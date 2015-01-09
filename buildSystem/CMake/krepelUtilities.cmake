@@ -14,17 +14,28 @@ include(CMakeParseArguments)
 set(KR_WARNING_ID_NOT_IMPLEMENTED 0)
 set(KR_WARNING_ID_UNPARSED_ARGS   1)
 
+function(kr_generate_log_prefix VERBOSITY OUTPUT_VARIABLE)
+  if(KR_SHOW_VERBOSITY_IN_LOG)
+    set(${OUTPUT_VARIABLE} "${VERBOSITY})${KR_LOG_PREFIX}" PARENT_SCOPE)
+  else()
+    set(${OUTPUT_VARIABLE} "${KR_LOG_PREFIX}" PARENT_SCOPE)
+  endif()
+endfunction()
+
 function(kr_message _VERBOSITY _STATUS _MESSAGE)
   if(NOT _VERBOSITY GREATER KR_VERBOSITY)
+    kr_generate_log_prefix(${_VERBOSITY} KR_LOG_PREFIX)
     message(${_STATUS} "${KR_LOG_PREFIX} ${_MESSAGE}")
   endif()
 endfunction(kr_message)
 
 function(kr_log _VERBOSITY _MESSAGE)
   if(NOT _VERBOSITY GREATER KR_VERBOSITY)
+    kr_generate_log_prefix(${_VERBOSITY} KR_LOG_PREFIX)
     message(STATUS "${KR_LOG_PREFIX} ${_MESSAGE}")
   endif()
 endfunction(kr_log)
+kr_log(0 "Note: log output for this project is controlled by the advanced cache variable KR_VERBOSITY")
 
 function(kr_error _MESSAGE)
   message(SEND_ERROR "${KR_LOG_PREFIX} ${_MESSAGE}")
@@ -42,6 +53,7 @@ function(kr_warning _ID _MESSAGE)
 
   list(FIND "${KR_DISABLED_WARNINGS}" "${_ID}" WARNING_INDEX)
   if(WARNING_INDEX EQUAL -1) # not found
+    kr_generate_log_prefix(KR_LOG_PREFIX)
     message(AUTHOR_WARNING "${KR_LOG_PREFIX} ${_MESSAGE}")
   endif()
 endfunction(kr_warning)
@@ -137,7 +149,6 @@ endfunction(kr_add_sfml)
 
 function(kr_add_packages TARGET_NAME)
   kr_indent_log_prefix("(packages)")
-  kr_log(0 "${ARGN}")
   set(SUPPORTED_PACKAGES SFML EZ_ENGINE)
   cmake_parse_arguments(PKG "" "" "${SUPPORTED_PACKAGES}" ${ARGN})
 
@@ -145,21 +156,51 @@ function(kr_add_packages TARGET_NAME)
     kr_warning_unparsed_args("unparsed arguments: ${PKG_UNPARSED_ARGUMENTS}")
   endif()
 
-  kr_log(1 "SFML: ${PKG_SFML}")
-  kr_log(1 "EZ_ENGINE: ${PKG_EZ_ENGINE}")
-
   if(PKG_SFML)
     kr_log(1 "adding SFML")
+    kr_log(2 "args: ${PKG_SFML}")
     kr_add_sfml("${TARGET_NAME}" "${PKG_SFML}")
   endif()
 
   if(PKG_EZ_ENGINE)
     kr_warning_not_implemented("ezEngine package not supported right now.")
     #kr_log(1 "adding ezEngine")
+    #kr_log(2 "args: ${PKG_EZ_ENGINE}")
     #find_package(ezEngine ${PKG_EZ_ENGINE})
   endif()
 
 endfunction(kr_add_packages)
+
+# chooses a file template based on the given FILE_EXTENSION
+function(kr_get_file_template FILE_EXTENSION OUTPUT_VARIABLE)
+  if("${FILE_EXTENSION}" STREQUAL ".h" OR
+     "${FILE_EXTENSION}" STREQUAL ".hpp")
+    set(${OUTPUT_VARIABLE} "${KR_FILE_TEMPLATE_DIR}/empty.h.template" PARENT_SCOPE)
+  elseif("${FILE_EXTENSION}" STREQUAL ".cpp")
+    set(${OUTPUT_VARIABLE} "${KR_FILE_TEMPLATE_DIR}/empty.cpp.template" PARENT_SCOPE)
+  elseif("${FILE_EXTENSION}" STREQUAL ".inl")
+    set(${OUTPUT_VARIABLE} "${KR_FILE_TEMPLATE_DIR}/empty.inl.template" PARENT_SCOPE)
+  endif()
+endfunction()
+
+# Generates a file from a template, chosen based on its extension
+function(kr_generate_file FILE_NAME)
+endfunction()
+
+function(kr_create_missing_files)
+  kr_indent_log_prefix("(creating missing files)")
+  foreach(SRC_FILE ${ARGN})
+    set(SRC_FILE "${CMAKE_CURRENT_LIST_DIR}/${SRC_FILE}")
+    if(NOT EXISTS "${SRC_FILE}")
+      get_filename_component(SRC_FILE_EXT "${SRC_FILE}" EXT)
+      kr_get_file_template("${SRC_FILE_EXT}" SRC_TEMPLATE)
+      kr_log(3 "using template: ${SRC_TEMPLATE}")
+      file(READ "${SRC_TEMPLATE}" SRC_TEMPLATE)
+      file(WRITE "${SRC_FILE}" "${SRC_TEMPLATE}")
+      kr_log(1 "generated: ${SRC_FILE}")
+    endif()
+  endforeach()
+endfunction()
 
 # project
 #######################################################################
@@ -198,9 +239,11 @@ function(kr_project        PROJECT_NAME)
     kr_error("No files specified for project: ${PROJECT_NAME}")
   endif()
 
+  kr_create_missing_files(${PROJECT_FILES})
+
   # actually start using the given data
   if(PROJECT_LIBRARY) # this project is a library
-  kr_log(1 "project is a library (${PROJECT_LIBRARY})")
+    kr_log(1 "project is a library (${PROJECT_LIBRARY})")
     add_library(${PROJECT_NAME} ${PROJECT_LIBRARY} ${PROJECT_FILES})
     
     # if this is a shared library (.dll), set a preprocessor definition KR_PROJECTNAME_EXPORT
@@ -230,6 +273,5 @@ function(kr_project        PROJECT_NAME)
 
   kr_group_sources_by_file_system(${PROJECT_FILES})
 
-  kr_log(0 "packages: ${PROJECT_PACKAGES}")
   kr_add_packages("${PROJECT_NAME}" ${PROJECT_PACKAGES})
 endfunction(kr_project)

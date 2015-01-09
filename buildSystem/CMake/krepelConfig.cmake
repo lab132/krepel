@@ -12,9 +12,16 @@ set(KR_LOG_PREFIX "[kr]" CACHE STRING
     "String used to prefix all log messages. Useful to quickly identify out log messages.")
 set(KR_DISABLED_WARNINGS "" CACHE STRING
     "List of disabled warnings")
+set(KR_FILE_TEMPLATE_DIR "${CMAKE_MODULE_PATH}/templates" CACHE STRING
+    "Directory containing all file templates used to generate new files listed in a CMakeLists.txt that does not yet exist on the filesystem.")
+set(KR_SHOW_VERBOSITY_IN_LOG OFF CACHE BOOL
+    "Whether to show verbosity of a log message or not.")
 
-mark_as_advanced(KR_LOG_PREFIX)
-mark_as_advanced(KR_DISABLED_WARNINGS)
+mark_as_advanced(KR_VERBOSITY
+                 KR_LOG_PREFIX
+                 KR_DISABLED_WARNINGS
+                 KR_FILE_TEMPLATE_DIR
+                 KR_SHOW_VERBOSITY_IN_LOG)
 
 set(KR_OUTPUT_DIR_BIN "${KR_OUTPUT_DIR}/bin")
 set(KR_OUTPUT_DIR_LIB "${KR_OUTPUT_DIR}/lib")

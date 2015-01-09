@@ -12,5 +12,5 @@ kr_project(
     "implementation/main.cpp"
   PACKAGES
     SFML 2 REQUIRED COMPONENTS system window graphics audio
-    EZ_ENGINE REQUIRED COMPONENTS Foundation Core
+    #EZ_ENGINE REQUIRED COMPONENTS Foundation Core
 )
