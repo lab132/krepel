@@ -46,9 +46,13 @@ function(kr_warning _ID _MESSAGE)
   endif()
 endfunction(kr_warning)
 
-function(kr_not_implemented)
+function(kr_warning_not_implemented)
   kr_warning(${KR_WARNING_ID_NOT_IMPLEMENTED} "[not implemented] ${ARGN}")
-endfunction(kr_not_implemented)
+endfunction(kr_warning_not_implemented)
+
+function(kr_warning_unparsed_args)
+  kr_warning(${KR_WARNING_ID_UNPARSED_ARGS} "[unparsed args] ${ARGN}")
+endfunction()
 
 # general config
 #######################################################################
@@ -70,6 +74,7 @@ function(kr_unindent_log_prefix UNINDENT_AMOUNT)
 endfunction(kr_unindent_log_prefix)
 
 function(kr_msvc_add_pch_flags PCH)
+  kr_indent_log_prefix("(pch)")
   cmake_parse_arguments(PCH "" PREFIX "" ${ARGN})
 
   get_filename_component(PCH_DIR "${PCH}" DIRECTORY)
@@ -115,16 +120,57 @@ function(kr_group_sources_by_file_system)
   endforeach()
 endfunction(kr_group_sources_by_file_system)
 
+function(kr_add_sfml TARGET_NAME)
+  find_package(SFML ${ARGN})
+  if(SFML_FOUND)
+    include_directories("${SFML_INCLUDE_DIR}")
+    target_link_libraries(${TARGET_NAME} ${SFML_LIBRARIES})
+  endif()
+
+  # copy SFML dlls to output dir as a post-build command
+  add_custom_command(TARGET ${TARGET_NAME} POST_BUILD
+                     COMMAND ${CMAKE_COMMAND} -E copy_directory
+                     "${SFML_ROOT}/bin"
+                     $<TARGET_FILE_DIR:${TARGET_NAME}>)
+
+endfunction(kr_add_sfml)
+
+function(kr_add_packages TARGET_NAME)
+  kr_indent_log_prefix("(packages)")
+  kr_log(0 "${ARGN}")
+  set(SUPPORTED_PACKAGES SFML EZ_ENGINE)
+  cmake_parse_arguments(PKG "" "" "${SUPPORTED_PACKAGES}" ${ARGN})
+
+  if(PKG_UNPARSED_ARGUMENTS)
+    kr_warning_unparsed_args("unparsed arguments: ${PKG_UNPARSED_ARGUMENTS}")
+  endif()
+
+  kr_log(1 "SFML: ${PKG_SFML}")
+  kr_log(1 "EZ_ENGINE: ${PKG_EZ_ENGINE}")
+
+  if(PKG_SFML)
+    kr_log(1 "adding SFML")
+    kr_add_sfml("${TARGET_NAME}" "${PKG_SFML}")
+  endif()
+
+  if(PKG_EZ_ENGINE)
+    kr_warning_not_implemented("ezEngine package not supported right now.")
+    #kr_log(1 "adding ezEngine")
+    #find_package(ezEngine ${PKG_EZ_ENGINE})
+  endif()
+
+endfunction(kr_add_packages)
+
 # project
 #######################################################################
 
 # signature:
-# kr_project(TheProjectName                       # the name of the project.
-#            EXECUTABLE|(LIBRARY SHARED|STATIC)   # marks this project as either an executable or a library.
-#            [PCH ThePchFileName]                 # the name of the precompiled-header file;
-#                                                 # if given, the project will be set up to use a precompiled header. 
-#            FILES file0 file1 ... fileN          # all files to include as sources.
-#            [LINK_LIBRARIES lib0 lib1 ... libN]) # the names of all the libraries this project depends on.
+# kr_project(TheProjectName                        # the name of the project.
+#            EXECUTABLE|(LIBRARY SHARED|STATIC)    # marks this project as either an executable or a library.
+#            [PCH ThePchFileName]                  # the name of the precompiled-header file;
+#                                                  # if given, the project will be set up to use a precompiled header. 
+#            FILES file0 file1 ... fileN           # all files to include as sources.
+#            [PACKAGES (SFML ...)|(EZ_ENGINE ...)] # the names and components of the packages this project depends on.
 #
 # note: SHARED libraries always add_definitions("-DKR_THEPROJECTNAME_EXPORT"), in all upper-case
 function(kr_project        PROJECT_NAME)
@@ -132,14 +178,14 @@ function(kr_project        PROJECT_NAME)
   set(single_value_options LIBRARY
                            PCH)
   set(multi_value_options  FILES
-                           LINK_LIBRARIES)
+                           PACKAGES)
   kr_indent_log_prefix("{${PROJECT_NAME}}")
   kr_log(2 "parsing arguments")
   cmake_parse_arguments(PROJECT "${bool_options}" "${single_value_options}" "${multi_value_options}" ${ARGN})
 
   # error checking
   if(LIB_UNPARSED_ARGUMENTS)
-    kr_warning(${KR_WARNING_ID_UNPARSED_ARGS} "unparsed args: ${LIB_UNPARSED_ARGUMENTS}")
+    kr_warning_unparsed_args("unparsed args: ${LIB_UNPARSED_ARGUMENTS}")
   endif()
 
   if(PROJECT_EXECUTABLE AND PROJECT_LIBRARY)
@@ -178,10 +224,12 @@ function(kr_project        PROJECT_NAME)
 
   if(PROJECT_PCH)
     if(MSVC)
-      kr_indent_log_prefix("(pch)")
       kr_msvc_add_pch_flags("${PROJECT_PCH}" ${PROJECT_FILES} PREFIX "${PROJECT_NAME}")
     endif()
   endif(PROJECT_PCH)
 
   kr_group_sources_by_file_system(${PROJECT_FILES})
+
+  kr_log(0 "packages: ${PROJECT_PACKAGES}")
+  kr_add_packages("${PROJECT_NAME}" ${PROJECT_PACKAGES})
 endfunction(kr_project)
