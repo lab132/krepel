@@ -53,7 +53,6 @@ function(kr_warning _ID _MESSAGE)
 
   list(FIND "${KR_DISABLED_WARNINGS}" "${_ID}" WARNING_INDEX)
   if(WARNING_INDEX EQUAL -1) # not found
-    kr_generate_log_prefix(KR_LOG_PREFIX)
     message(AUTHOR_WARNING "${KR_LOG_PREFIX} ${_MESSAGE}")
   endif()
 endfunction(kr_warning)
@@ -133,10 +132,16 @@ function(kr_group_sources_by_file_system)
 endfunction(kr_group_sources_by_file_system)
 
 function(kr_add_sfml TARGET_NAME)
+  if(NOT SFML_ROOT)
+    set(SFML_ROOT "$ENV{SFML_ROOT}" CACHE PATH
+        "Path to the (installed) SFML root directory.")
+  endif()
   find_package(SFML ${ARGN})
   if(SFML_FOUND)
     include_directories("${SFML_INCLUDE_DIR}")
     target_link_libraries(${TARGET_NAME} ${SFML_LIBRARIES})
+  else()
+    kr_log(0 "Please specify SFML_ROOT as either a cmake cache variable or an environment variable.")
   endif()
 
   # copy SFML dlls to output dir as a post-build command
@@ -146,6 +151,20 @@ function(kr_add_sfml TARGET_NAME)
                      $<TARGET_FILE_DIR:${TARGET_NAME}>)
 
 endfunction(kr_add_sfml)
+
+function(kr_add_ezEngine TARGET_NAME)
+  cmake_parse_arguments(EZ_ENGINE "POST_BUILD_COPY_DLLS" "" "" ${ARGN})
+  if(EZ_ENGINE_POST_BUILD_COPY_DLLS)
+    set(EZ_ENGINE_POST_BUILD_COPY_DLLS "${TARGET_NAME}")
+  endif()
+  find_package(EZ_ENGINE ${EZ_ENGINE_UNPARSED_ARGUMENTS})
+
+  if(EZ_ENGINE_FOUND)
+    kr_log(0 "yiey! ${EZ_ENGINE_INCLUDE_DIR} | ${EZ_ENGINE_LIBRARIES}")
+    include_directories("${EZ_ENGINE_INCLUDE_DIR}")
+    target_link_libraries("${TARGET_NAME}" ${EZ_ENGINE_LIBRARIES})
+  endif()
+endfunction()
 
 function(kr_add_packages TARGET_NAME)
   kr_indent_log_prefix("(packages)")
@@ -163,10 +182,9 @@ function(kr_add_packages TARGET_NAME)
   endif()
 
   if(PKG_EZ_ENGINE)
-    kr_warning_not_implemented("ezEngine package not supported right now.")
-    #kr_log(1 "adding ezEngine")
-    #kr_log(2 "args: ${PKG_EZ_ENGINE}")
-    #find_package(ezEngine ${PKG_EZ_ENGINE})
+    kr_log(1 "adding ezEngine")
+    kr_log(2 "args: ${PKG_EZ_ENGINE}")
+    kr_add_ezEngine("${TARGET_NAME}" "${PKG_EZ_ENGINE}")
   endif()
 
 endfunction(kr_add_packages)
@@ -181,11 +199,7 @@ function(kr_get_file_template FILE_EXTENSION OUTPUT_VARIABLE)
   elseif("${FILE_EXTENSION}" STREQUAL ".inl")
     set(${OUTPUT_VARIABLE} "${KR_FILE_TEMPLATE_DIR}/empty.inl.template" PARENT_SCOPE)
   endif()
-endfunction()
-
-# Generates a file from a template, chosen based on its extension
-function(kr_generate_file FILE_NAME)
-endfunction()
+endfunction(kr_get_file_template)
 
 function(kr_create_missing_files)
   kr_indent_log_prefix("(creating missing files)")
@@ -200,7 +214,7 @@ function(kr_create_missing_files)
       kr_log(1 "generated: ${SRC_FILE}")
     endif()
   endforeach()
-endfunction()
+endfunction(kr_create_missing_files)
 
 # project
 #######################################################################
