@@ -24,3 +24,7 @@
 
 # ide settings
 .idea
+
+# cmake temp files
+# CMakeCache.txt
+# CmakeFiles/
