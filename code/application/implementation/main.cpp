@@ -10,6 +10,7 @@ int main(int argc, const char* argv[])
 
     // Use something that is exported by ezEngine
     printf("App dir: %s", ezOSFile::GetApplicationDirectory());
+    printf("something?: %s", kr::getSomething());
 
     sf::Window app(sf::VideoMode(800, 600), "krepel application");
 

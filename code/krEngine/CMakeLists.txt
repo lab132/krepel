@@ -1,16 +1,16 @@
 #cmake
 
-set(KR_PROJECT_NAME "application")
+set(KR_PROJECT_NAME "krEngine")
 set(KR_SOURCE_FILES
     "pch.h"
     "pch.cpp"
-    "config.h"
-    "implementation/main.cpp"
+    "common.h"
+    "implementation/common.cpp"
 )
 
 kr_project(
   ${KR_PROJECT_NAME}
-  EXECUTABLE
+  LIBRARY SHARED
   PCH pch.h
   FILES ${KR_SOURCE_FILES}
   PACKAGES
@@ -21,5 +21,4 @@ kr_project(
       REQUIRED COMPONENTS
         ezFoundation ezCore ezSystem
       POST_BUILD_COPY_DLLS
-    krEngine
 )
