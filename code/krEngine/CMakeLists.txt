@@ -6,6 +6,16 @@ set(KR_SOURCE_FILES
     "pch.cpp"
     "common.h"
     "implementation/common.cpp"
+
+    # rendering
+    "rendering.h"
+    "rendering/drawableBase.h"
+    "rendering/renderExtractor.h"
+    "rendering/implementation/renderExtractor.cpp"
+    "rendering/renderer.h"
+    "rendering/implementation/renderer.cpp"
+    "rendering/debugRenderer.h"
+    "rendering/implementation/debugRenderer.cpp"
 )
 
 kr_project(
