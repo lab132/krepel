@@ -81,7 +81,7 @@ elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux")
   set(KR_PLATFORM_PREFIX "Linux")
   
 else()
-  kr_fatal("Platform '${CMAKE_SYSTEM_NAME}' is not supported! Please extend CMAKE_GeneralConfig.txt.")
+  kr_fatal("Platform '${CMAKE_SYSTEM_NAME}' is not supported! Please extend krepelConfig.cmake.")
 endif()
 
 
@@ -99,7 +99,7 @@ if(KR_BUILDSYSTEM_PLATFORM_WINDOWS)
     set(KR_BUILDSYSTEM_PREFIX "Vs")
     set(KR_BUILDSYSTEM_CONFIGURATION $<CONFIGURATION>)
   else()
-    kr_fatal("Generator '${CMAKE_GENERATOR}' is not supported on Windows! Please extend CMAKE_GeneralConfig.txt.")
+    kr_fatal("Generator '${CMAKE_GENERATOR}' is not supported on Windows! Please extend krepelConfig.cmake.")
   endif()
   
 elseif(KR_BUILDSYSTEM_PLATFORM_OSX)
@@ -117,7 +117,7 @@ elseif(KR_BUILDSYSTEM_PLATFORM_OSX)
     set(KR_BUILDSYSTEM_PREFIX "Make")
     set(KR_BUILDSYSTEM_CONFIGURATION ${CMAKE_BUILD_TYPE})
   else()
-    kr_fatal("Generator '${CMAKE_GENERATOR}' is not supported on OS X! Please extend CMAKE_GeneralConfig.txt.")
+    kr_fatal("Generator '${CMAKE_GENERATOR}' is not supported on OS X! Please extend krepelConfig.cmake.")
   endif()
   
 elseif(KR_BUILDSYSTEM_PLATFORM_LINUX)
@@ -128,11 +128,11 @@ elseif(KR_BUILDSYSTEM_PLATFORM_LINUX)
     set(KR_BUILDSYSTEM_PREFIX "Make")
     set(KR_BUILDSYSTEM_CONFIGURATION ${CMAKE_BUILD_TYPE})
   else()
-    kr_fatal("Generator '${CMAKE_GENERATOR}' is not supported on Linux! Please extend CMAKE_GeneralConfig.txt.")
+    kr_fatal("Generator '${CMAKE_GENERATOR}' is not supported on Linux! Please extend krepelConfig.cmake.")
   endif()
   
 else()
-  kr_fatal("Platform '${CMAKE_SYSTEM_NAME}' has not setup the supported generators. Please extend CMAKE_GeneralConfig.txt.")
+  kr_fatal("Platform '${CMAKE_SYSTEM_NAME}' has not setup the supported generators. Please extend krepelConfig.cmake.")
 endif()
 
 #########################################################################################
@@ -158,7 +158,7 @@ if(KR_BUILDSYSTEM_MSVC)
     set(KR_BUILDSYSTEM_COMPILER_MSVC_100 ON)
     set(KR_COMPILER_POSTFIX "100")
   else()
-    kr_fatal("Compiler for generator '${CMAKE_GENERATOR}' is not supported on MSVC! Please extend CMAKE_GeneralConfig.txt.")
+    kr_fatal("Compiler for generator '${CMAKE_GENERATOR}' is not supported on MSVC! Please extend krepelConfig.cmake.")
   endif()
   
 elseif(KR_BUILDSYSTEM_PLATFORM_OSX)
@@ -175,7 +175,7 @@ elseif(KR_BUILDSYSTEM_PLATFORM_LINUX)
   set(KR_COMPILER_POSTFIX "Gcc")
   
 else()
-  kr_fatal("Compiler for generator '${CMAKE_GENERATOR}' is not supported on '${CMAKE_SYSTEM_NAME}'. Please extend CMAKE_GeneralConfig.txt.")
+  kr_fatal("Compiler for generator '${CMAKE_GENERATOR}' is not supported on '${CMAKE_SYSTEM_NAME}'. Please extend krepelConfig.cmake.")
 endif()
 
 
@@ -220,7 +220,7 @@ elseif(KR_BUILDSYSTEM_PLATFORM_LINUX AND KR_BUILDSYSTEM_COMPILER_GCC)
   endif()
   
 else()
-  kr_fatal("Architecture could not be determined. Please extend CMAKE_GeneralConfig.txt.")
+  kr_fatal("Architecture could not be determined. Please extend krepelConfig.cmake.")
 endif()
 
 ## tell cmake where to build our stuff to
@@ -307,10 +307,10 @@ if(KR_BUILDSYSTEM_COMPILER_MSVC)
   # Don't know what it does, but Clemens wants it :-) (does not work together with incremental build)
   set(KR_LINKER_SETTINGS_RELEASE "${KR_LINKER_SETTINGS_RELEASE} /OPT:ICF")
   
-elseif(BUILDSYSTEM_COMPILER_CLANG)
+elseif(KR_BUILDSYSTEM_COMPILER_CLANG)
   # Enable c++11 features
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -stdlib=libc++")
-elseif(BUILDSYSTEM_COMPILER_GCC)
+elseif(KR_BUILDSYSTEM_COMPILER_GCC)
   # dynamic linking will fail without fPIC (plugins)
   # Wno-enum-compare removes all annoying enum cast warnings
   # std=c++11 is - well needed for c++11.
@@ -319,5 +319,5 @@ elseif(BUILDSYSTEM_COMPILER_GCC)
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC -gdwarf-3")
   
 else()
-  message (FATAL_ERROR "Not settings are defined for the selected compiler. Please extend CMAKE_GeneralConfig.txt.")
+  message (FATAL_ERROR "Not settings are defined for the selected compiler. Please extend krepelConfig.cmake.")
 endif()
