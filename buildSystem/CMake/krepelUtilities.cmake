@@ -143,12 +143,14 @@ function(kr_add_sfml TARGET_NAME)
     kr_log(0 "Please specify SFML_ROOT as either a cmake cache variable or an environment variable.")
   endif()
 
-  # copy SFML dlls to output dir as a post-build command
-  add_custom_command(TARGET ${TARGET_NAME} POST_BUILD
-                     COMMAND ${CMAKE_COMMAND} -E copy_directory
-                     "${SFML_ROOT}/bin"
-                     $<TARGET_FILE_DIR:${TARGET_NAME}>)
-
+  # copy DLLs only on windows
+  if(MSVC)
+    # copy SFML dlls to output dir as a post-build command
+    add_custom_command(TARGET ${TARGET_NAME} POST_BUILD
+                       COMMAND ${CMAKE_COMMAND} -E copy_directory
+                       "${SFML_ROOT}/bin"
+                       $<TARGET_FILE_DIR:${TARGET_NAME}>)
+  endif()
 endfunction(kr_add_sfml)
 
 function(kr_add_ezEngine TARGET_NAME)
