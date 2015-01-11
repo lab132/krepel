@@ -133,10 +133,8 @@ function(kr_group_sources_by_file_system)
 endfunction(kr_group_sources_by_file_system)
 
 function(kr_add_sfml TARGET_NAME)
-  if(NOT SFML_ROOT)
-    set(SFML_ROOT "$ENV{SFML_ROOT}" CACHE PATH
-        "Path to the (installed) SFML root directory.")
-  endif()
+  set(SFML_ROOT "$ENV{SFML_ROOT}" CACHE PATH
+      "Path to the (installed) SFML root directory. This variable can be set manually if cmake fails to find SFML automatically.")
   find_package(SFML ${ARGN})
   if(SFML_FOUND)
     include_directories("${SFML_INCLUDE_DIR}")

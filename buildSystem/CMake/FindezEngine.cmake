@@ -80,10 +80,14 @@ endfunction()
 # run-time
 ########################################################################
 
+set(ezEngine_ROOT "${ezEngine_ROOT}" CACHE PATH
+    "Path to the root directory of the ezEngine project (i.e. their repo).")
 find_path(ezEngine_ROOT
           NAMES Code/Engine Output
           PATHS "$ENV{ezEngine_ROOT}" "${ezEngine_ROOT}")
 
+set(ezEngine_ROOT "${ezEngine_ROOT}" CACHE FILEPATH
+    "Path to the exports.cmake file describing the exported ezEngine targets. You should be able to find it in the ez build directory, the one you specified when generating the project with CMake.")
 find_file(ezEngine_EXPORTS_FILE
           NAMES "exports.cmake"
           PATHS "${ezEngine_ROOT}" "${ezEngine_ROOT}/*")
@@ -123,7 +127,6 @@ endif()
 # Collect the targets of all requested ezEngine components and store the result in ezEngine_LIBRARIES
 foreach(COMPONENT ${ezEngine_FIND_COMPONENTS})
   if(TARGET ${COMPONENT})
-    message("Found target for ezEngine component: ${COMPONENT}")
     list(APPEND ezEngine_LIBRARIES ${COMPONENT})
   elseif(ezEngine_FIND_REQUIRED_${COMPONENT})
     set(ezEngine_FOUND FALSE)
