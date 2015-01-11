@@ -6,9 +6,10 @@ endif()
 set(KR_KREPEL_UTILITIES_INCLUDED ON)
 
 include(CMakeParseArguments)
+include(echoTargetProperties)
 
 ## logging
-#######################################################################
+########################################################################
 
 # warning ids
 set(KR_WARNING_ID_NOT_IMPLEMENTED 0)
@@ -66,12 +67,12 @@ function(kr_warning_unparsed_args)
 endfunction()
 
 # general config
-#######################################################################
+########################################################################
 
 include(krepelConfig)
 
 # helper functions
-#######################################################################
+########################################################################
 
 function(kr_indent_log_prefix INDENT_STRING)
   set(KR_LOG_PREFIX "${KR_LOG_PREFIX}${INDENT_STRING}" PARENT_SCOPE)
@@ -153,22 +154,21 @@ function(kr_add_sfml TARGET_NAME)
 endfunction(kr_add_sfml)
 
 function(kr_add_ezEngine TARGET_NAME)
-  cmake_parse_arguments(EZ_ENGINE "POST_BUILD_COPY_DLLS" "" "" ${ARGN})
-  if(EZ_ENGINE_POST_BUILD_COPY_DLLS)
-    set(EZ_ENGINE_POST_BUILD_COPY_DLLS "${TARGET_NAME}")
+  cmake_parse_arguments(ezEngine "POST_BUILD_COPY_DLLS" "" "" ${ARGN})
+  if(ezEngine_POST_BUILD_COPY_DLLS)
+    set(ezEngine_POST_BUILD_COPY_DLLS "${TARGET_NAME}")
   endif()
-  find_package(EZ_ENGINE ${EZ_ENGINE_UNPARSED_ARGUMENTS})
+  find_package(ezEngine ${ezEngine_UNPARSED_ARGUMENTS})
 
-  if(EZ_ENGINE_FOUND)
-    kr_log(0 "yiey! ${EZ_ENGINE_INCLUDE_DIR} | ${EZ_ENGINE_LIBRARIES}")
-    include_directories("${EZ_ENGINE_INCLUDE_DIR}")
-    target_link_libraries("${TARGET_NAME}" ${EZ_ENGINE_LIBRARIES})
+  if(ezEngine_FOUND)
+    include_directories("${ezEngine_INCLUDE_DIR}")
+    target_link_libraries("${TARGET_NAME}" ${ezEngine_LIBRARIES})
   endif()
 endfunction()
 
 function(kr_add_packages TARGET_NAME)
   kr_indent_log_prefix("(packages)")
-  set(SUPPORTED_PACKAGES SFML EZ_ENGINE)
+  set(SUPPORTED_PACKAGES SFML ezEngine)
   cmake_parse_arguments(PKG "" "" "${SUPPORTED_PACKAGES}" ${ARGN})
 
   if(PKG_UNPARSED_ARGUMENTS)
@@ -181,10 +181,10 @@ function(kr_add_packages TARGET_NAME)
     kr_add_sfml("${TARGET_NAME}" "${PKG_SFML}")
   endif()
 
-  if(PKG_EZ_ENGINE)
+  if(PKG_ezEngine)
     kr_log(1 "adding ezEngine")
-    kr_log(2 "args: ${PKG_EZ_ENGINE}")
-    kr_add_ezEngine("${TARGET_NAME}" "${PKG_EZ_ENGINE}")
+    kr_log(2 "args: ${PKG_ezEngine}")
+    kr_add_ezEngine("${TARGET_NAME}" "${PKG_ezEngine}")
   endif()
 
 endfunction(kr_add_packages)
@@ -217,7 +217,7 @@ function(kr_create_missing_files)
 endfunction(kr_create_missing_files)
 
 # project
-#######################################################################
+########################################################################
 
 # signature:
 # kr_project(TheProjectName                        # the name of the project.
@@ -225,7 +225,7 @@ endfunction(kr_create_missing_files)
 #            [PCH ThePchFileName]                  # the name of the precompiled-header file;
 #                                                  # if given, the project will be set up to use a precompiled header. 
 #            FILES file0 file1 ... fileN           # all files to include as sources.
-#            [PACKAGES (SFML ...)|(EZ_ENGINE ...)] # the names and components of the packages this project depends on.
+#            [PACKAGES (SFML ...)|(ezEngine ...)] # the names and components of the packages this project depends on.
 #
 # note: SHARED libraries always add_definitions("-DKR_THEPROJECTNAME_EXPORT"), in all upper-case
 function(kr_project        PROJECT_NAME)
@@ -272,12 +272,6 @@ function(kr_project        PROJECT_NAME)
     kr_log(1 "project is an executable")
     add_executable(${PROJECT_NAME} ${PROJECT_FILES})
   endif()
-
-  if(PROJECT_LINK_LIBRARIES)
-    kr_log(2 "linking to: ${PROJECT_LINK_LIBRARIES}")
-    find_library(PROJECT_LINK_LIBRARIES NAMES ${PROJECT_LINK_LIBRARIES})
-    target_link_libraries(${PROJECT_NAME} ${PROJECT_LINK_LIBRARIES})
-  endif(PROJECT_LINK_LIBRARIES)
 
   if(PROJECT_PCH)
     if(MSVC)
