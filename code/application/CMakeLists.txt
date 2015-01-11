@@ -16,9 +16,10 @@ kr_project(
   PACKAGES
     SFML 2
       REQUIRED COMPONENTS
-        system window graphics audio
+        system window graphics
     ezEngine
       REQUIRED COMPONENTS
-        ezFoundation ezCore
+        ezFoundation ezCore ezSystem
       POST_BUILD_COPY_DLLS
+    krEngine
 )

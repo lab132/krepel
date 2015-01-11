@@ -168,8 +168,7 @@ endfunction()
 
 function(kr_add_packages TARGET_NAME)
   kr_indent_log_prefix("(packages)")
-  set(SUPPORTED_PACKAGES SFML ezEngine)
-  cmake_parse_arguments(PKG "" "" "${SUPPORTED_PACKAGES}" ${ARGN})
+  cmake_parse_arguments(PKG "krEngine" "" "SFML;ezEngine" ${ARGN})
 
   if(PKG_UNPARSED_ARGUMENTS)
     kr_warning_unparsed_args("unparsed arguments: ${PKG_UNPARSED_ARGUMENTS}")
@@ -185,6 +184,14 @@ function(kr_add_packages TARGET_NAME)
     kr_log(1 "adding ezEngine")
     kr_log(2 "args: ${PKG_ezEngine}")
     kr_add_ezEngine("${TARGET_NAME}" "${PKG_ezEngine}")
+  endif()
+
+  if(PKG_krEngine)
+    target_link_libraries("${TARGET_NAME}" krEngine)
+    foreach(CFG DEBUG RELEASE MINSIZEREL RELWITHDEBINFO)
+      get_target_property(krEngine_LIBRARY_OUTPUT_DIR krEngine LIBRARY_OUTPUT_DIRECTORY_${CFG})
+      link_directories("${krEngine_LIBRARY_OUTPUT_DIR}")
+    endforeach()
   endif()
 
 endfunction(kr_add_packages)
@@ -227,7 +234,6 @@ endfunction(kr_create_missing_files)
 #            FILES file0 file1 ... fileN           # all files to include as sources.
 #            [PACKAGES (SFML ...)|(ezEngine ...)] # the names and components of the packages this project depends on.
 #
-# note: SHARED libraries always add_definitions("-DKR_THEPROJECTNAME_EXPORT"), in all upper-case
 function(kr_project        PROJECT_NAME)
   set(bool_options         EXECUTABLE)
   set(single_value_options LIBRARY
@@ -259,15 +265,6 @@ function(kr_project        PROJECT_NAME)
   if(PROJECT_LIBRARY) # this project is a library
     kr_log(1 "project is a library (${PROJECT_LIBRARY})")
     add_library(${PROJECT_NAME} ${PROJECT_LIBRARY} ${PROJECT_FILES})
-    
-    # if this is a shared library (.dll), set a preprocessor definition KR_PROJECTNAME_EXPORT
-    if(PROJECT_LIBRARY STREQUAL SHARED)
-      set(EXPORT_DEF_NAME "KR_${PROJECT_NAME}_EXPORT")
-      # make sure it is in all-caps
-      string(TOUPPER "${EXPORT_DEF_NAME}" EXPORT_DEF_NAME)
-      kr_log(2 "Adding preprocessor definition: ${EXPORT_DEF_NAME}")
-      add_definitions("-D${EXPORT_DEF_NAME}")
-    endif()
   elseif(PROJECT_EXECUTABLE)
     kr_log(1 "project is an executable")
     add_executable(${PROJECT_NAME} ${PROJECT_FILES})

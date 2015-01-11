@@ -6,13 +6,12 @@
 # if the following is set to true
 root = true
 
-# Settings from here apply to *.h, *.hpp, *.inl, *.c, *.cpp, and *.lua files only
-[*.{h,hpp,inl,c,cpp,lua}]
-
+# Use unix line endings for all files
+[*]
 # Unix style line endings (\n)
 end_of_line = lf
 
-# Use 4 spaces for indentation
+# Use 2 spaces for indentation
 indent_style = space
 indent_size = 2
 
