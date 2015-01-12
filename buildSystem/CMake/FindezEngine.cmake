@@ -13,6 +13,16 @@
 #   ezEngine_OUTPUT_DIR:   The output directory of the ezEngine.
 #   ezEngine_BIN_DIR:      The directory of the ezEngine binaries (executables and shared libraries, i.e. DLLs).
 #   ezEngine_LIB_DIR:      The directory of the ezEngine static and import libraries (.lib).
+#
+# Usage instructions:
+#   Copy this file (FindezEngine.cmake) to your module directory, i.e. where the variable CMAKE_MODULE_PATH points to.
+#   Then you can use the following code to find all ezEngine targets:
+#     set(ezEngine_POST_BUILD_COPY_DLLS MyOwnTargetName) # This is completely optional und unecessary for static linking.
+#     find_package(ezEngine COMPONENTS ezSystem REQUIRED ezFoundation ezCore)
+#     if(ezEngine_FOUND)
+#       include_directories("${ezEngine_INCLUDE_DIR}")
+#       target_link_libraries(MyOwnTargetName ${ezEngine_LIBRARIES})
+#     endif()
 ########################################################################
 
 # functions

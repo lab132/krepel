@@ -230,10 +230,9 @@ endfunction(kr_create_missing_files)
 # kr_project(TheProjectName                        # the name of the project.
 #            EXECUTABLE|(LIBRARY SHARED|STATIC)    # marks this project as either an executable or a library.
 #            [PCH ThePchFileName]                  # the name of the precompiled-header file;
-#                                                  # if given, the project will be set up to use a precompiled header. 
+#                                                  # if given, the project will be set up to use a precompiled header.
 #            FILES file0 file1 ... fileN           # all files to include as sources.
 #            [PACKAGES (SFML ...)|(ezEngine ...)] # the names and components of the packages this project depends on.
-#
 function(kr_project        PROJECT_NAME)
   set(bool_options         EXECUTABLE)
   set(single_value_options LIBRARY
