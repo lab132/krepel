@@ -11,11 +11,13 @@ set(FILES
   sanityTests.cpp
 
   # Regular tests.
+  test_common.cpp
   test_referenceCounting.cpp
   test_texture.cpp
   test_sprite.cpp
   test_shader.cpp
   test_vertexBuffer.cpp
+  test_renderer.cpp
 )
 
 bield_project(

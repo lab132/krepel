@@ -55,5 +55,8 @@ namespace kr
   /// \example close(move(m_pWindow)); // Destroys the window after it was closed.
   KR_ENGINE_API ezResult close(RefCountedPtr<Window> pWindow);
 
+  /// \brief Processes messages for the given \a pWindow.
+  ///
+  /// This is necessary in order to stay responsive and should be done in the main/render loop.
   KR_ENGINE_API void processWindowMessages(RefCountedPtr<Window> pWindow);
 }
