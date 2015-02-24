@@ -12,9 +12,16 @@
 
 namespace kr
 {
-  using std::swap;
+  using ::std::swap;
+  using ::std::move;
+  using ::std::forward;
+  using ::std::begin;
+  using ::std::end;
 
   KR_ENGINE_API const char* getSomething();
 }
 
-#define KR_NOT_IMPLEMENTED EZ_REPORT_FAILURE("Not implemented.")
+#define KR_NOT_IMPLEMENTED throw std::exception("Not implemented.")
+
+#include <krEngine/common/ezArrayPtrExtension.h>
+#include <krEngine/common/ezTypesExtension.h>

@@ -4,18 +4,52 @@ set(FILES
   # Note: the precompiled header should always come first.
   pch.cpp
   pch.h
-  common.h
-  implementation/common.cpp
 
-  # rendering
+  ## Common
+  ## ======
+  common.h
+  common/ezArrayPtrExtension.h
+  common/ezTypesExtension.h
+
+  ## ReferenceCounting
+  ## =================
+  referenceCounting.h
+
+  referenceCounting/refcounted.h
+  referenceCounting/refCountedPtr.h
+
+  ## Rendering
+  ## =========
   rendering.h
-  rendering/drawableBase.h
-  rendering/renderExtractor.h
-  rendering/implementation/renderExtractor.cpp
+
+  # Renderer
   rendering/renderer.h
   rendering/implementation/renderer.cpp
-  rendering/debugRenderer.h
-  rendering/implementation/debugRenderer.cpp
+  rendering/implementation/extractionBuffer.h
+  rendering/implementation/extractionBuffer.cpp
+
+  # Window
+  rendering/window.h
+  rendering/implementation/window.cpp
+  rendering/implementation/openGlContext.inl
+  rendering/implementation/windowImpl.h
+
+  # Sprite
+  rendering/sprite.h
+  rendering/implementation/sprite.cpp
+
+  # Texture
+  rendering/texture.h
+  rendering/implementation/textureInstance.h
+  rendering/implementation/texture.cpp
+
+  # Shaders
+  rendering/shader.h
+  rendering/implementation/shader.cpp
+
+  # VertexBuffer
+  rendering/vertexBuffer.h
+  rendering/implementation/vertexBuffer.cpp
 )
 
 bield_project(
@@ -32,7 +66,13 @@ set_target_properties(${BIELD_PROJECT_NAME} PROPERTIES FOLDER engine)
 ## ========
 
 set(ezEngine_POST_BUILD_COPY_DLLS ${BIELD_PROJECT_NAME})
-find_package(ezEngine REQUIRED COMPONENTS ezThirdParty ezFoundation ezCore ezCoreUtils ezSystem)
+find_package(ezEngine
+  REQUIRED COMPONENTS
+    ezThirdParty
+    ezFoundation
+    ezCore
+    ezCoreUtils
+    ezSystem)
 
 ## OpenGL and GLEW
 ## ===============
