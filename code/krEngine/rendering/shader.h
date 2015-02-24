@@ -69,13 +69,4 @@ namespace kr
 
     EZ_DISALLOW_COPY_AND_ASSIGN(ShaderProgram);
   };
-
-  struct ShaderAttribute
-  {
-    /// \note You should not fiddle around with this directly.
-    GLuint glHandle = 0;
-    ShaderProgram program;
-  };
-
-  //KR_ENGINE_API ShaderAttribute getAttribute(ShaderProgram program, const char* attrName);
 }
