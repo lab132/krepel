@@ -28,3 +28,5 @@
 # cmake temp files
 # CMakeCache.txt
 # CmakeFiles/
+
+output/

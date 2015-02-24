@@ -1,4 +1,3 @@
-#include "krEngine/pch.h"
 #include "krEngine/rendering/renderExtractor.h"
 
 kr::RenderExtractor::Event kr::RenderExtractor::s_extractionEvent;

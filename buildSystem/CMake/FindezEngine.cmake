@@ -16,13 +16,16 @@
 #
 # Usage instructions:
 #   Copy this file (FindezEngine.cmake) to your module directory, i.e. where the variable CMAKE_MODULE_PATH points to.
-#   Then you can use the following code to find all ezEngine targets:
+#   Then you can use the following code to find the given ezEngine targets:
 #     set(ezEngine_POST_BUILD_COPY_DLLS MyOwnTargetName) # This is completely optional und unecessary for static linking.
 #     find_package(ezEngine COMPONENTS ezSystem REQUIRED ezFoundation ezCore)
 #     if(ezEngine_FOUND)
 #       include_directories("${ezEngine_INCLUDE_DIR}")
 #       target_link_libraries(MyOwnTargetName ${ezEngine_LIBRARIES})
 #     endif()
+#   In order for all of this to work properly, the user has to do the following:
+#     Set the cache variable ezEngine_ROOT to the root directory (repo) of the ezEngine project.
+#     Set the cache variable ezEngine_EXPORTS_FILE to the file `exports.cmake` which can be found in the build directory of your ezEngine build.
 ########################################################################
 
 # functions
@@ -55,7 +58,12 @@ function(ez_add_post_build_copy_dlls TARGET_NAME)
 endfunction(ez_add_post_build_copy_dlls)
 
 # Note: This is a recursive function
-function(ez_collect_dependencies COLLECTED_DEPENDENCIES MODULE)
+function(ez_collect_dependencies COLLECTED_DEPENDENCIES MODULE PATTERN)
+  # If the module does not match the given pattern, we discard it as dependency.
+  if(NOT MODULE MATCHES "${PATTERN}")
+    return()
+  endif()
+
   # if the dependency is already in the list of COLLECTED_DEPENDENCIES, there is nothing to be done and we return.
   list(FIND ${COLLECTED_DEPENDENCIES} ${MODULE} DEPENDENCY_LOCATION)
   if(NOT DEPENDENCY_LOCATION EQUAL -1)
@@ -79,7 +87,7 @@ function(ez_collect_dependencies COLLECTED_DEPENDENCIES MODULE)
 
     # recurse for each dependency of the current module
     foreach(MODULE_DEPENDENCY ${MODULE_DEPENDENCIES})
-      ez_collect_dependencies(LOCALLY_COLLECTED_DEPENDENCIES ${MODULE_DEPENDENCY})
+      ez_collect_dependencies(LOCALLY_COLLECTED_DEPENDENCIES ${MODULE_DEPENDENCY} "${PATTERN}")
     endforeach()
   endif()
 
@@ -96,7 +104,7 @@ find_path(ezEngine_ROOT
           NAMES Code/Engine Output
           PATHS "$ENV{ezEngine_ROOT}" "${ezEngine_ROOT}")
 
-set(ezEngine_ROOT "${ezEngine_ROOT}" CACHE FILEPATH
+set(ezEngine_EXPORTS_FILE "" CACHE FILEPATH
     "Path to the exports.cmake file describing the exported ezEngine targets. You should be able to find it in the ez build directory, the one you specified when generating the project with CMake.")
 find_file(ezEngine_EXPORTS_FILE
           NAMES "exports.cmake"
@@ -126,15 +134,8 @@ set(ezEngine_OUTPUT_DIR "${ezEngine_ROOT}/Output")
 set(ezEngine_BIN_DIR "${ezEngine_ROOT}/Output/Bin")
 set(ezEngine_LIB_DIR "${ezEngine_ROOT}/Output/Lib")
 
-# Determine the platform architecture
-if(CMAKE_SIZEOF_VOID_P EQUAL 4)
-  set(EZ_ARCHITECTURE_SUFFIX 32)
-elseif(CMAKE_SIZEOF_VOID_P EQUAL 8)
-  set(EZ_ARCHITECTURE_SUFFIX 64)
-else()
-endif()
-
 # Collect the targets of all requested ezEngine components and store the result in ezEngine_LIBRARIES
+unset(ezEngine_LIBRARIES) # Make sure this list is empty initially.
 foreach(COMPONENT ${ezEngine_FIND_COMPONENTS})
   if(TARGET ${COMPONENT})
     list(APPEND ezEngine_LIBRARIES ${COMPONENT})
@@ -147,9 +148,9 @@ endforeach()
 # If instructed to copy dlls as a post-build command, collect the dependencies of all requested components.
 if(ezEngine_POST_BUILD_COPY_DLLS)
   unset(ALL_DEPENDENCIES)
-  # collect all dependencies in ALL_DEPENDENCIES
+  # collect all ez* dependencies in ALL_DEPENDENCIES
   foreach(MODULE ${ezEngine_LIBRARIES})
-    ez_collect_dependencies(ALL_DEPENDENCIES ${MODULE})
+    ez_collect_dependencies(ALL_DEPENDENCIES ${MODULE} "^ez.*")
   endforeach()
   # now that we have all dependencies, set up custom post-build commands to copy the DLLs
   ez_add_post_build_copy_dlls(${ezEngine_POST_BUILD_COPY_DLLS} ${ALL_DEPENDENCIES})
