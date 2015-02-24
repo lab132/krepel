@@ -16,5 +16,8 @@ set(BIELD_OUTPUT_DIR_LIB "${BIELD_OUTPUT_DIR}/lib")
 # Include the Bield master script.
 include(bield)
 
-# the sub-directory 'code' contains all source code.
+# The sub-directory 'code' contains all source code.
 add_subdirectory("code") # execute CMake code in code/CMakeLists.txt
+
+# The sub-directory 'tests' contains all test code.
+add_subdirectory("tests")

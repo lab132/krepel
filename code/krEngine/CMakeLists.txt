@@ -25,6 +25,9 @@ bield_project(
   FILES ${FILES}
 )
 
+# Put this project in the "engine" folder.
+set_target_properties(${BIELD_PROJECT_NAME} PROPERTIES FOLDER engine)
+
 ## ezEngine
 ## ========
 
