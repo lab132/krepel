@@ -11,23 +11,23 @@ namespace kr
     bool m_needsUpdate = false;
 
     /// \brief Handle to the texture used by this sprite.
-    Texture::Handle m_hTexture;
+    RefCountedPtr<Texture> m_pTexture;
 
     /// \brief The bounds (or "view") of this sprite into the texture.
     ezRectU32 m_bounds;
 
   public: // *** Accessors/Mutators
     /// \brief Set the current texture.
-    void setTexture(Texture::Handle hTex)
+    void setTexture(RefCountedPtr<Texture> pTex)
     {
       m_needsUpdate = true;
-      m_hTexture = hTex;
+      m_pTexture = pTex;
     }
 
     /// \brief Gets the handle to the current texture.
-    Texture::Handle getTexture() const
+    RefCountedPtr<Texture> getTexture() const
     {
-      return m_hTexture;
+      return m_pTexture;
     }
 
     /// \brief Set the bounds (or "view") of this sprite into the texture.

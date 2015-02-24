@@ -24,4 +24,6 @@ namespace kr
 #define KR_NOT_IMPLEMENTED throw std::exception("Not implemented.")
 
 #include <krEngine/common/ezArrayPtrExtension.h>
+#include <krEngine/common/ezContainersExtension.h>
 #include <krEngine/common/ezTypesExtension.h>
+#include <krEngine/common/utils.h>

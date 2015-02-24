@@ -1,50 +1,41 @@
 #pragma once
+#include <krEngine/referenceCounting.h>
 
-class ezImage;
+#include <CoreUtils/Image/Image.h>
 
 namespace kr
 {
-  namespace Texture
+  using TextureName = ezString128;
+
+  class Texture : public RefCounted
   {
-    /// \brief A handle to an actual texture instance.
-    ///
-    /// This is used with all functions to access the actual texture data.
-    struct KR_ENGINE_API Handle
-    {
-      /// \brief The internal reference to the actual texture.
-      ezUInt32 hash : 8;
-      ezUInt32 index : 24;
+  public:
+    using ReleasePolicy = Texture;
 
-      Handle() : hash(-1), index(-1) {}
-
-      bool isValid() const;
-
-      bool operator ==(const Handle& rhs) const
-      {
-        return index == rhs.index
-            && hash == rhs.hash;
-      }
-      bool operator !=(const Handle& rhs) const { return !(*this == rhs); }
-    };
-
-    EZ_CHECK_AT_COMPILETIME(sizeof(Handle) == sizeof(ezUInt32));
+    KR_ENGINE_API static void release(Texture*& pTex);
 
     /// \brief Loads a texture from the filesystem with the given \a filename.
-    KR_ENGINE_API Handle load(const char* filename);
+    KR_ENGINE_API static RefCountedPtr<Texture> load(const char* filename);
 
-    /// \brief Unloads a texture if there are no more references to it and invalidates the given handle.
-    KR_ENGINE_API void unload(Handle& hTex);
+  public: // *** Accessors/Mutators
 
-    KR_ENGINE_API ezUInt32 getWidth(Handle hTex);
-    KR_ENGINE_API ezUInt32 getHeight(Handle hTex);
+    /// \brief Get the underlying image data of the texture.
+    KR_ENGINE_API const ezImage& getImage() const;
 
     /// \brief Gets the name of the texture.
     ///
     /// If the texture was loaded from a file, this will be the filename.
     /// Else the name will be the given string.
-    KR_ENGINE_API const ezString64& getName(Handle hTex);
+    KR_ENGINE_API const TextureName& getName() const;
 
-    /// \brief Get the underlying image data of the texture.
-    KR_ENGINE_API const ezImage& getImage(Handle hTex);
-  }
+    ezUInt32 getWidth() const { return getImage().GetWidth(); }
+    ezUInt32 getHeight() const { return getImage().GetHeight(); }
+
+  protected: // *** Construction
+    Texture() = default; ///< Default ctor (private).
+
+  private: // *** Type Constraints
+    Texture(const Texture&) = delete;         ///< No copy.
+    void operator =(const Texture&) = delete; ///< No assignment.
+  };
 }

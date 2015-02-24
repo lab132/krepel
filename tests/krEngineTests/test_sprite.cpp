@@ -43,6 +43,4 @@ EZ_CREATE_SIMPLE_TEST(Sprite, Display)
   }
 
   ezStartup::ShutdownEngine();
-
-  EZ_TEST_BOOL(close(move(pWindow)).Succeeded());
 }

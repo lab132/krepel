@@ -10,6 +10,8 @@ set(FILES
   common.h
   common/ezArrayPtrExtension.h
   common/ezTypesExtension.h
+  common/ezContainersExtension.h
+  common/utils.h
 
   ## ReferenceCounting
   ## =================
@@ -40,7 +42,7 @@ set(FILES
 
   # Texture
   rendering/texture.h
-  rendering/implementation/textureInstance.h
+  rendering/implementation/textureImpl.h
   rendering/implementation/texture.cpp
 
   # Shaders
