@@ -81,7 +81,6 @@ namespace kr
 }
 // clang-format on
 
-
 void kr::Renderer::extract()
 {
   swap(g_pReadBuffer, g_pWriteBuffer);
@@ -110,9 +109,11 @@ void kr::Renderer::update(ezTime dt, RefCountedPtr<Window> pTarget)
     glClearColor(clearColor.r, clearColor.g, clearColor.b, clearColor.a);
   }
 
-  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  //glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
   /// \todo Do the actual rendering here.
+
+  glDrawArrays(GL_TRIANGLES, 0, 4);
 
   if (presentFrame(window).Failed())
   {

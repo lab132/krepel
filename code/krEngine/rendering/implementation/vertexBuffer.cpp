@@ -131,6 +131,7 @@ ezResult kr::setupLayout(RefCountedPtr<VertexBuffer> pVertBuffer,
     if (pair.pProgram == pProgram)
     {
       ezLog::Debug("Overwriting existing vertex buffer layout binding.");
+      vao = pair.hVao;
       break;
     }
   }
@@ -251,4 +252,19 @@ ezResult kr::uploadData(RefCountedPtr<VertexBuffer> pVertBuffer,
   glBindBuffer(target, 0);
 
   return EZ_SUCCESS;
+}
+
+ezResult kr::bind(RefCountedPtr<VertexBuffer> pVertBuffer,
+                  RefCountedPtr<ShaderProgram> pProgram)
+{
+  for (auto& pair : pVertBuffer->m_Vaos)
+  {
+    if (pair.pProgram == pProgram)
+    {
+      glBindVertexArray(pair.hVao);
+      return EZ_SUCCESS;
+    }
+  }
+
+  return EZ_FAILURE;
 }

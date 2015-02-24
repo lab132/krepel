@@ -27,14 +27,14 @@ EZ_ON_GLOBAL_EVENT(ezStartup_StartupCore_End)
   // Textures dir
   ezFileSystem::AddDataDirectory(g_texturesDir.GetData(),
                                  ezFileSystem::ReadOnly,
-                                 "TestData",
-                                 "Textures"); // To be used as"<Textures>RedPants.dds"
+                                 "testData",
+                                 "texture"); // To be used as"<texture>RedPants.dds"
 
   // Shaders dir
   ezFileSystem::AddDataDirectory(g_shadersDir.GetData(),
                                  ezFileSystem::ReadOnly,
-                                 "TestData",
-                                 "Shaders"); // To be used as"<Shaders>Lighting.vs"
+                                 "testData",
+                                 "shader"); // To be used as"<shader>Lighting.vs"
 
   g_initialized = true;
 }

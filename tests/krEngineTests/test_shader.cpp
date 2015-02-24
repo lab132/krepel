@@ -15,9 +15,9 @@ EZ_CREATE_SIMPLE_TEST(Shader, VertexShader)
     RefCountedPtr<VertexShader> pVS;
     pVS = VertexShader::loadAndCompile("<What The Hell>I don't exist.nopes");
     EZ_TEST_BOOL(!isValid(pVS));
-    pVS = VertexShader::loadAndCompile("<Shaders>Invalid.vs");
+    pVS = VertexShader::loadAndCompile("<shader>Invalid.vs");
     EZ_TEST_BOOL(!isValid(pVS));
-    pVS = VertexShader::loadAndCompile("<Shaders>Valid.vs");
+    pVS = VertexShader::loadAndCompile("<shader>Valid.vs");
     EZ_TEST_BOOL(isValid(pVS));
   }
 }
@@ -35,9 +35,9 @@ EZ_CREATE_SIMPLE_TEST(Shader, FragmentShader)
     EZ_TEST_BOOL(!isValid(pFS));
     pFS = FragmentShader::loadAndCompile("<What The Hell>I don't exist.nopes");
     EZ_TEST_BOOL(!isValid(pFS));
-    pFS = FragmentShader::loadAndCompile("<Shaders>Invalid.fs");
+    pFS = FragmentShader::loadAndCompile("<shader>Invalid.fs");
     EZ_TEST_BOOL(!isValid(pFS));
-    pFS = FragmentShader::loadAndCompile("<Shaders>Valid.fs");
+    pFS = FragmentShader::loadAndCompile("<shader>Valid.fs");
     EZ_TEST_BOOL(isValid(pFS));
   }
 }
@@ -51,10 +51,10 @@ EZ_CREATE_SIMPLE_TEST(Shader, ShaderProgram)
 
   EZ_TEST_BLOCK(ezTestBlock::Enabled, "Attach and Link")
   {
-    auto pVS = VertexShader::loadAndCompile("<Shaders>Valid.vs");
+    auto pVS = VertexShader::loadAndCompile("<shader>Valid.vs");
     EZ_TEST_BOOL(isValid(pVS));
 
-    auto pFS = FragmentShader::loadAndCompile("<Shaders>Valid.fs");
+    auto pFS = FragmentShader::loadAndCompile("<shader>Valid.fs");
     EZ_TEST_BOOL(isValid(pVS));
 
     auto pProgram = ShaderProgram::link(pVS, pFS);
@@ -63,8 +63,8 @@ EZ_CREATE_SIMPLE_TEST(Shader, ShaderProgram)
 
   EZ_TEST_BLOCK(ezTestBlock::Enabled, "Attributes")
   {
-    auto pVS = VertexShader::loadAndCompile("<Shaders>Valid.vs");
-    auto pFS = FragmentShader::loadAndCompile("<Shaders>Valid.fs");
+    auto pVS = VertexShader::loadAndCompile("<shader>Valid.vs");
+    auto pFS = FragmentShader::loadAndCompile("<shader>Valid.fs");
     auto pProgram = ShaderProgram::link(pVS, pFS);
 
     // TODO Implement me.

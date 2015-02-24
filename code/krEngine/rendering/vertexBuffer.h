@@ -77,7 +77,7 @@ namespace kr
   template<typename T>
   ezResult uploadData(RefCountedPtr<VertexBuffer> pVertBuffer,
                       ezArrayPtr<T> data,
-                      ezUInt32 offet)
+                      ezUInt32 offset = 0)
   {
     return uploadData(forward<decltype(pVertBuffer)>(pVertBuffer),
                       data.GetCount() * sizeof(T), // byteCount
@@ -85,13 +85,6 @@ namespace kr
                       offset);                     // offset
   }
 
-  template<typename T>
-  ezResult uploadData(RefCountedPtr<VertexBuffer> pVertBuffer,
-                      ezArrayPtr<T> data)
-  {
-    return uploadData(forward<decltype(pVertBuffer)>(pVertBuffer),
-                      data.GetCount() * sizeof(T), // byteCount
-                      (const void*)data.GetPtr(),  // bytes
-                      0);                          // offset
-  }
+  KR_ENGINE_API ezResult bind(RefCountedPtr<VertexBuffer> pVertBuffer,
+                              RefCountedPtr<ShaderProgram> pProgram);
 }
