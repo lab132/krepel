@@ -1,5 +1,5 @@
-#include <krEngine/rendering/Renderer.h>
-#include <krEngine/rendering/Window.h>
+#include <krEngine/rendering/renderer.h>
+#include <krEngine/rendering/window.h>
 
 EZ_CREATE_SIMPLE_TEST_GROUP(Renderer);
 

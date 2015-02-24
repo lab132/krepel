@@ -1,5 +1,5 @@
-#include <krEngine/rendering//Window.h>
-#include <krEngine/rendering/VertexBuffer.h>
+#include <krEngine/rendering/window.h>
+#include <krEngine/rendering/vertexBuffer.h>
 
 #include <Foundation/Reflection/ReflectionUtils.h>
 

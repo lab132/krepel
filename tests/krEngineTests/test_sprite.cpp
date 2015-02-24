@@ -1,4 +1,4 @@
-#include <krEngine/rendering/Sprite.h>
+#include <krEngine/rendering/sprite.h>
 
 EZ_CREATE_SIMPLE_TEST_GROUP(Sprite);
 

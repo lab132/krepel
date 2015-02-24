@@ -1,4 +1,4 @@
-#include <krEngine/ReferenceCounting.h>
+#include <krEngine/referenceCounting.h>
 
 // Helpers
 // =======

@@ -1,5 +1,5 @@
-#include <krEngine/rendering/Window.h>
-#include <krEngine/rendering/Shader.h>
+#include <krEngine/rendering/window.h>
+#include <krEngine/rendering/shader.h>
 
 EZ_CREATE_SIMPLE_TEST_GROUP(Shader);
 

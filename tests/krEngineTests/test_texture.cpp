@@ -1,4 +1,4 @@
-#include <krEngine/rendering/Texture.h>
+#include <krEngine/rendering/texture.h>
 
 EZ_CREATE_SIMPLE_TEST_GROUP(Texture);
 
