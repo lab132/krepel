@@ -1,4 +1,3 @@
-#include "krEngine/pch.h"
 #include "krEngine/rendering/debugRenderer.h"
 
 void kr::DebugRenderer::draw(const Line& line)

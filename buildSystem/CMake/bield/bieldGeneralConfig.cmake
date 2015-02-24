@@ -11,10 +11,33 @@ set(BIELD_GENERAL_CONFIG_INCLUDED true)
 ################################################################################
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
-set(BIELD_OUTPUT_DIR "${CMAKE_BINARY_DIR}/Output" CACHE PATH
+## Set Default Output Directories If User Did Not Specify Them
+## ===========================================================
+
+if(NOT BIELD_OUTPUT_DIR)
+  set(BIELD_OUTPUT_DIR "${CMAKE_BINARY_DIR}/Output")
+endif()
+
+if(NOT BIELD_OUTPUT_DIR_BIN)
+  set(BIELD_OUTPUT_DIR_BIN "${BIELD_OUTPUT_DIR}/Bin")
+endif()
+
+if(NOT BIELD_OUTPUT_DIR_LIB)
+  set(BIELD_OUTPUT_DIR_LIB "${BIELD_OUTPUT_DIR}/Lib")
+endif()
+
+## Expose Output Directories As Cache Variables
+## ============================================
+
+set(BIELD_OUTPUT_DIR "${BIELD_OUTPUT_DIR}" CACHE PATH
     "The directory in which to create the Bin and Lib folders in.")
-set(BIELD_OUTPUT_DIR_BIN "${BIELD_OUTPUT_DIR}/Bin")
-set(BIELD_OUTPUT_DIR_LIB "${BIELD_OUTPUT_DIR}/Lib")
+set(BIELD_OUTPUT_DIR_BIN "${BIELD_OUTPUT_DIR_BIN}" CACHE PATH
+    "The directory in which to compile the binaries to.")
+set(BIELD_OUTPUT_DIR_LIB "${BIELD_OUTPUT_DIR_LIB}" CACHE PATH
+    "The directory in which to compile the libs to.")
+
+mark_as_advanced(BIELD_OUTPUT_DIR_BIN
+                 BIELD_OUTPUT_DIR_LIB)
 
 set(BIELD_FILE_TEMPLATE_DIR "${CMAKE_MODULE_PATH}/templates" CACHE STRING
     "Directory containing all file templates used to generate new files listed in a CMakeLists.txt that do not yet exist on the filesystem.")

@@ -1,7 +1,7 @@
 #pragma once
 
 #if EZ_ENABLED(EZ_PLATFORM_WINDOWS)
-  #ifdef krEngine_EXPORTS
+  #ifdef KR_ENGINE_DLL_EXPORT
     #define KR_ENGINE_API __declspec(dllexport)
   #else
     #define KR_ENGINE_API __declspec(dllimport)

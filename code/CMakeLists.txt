@@ -2,4 +2,3 @@
 include_directories(".")
 
 add_subdirectory("krEngine")
-add_subdirectory("application")
