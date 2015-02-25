@@ -1,9 +1,11 @@
 #include <krEngine/rendering/shader.h>
+#include <krEngine/rendering/implementation/opelGlCheck.h>
 
-#define CHECK_PRECONDITIONS(pShader, uniform)      \
+#define PRECONDITIONS(uniform, type)               \
+  EZ_LOG_BLOCK("Uploading Uniform Value", type);   \
   do                                               \
   {                                                \
-    if (isNull(pShader))                           \
+    if (isNull(uniform.pShader))                   \
     {                                              \
       ezLog::Warning("Invalid shader object.");    \
       return EZ_FAILURE;                           \
@@ -16,31 +18,31 @@
   } while (false)
 
 
-ezResult kr::uploadUniformValue(RefCountedPtr<ShaderProgram> pShader,
-                                ShaderUniform uniform,
+ezResult kr::uploadUniformValue(const ShaderUniform& uniform,
                                 ezColor value)
 {
-  CHECK_PRECONDITIONS(pShader, uniform);
+  PRECONDITIONS(uniform, "ezColor");
 
-  glProgramUniform4fv(pShader->m_glHandle,
-                      uniform.glLocation,
-                      1, value.GetData());
+  glCheck(glProgramUniform4fv(uniform.pShader->m_glHandle,
+                              uniform.glLocation,
+                              1, value.GetData()));
 
   return EZ_SUCCESS;
 }
 
-ezResult kr::uploadUniformValue(RefCountedPtr<ShaderProgram> pShader,
-                                ShaderUniform uniform,
+ezResult kr::uploadUniformValue(const ShaderUniform& uniform,
                                 RefCountedPtr<Texture> pTex)
 {
-  CHECK_PRECONDITIONS(pShader, uniform);
+  PRECONDITIONS(uniform, "Texture");
 
-  glProgramUniform1i(pShader->m_glHandle,
-                     uniform.glLocation,
-                     pTex->getSlot());
+  /// \todo Set active texture as well?? (glActiveTexture(...))
+
+  glCheck(glProgramUniform1i(uniform.pShader->m_glHandle,
+                             uniform.glLocation,
+                             pTex->getSlot()));
 
   return EZ_SUCCESS;
 }
 
 
-#undef CHECK_PRECONDITIONS
+#undef PRECONDITIONS

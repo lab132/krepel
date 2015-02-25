@@ -1,3 +1,4 @@
+#include <krEngine/rendering/implementation/opelGlCheck.h>
 
 static ezResult destroyOpenGLContext(kr::WindowImpl& window)
 {
@@ -95,11 +96,24 @@ static ezResult createOpenGLContext(kr::WindowImpl& window)
     goto failure;
   }
 
+  GLint minor, major;
+  glCheck(glGetIntegerv(GL_MAJOR_VERSION, &minor));
+  glCheck(glGetIntegerv(GL_MINOR_VERSION, &major));
+
+  if (minor < 4 || minor == 4 && major < 3)
+  {
+    ezLog::Error("Need OpenGL version 4.3 or higher! Got %d.%d",
+                 minor,
+                 major);
+    goto failure;
+  }
+
+  auto versionString = glGetString(GL_VERSION);
+  glCheckLastError();
+  ezLog::Success("Graphics context is initialized: OpenGL %s", versionString);
+
   SetFocus(hWnd);
   SetForegroundWindow(hWnd);
-
-  ezLog::Success("OpenGL (%s) graphics context is initialized.",
-                 glGetString(GL_VERSION));
 
   glewExperimental = GL_TRUE;
   if (glewInit() != GLEW_OK)

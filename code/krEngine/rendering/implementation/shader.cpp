@@ -1,4 +1,5 @@
 #include <krEngine/rendering/shader.h>
+#include <krEngine/rendering/implementation/opelGlCheck.h>
 
 #include <Foundation/IO/FileSystem/FileReader.h>
 
@@ -21,15 +22,16 @@ static GLuint loadAndCompileShader(GLuint type, const char* filename)
   GLint sourceLength = buffer.GetCharacterCount();
 
   auto hShader = glCreateShader(type);
-  glShaderSource(hShader, 1, &source, &sourceLength);
+  glCheckLastError();
+  glCheck(glShaderSource(hShader, 1, &source, &sourceLength));
 
   // Compile the shader
   // ==================
 
-  glCompileShader(hShader);
+  glCheck(glCompileShader(hShader));
 
   GLint status;
-  glGetShaderiv(hShader, GL_COMPILE_STATUS, &status);
+  glCheck(glGetShaderiv(hShader, GL_COMPILE_STATUS, &status));
 
   if (status == GL_TRUE)
     return hShader;
@@ -40,14 +42,14 @@ static GLuint loadAndCompileShader(GLuint type, const char* filename)
   // =====================
 
   GLint messageLength = 0;
-  glGetShaderiv(hShader, GL_INFO_LOG_LENGTH, &messageLength);
+  glCheck(glGetShaderiv(hShader, GL_INFO_LOG_LENGTH, &messageLength));
   buffer.Reserve((ezUInt32)messageLength - 1); // Subtract the null-terminator.
 
   // Get compilation log
   // ===================
 
   GLchar* message = const_cast<GLchar*>(buffer.GetData());
-  glGetShaderInfoLog(hShader, messageLength, &messageLength, message);
+  glCheck(glGetShaderInfoLog(hShader, messageLength, &messageLength, message));
 
   // Pipe the log to the ezLog system
   // ================================
@@ -57,7 +59,7 @@ static GLuint loadAndCompileShader(GLuint type, const char* filename)
   // Finally, release the shader again
   // =================================
 
-  glDeleteShader(hShader);
+  glCheck(glDeleteShader(hShader));
 
   return 0;
 }
@@ -67,7 +69,9 @@ kr::RefCountedPtr<kr::VertexShader> kr::VertexShader::loadAndCompile(const char*
   auto handle = loadAndCompileShader(GL_VERTEX_SHADER, filename);
 
   if (glIsShader(handle) != GL_TRUE)
+  {
     return nullptr;
+  }
 
   auto pVS = EZ_DEFAULT_NEW(VertexShader);
   pVS->m_glHandle = handle;
@@ -77,7 +81,7 @@ kr::RefCountedPtr<kr::VertexShader> kr::VertexShader::loadAndCompile(const char*
 
 kr::VertexShader::~VertexShader()
 {
-  glDeleteShader(m_glHandle);
+  glCheck(glDeleteShader(m_glHandle));
   m_glHandle = 0;
 }
 
@@ -86,7 +90,10 @@ kr::RefCountedPtr<kr::FragmentShader> kr::FragmentShader::loadAndCompile(const c
   auto handle = loadAndCompileShader(GL_FRAGMENT_SHADER, filename);
 
   if (glIsShader(handle) != GL_TRUE)
+  {
     return nullptr;
+  }
+  glCheckLastError();
 
   auto pFS = EZ_DEFAULT_NEW(FragmentShader);
   pFS->m_glHandle = handle;
@@ -96,7 +103,7 @@ kr::RefCountedPtr<kr::FragmentShader> kr::FragmentShader::loadAndCompile(const c
 
 kr::FragmentShader::~FragmentShader()
 {
-  glDeleteShader(m_glHandle);
+  glCheck(glDeleteShader(m_glHandle));
   m_glHandle = 0;
 }
 
@@ -118,19 +125,19 @@ kr::ShaderProgram::link(RefCountedPtr<VertexShader> pVS,
 
   auto hProgram = glCreateProgram();
 
-  glAttachShader(hProgram, pVS->m_glHandle);
-  glAttachShader(hProgram, pFS->m_glHandle);
+  glCheck(glAttachShader(hProgram, pVS->m_glHandle));
+  glCheck(glAttachShader(hProgram, pFS->m_glHandle));
 
   // Link the program
   // ================
 
-  glLinkProgram(hProgram);
+  glCheck(glLinkProgram(hProgram));
 
   // Get the link status
   // ===================
 
   GLint status;
-  glGetProgramiv(hProgram, GL_LINK_STATUS, &status);
+  glCheck(glGetProgramiv(hProgram, GL_LINK_STATUS, &status));
   // If linking succeeded, return success.
   if (status == GL_TRUE)
   {
@@ -143,7 +150,7 @@ kr::ShaderProgram::link(RefCountedPtr<VertexShader> pVS,
   // ======================
 
   GLint messageLength = 0;
-  glGetProgramiv(hProgram, GL_INFO_LOG_LENGTH, &messageLength);
+  glCheck(glGetProgramiv(hProgram, GL_INFO_LOG_LENGTH, &messageLength));
 
   // Get log message
   // ===============
@@ -152,7 +159,7 @@ kr::ShaderProgram::link(RefCountedPtr<VertexShader> pVS,
   buffer.Reserve((ezUInt32)messageLength - 1);
 
   auto message = const_cast<GLchar*>(buffer.GetData());
-  glGetProgramInfoLog(hProgram, messageLength, &messageLength, message);
+  glCheck(glGetProgramInfoLog(hProgram, messageLength, &messageLength, message));
 
   // Forward log message to ezLog
   // ============================
@@ -162,46 +169,64 @@ kr::ShaderProgram::link(RefCountedPtr<VertexShader> pVS,
   // Release the allocated object
   // ============================
 
-  glDeleteProgram(hProgram);
+  glCheck(glDeleteProgram(hProgram));
 
   return nullptr;
 }
 
 kr::ShaderProgram::~ShaderProgram()
 {
-  glDeleteProgram(m_glHandle);
+  glCheck(glDeleteProgram(m_glHandle));
   m_glHandle = 0;
 }
 
-kr::ShaderUniform kr::ShaderProgram::getUniform(const char* uniformName)
+kr::ShaderUniform kr::shaderUniformOf(RefCountedPtr<ShaderProgram> pShader, const char* uniformName)
 {
-  ShaderUniform u;
-  u.glLocation = glGetUniformLocation(m_glHandle, uniformName);
-
-  if (u.glLocation == -1)
+  EZ_ASSERT(isValid(pShader), "Invalid shader program.");
+  if(isNull(pShader))
   {
-    ezLog::Warning("Cannot find uniform location for name '%s'.", uniformName);
+    ezLog::Warning("Invalid shader program. Ignoring call.");
+    return ShaderUniform();
   }
 
+  auto location = glGetUniformLocation(pShader->m_glHandle, uniformName);
+  glCheckLastError();
+
+  if (location == -1)
+  {
+    ezLog::Warning("Cannot find uniform location for name '%s'.", uniformName);
+    return ShaderUniform();
+  }
+
+  // Success
+  // =======
+  ShaderUniform u;
+  u.glLocation = location;
+  u.pShader = pShader;
   return u;
 }
 
-static bool g_usingProgram = false;
+static kr::RefCountedPtr<kr::ShaderProgram> g_currentShader;
 
 KR_ENGINE_API ezResult kr::use(RefCountedPtr<ShaderProgram> pShader)
 {
-  EZ_ASSERT(!g_usingProgram,
+  EZ_ASSERT(isNull(g_currentShader),
             "Some other shader program is already in use. Is this intentional?");
-  g_usingProgram = true;
   if (isNull(pShader))
     return EZ_FAILURE;
 
-  glUseProgram(pShader->m_glHandle);
+  glCheck(glUseProgram(pShader->m_glHandle));
+  g_currentShader = pShader;
   return EZ_SUCCESS;
 }
 
 void kr::unuse(RefCountedPtr<ShaderProgram> pShader)
 {
-  glUseProgram(0);
-  g_usingProgram = false;
+    EZ_ASSERT(g_currentShader == pShader,
+              "Calling unuse with a shader that is not in use!");
+  if (g_currentShader == pShader)
+  {
+    glCheck(glUseProgram(0));
+    g_currentShader = nullptr;
+  }
 }

@@ -33,6 +33,10 @@ namespace kr
 
     KR_ENGINE_API ezUInt32 getSlot() const;
 
+    KR_ENGINE_API ezUInt32 getUnit() const;
+
+    KR_ENGINE_API ezUInt32 getId() const;
+
   protected: // *** Construction
     Texture() = default; ///< Default ctor (private).
 

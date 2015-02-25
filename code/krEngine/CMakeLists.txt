@@ -24,6 +24,9 @@ set(FILES
   ## =========
   rendering.h
 
+  rendering/implementation/opelGlCheck.h
+  rendering/implementation/opelGlCheck.cpp
+
   # Renderer
   rendering/renderer.h
   rendering/implementation/renderer.cpp

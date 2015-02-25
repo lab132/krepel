@@ -41,91 +41,95 @@ EZ_CREATE_SIMPLE_TEST(Renderer, Experiments)
 
   ezStartup::StartupEngine();
 
-  // Shaders and Shader Program
-  // ==========================
-  auto vs = VertexShader::loadAndCompile("<shader>texturedQuad.vs");
-  auto fs = FragmentShader::loadAndCompile("<shader>texturedQuad.fs");
-  auto prg = ShaderProgram::link(vs, fs);
-  EZ_TEST_BOOL(isValid(prg));
-  //KR_SCOPED_USE(prg);
-  //glUseProgram(prg->m_glHandle);
-  use(prg);
-
-  // Vertices
-  // ========
-  Vertex vertices[4];
-  vertices[0].pos.Set(-0.5f, 0.5f);
-  vertices[1].pos.Set(0.5f, 0.5f);
-  vertices[2].pos.Set(0.5f, -0.5f);
-  vertices[3].pos.Set(-0.5f, -0.5f);
-
-  vertices[0].color = ezColor::GetRed();
-  vertices[1].color = ezColor::GetGreen();
-  vertices[2].color = ezColor::GetBlue();
-  vertices[3].color = ezColor::GetGreen();
-
-  vertices[0].texCoords.Set(0.0f, 0.0f);
-  vertices[1].texCoords.Set(1.0f, 0.0f);
-  vertices[2].texCoords.Set(1.0f, 1.0f);
-  vertices[3].texCoords.Set(0.0f, 1.0f);
-
-  // Vertex Buffer
-  // =============
-  auto vb = VertexBuffer::create(BufferUsage::StaticDraw, PrimitiveType::Triangles);
-  //EZ_TEST_BOOL(setupLayout(vb, prg, "Vertex").Succeeded());
-  setupLayout(vb, prg, "Vertex");
-  EZ_TEST_BOOL(uploadData(vb, ezMakeArrayPtr(vertices)).Succeeded());
-
-  // Texture
-  // =======
-  if (false)
   {
-    auto tex = Texture::load("<texture>test_4x4.bmp");
-    EZ_TEST_BOOL(isValid(tex));
+    // Shaders and Shader Program
+    // ==========================
+    auto vs = VertexShader::loadAndCompile("<shader>texturedQuad.vs");
+    auto fs = FragmentShader::loadAndCompile("<shader>texturedQuad.fs");
+    auto prg = ShaderProgram::link(vs, fs);
+    EZ_TEST_BOOL(isValid(prg));
 
-    GLuint texID;
-    glGenTextures(1, &texID);
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, texID);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    use(prg);
+    KR_ON_SCOPE_EXIT{ unuse(prg); };
 
-    auto pixels = tex->getImage().GetSubImagePointer<void>();
-    glTexImage2D(GL_TEXTURE_2D,    // Target
-                 0,                // (Mip) Level
-                 GL_RGBA,          // Format used by OpenGL, not the pixels.
-                 tex->getWidth(),  // Texture width
-                 tex->getHeight(), // Texture height
-                 0,                // Must be 0, as per the specification.
-                 GL_BGRA,          // Format of the pixels (see last argument).
-                 GL_UNSIGNED_BYTE, // Size per pixel.
-                 pixels);          // The actual pixel data.
-    // TODO This must be done in a more sophisticated way.
-    auto u_texture = glGetUniformLocation(prg->m_glHandle, "u_texture");
-    glUniform1i(u_texture, 0);// Assign slot 0 to the texture.
+    // Vertices
+    // ========
+    Vertex vertices[4];
+    vertices[0].pos.Set(-0.5f, -0.5f); // Lower Left
+    vertices[1].pos.Set(-0.5f,  0.5f); // Upper Left
+    vertices[2].pos.Set( 0.5f, -0.5f); // Lower Right
+    vertices[3].pos.Set( 0.5f,  0.5f); // Upper Right
+
+    vertices[0].color = ezColor::GetRed();
+    vertices[1].color = ezColor::GetGreen();
+    vertices[2].color = ezColor::GetBlue();
+    vertices[3].color = ezColor::GetYellow();
+
+    vertices[0].texCoords.Set(0.0f, 1.0f); // Upper Left
+    vertices[1].texCoords.Set(0.0f, 0.0f); // Lower Left
+    vertices[2].texCoords.Set(1.0f, 1.0f); // Upper Right
+    vertices[3].texCoords.Set(1.0f, 0.0f); // Lower Right
+
+    // Vertex Buffer
+    // =============
+    auto vb = VertexBuffer::create(BufferUsage::StaticDraw, PrimitiveType::Triangles);
+    //EZ_TEST_BOOL(setupLayout(vb, prg, "Vertex").Succeeded());
+    setupLayout(vb, prg, "Vertex");
+    EZ_TEST_BOOL(uploadData(vb, ezMakeArrayPtr(vertices)).Succeeded());
+
+    // Texture
+    // =======
+    auto tex = Texture::load("<texture>kitten.dds");
+    if(true)
+    {
+      EZ_TEST_BOOL(isValid(tex));
+
+      glActiveTexture(tex->getUnit());
+      glBindTexture(GL_TEXTURE_2D, tex->getId());
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+      auto pixels = tex->getImage().GetSubImagePointer<void>();
+      glTexImage2D(GL_TEXTURE_2D,    // Target
+                   0,                // (Mip) Level
+                   GL_RGBA,          // Format used by OpenGL, not the pixels.
+                   tex->getWidth(),  // Texture width
+                   tex->getHeight(), // Texture height
+                   0,                // Must be 0, as per the specification.
+                   GL_BGRA,          // Format of the pixels (see last argument).
+                   GL_UNSIGNED_BYTE, // Size per pixel.
+                   pixels);          // The actual pixel data.
+      // TODO This must be done in a more sophisticated way.
+      uploadUniformValue(shaderUniformOf(prg, "u_texture"), tex);
+    }
+
+    EZ_TEST_BOOL(use(vb, prg).Succeeded());
+    KR_ON_SCOPE_EXIT{ unuse(vb, prg); };
+
+    bool run = true;
+
+    pWindow->getEvent().AddEventHandler([&run](const WindowEventArgs& e)
+    {
+      if (e.type == WindowEventArgs::ClickClose)
+        run = false;
+    });
+
+    auto now = ezTime::Now();
+    //auto targetTime = now + ezTime::Seconds(2);
+    //while(now < targetTime)
+    while(run)
+    {
+      auto dt = ezTime::Now() - now;
+
+      processWindowMessages(pWindow);
+      Renderer::extract();
+      Renderer::update(dt, pWindow);
+
+      now += dt;
+    }
   }
-
-
-  //glBindVertexArray(vb->m_Vaos[0].hVao);
-
-  EZ_TEST_BOOL(use(vb, prg).Succeeded());
-
-  auto now = ezTime::Now();
-  auto targetTime = now + ezTime::Seconds(2);
-  while(now < targetTime)
-  {
-    auto dt = ezTime::Now() - now;
-
-    processWindowMessages(pWindow);
-    Renderer::extract();
-    Renderer::update(dt, pWindow);
-
-    now += dt;
-  }
-
-  unuse(vb, prg);
 
   ezStartup::ShutdownEngine();
 }

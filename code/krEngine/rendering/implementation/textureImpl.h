@@ -11,6 +11,7 @@ namespace kr
 
   public: // *** Data
     GLuint m_slot = -1;
+    GLuint m_id = 0;
     TextureName m_name;
     ezImage m_image;
   };

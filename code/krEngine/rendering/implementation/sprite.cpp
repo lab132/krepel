@@ -1,5 +1,6 @@
 #include <krEngine/rendering/sprite.h>
 #include <krEngine/rendering/shader.h>
+#include <krEngine/rendering/implementation/opelGlCheck.h>
 
 #include <Foundation/Reflection/Reflection.h>
 
@@ -36,15 +37,17 @@ static kr::RefCountedPtr<kr::VertexBuffer> createVertexBuffer(kr::RefCountedPtr<
 
   SpriteVertex vertices[4];
 
-  vertices[0].pos.Set(-0.5f, 0.5f);
-  vertices[1].pos.Set(0.5f, 0.5f);
-  vertices[2].pos.Set(0.5f, -0.5f);
-  vertices[3].pos.Set(-0.5f, -0.5f);
+  /// \todo Make use of bounds here.
 
-  vertices[0].texCoords.Set(0.0f, 0.0f);
-  vertices[1].texCoords.Set(1.0f, 0.0f);
-  vertices[2].texCoords.Set(1.0f, 1.0f);
-  vertices[3].texCoords.Set(0.0f, 1.0f);
+  vertices[0].pos.Set(-0.5f, -0.5f); // Lower Left
+  vertices[1].pos.Set(-0.5f,  0.5f); // Upper Left
+  vertices[2].pos.Set( 0.5f, -0.5f); // Lower Right
+  vertices[3].pos.Set( 0.5f,  0.5f); // Upper Right
+
+  vertices[0].texCoords.Set(0.0f, 1.0f); // Upper Left
+  vertices[1].texCoords.Set(0.0f, 0.0f); // Lower Left
+  vertices[2].texCoords.Set(1.0f, 1.0f); // Upper Right
+  vertices[3].texCoords.Set(1.0f, 0.0f); // Lower Right
 
   uploadData(pVB, ezMakeArrayPtr(vertices));
 
@@ -88,8 +91,8 @@ void kr::update(Sprite& sprite)
   if (isNull(sprite.m_pShader))
   {
     sprite.m_pShader = createSpriteShader();
-    sprite.m_uColor = sprite.m_pShader->getUniform("u_color");
-    sprite.m_uTexture = sprite.m_pShader->getUniform("u_texture");
+    sprite.m_uColor = shaderUniformOf(sprite.m_pShader, "u_color");
+    sprite.m_uTexture = shaderUniformOf(sprite.m_pShader, "u_texture");
   }
 
   if (isNull(sprite.m_pVertexBuffer))
@@ -118,8 +121,8 @@ void kr::update(Sprite& sprite)
 
   // Update Uniforms
   // ===============
-  uploadUniformValue(sprite.m_pShader, sprite.m_uColor, sprite.m_color);
-  uploadUniformValue(sprite.m_pShader, sprite.m_uTexture, pTexture);
+  uploadUniformValue(sprite.m_uColor, sprite.m_color);
+  uploadUniformValue(sprite.m_uTexture, pTexture);
 
   // Finish Updating
   // ===============
@@ -152,7 +155,7 @@ void kr::draw(Sprite& sprite)
 
   // Update Uniforms
   // ===============
-  uploadUniformValue(sprite.m_pShader, sprite.m_uColor, sprite.m_color);
-  uploadUniformValue(sprite.m_pShader, sprite.m_uTexture, sprite.m_pTexture);
+  uploadUniformValue(sprite.m_uColor, sprite.m_color);
+  uploadUniformValue(sprite.m_uTexture, sprite.m_pTexture);
 
 }

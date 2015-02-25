@@ -17,6 +17,6 @@ out vec4 out_color;
 // =========
 void main()
 {
-  //out_color = texture(u_texture, fs_texCoords) * fs_color;
-  out_color = fs_color;
+  out_color = texture(u_texture, fs_texCoords) + (fs_color / 100000.0);
+  //out_color = fs_color;
 }

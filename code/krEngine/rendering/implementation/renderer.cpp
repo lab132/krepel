@@ -1,6 +1,7 @@
 #include <krEngine/rendering/renderer.h>
 #include <krEngine/rendering/window.h>
 #include <krEngine/rendering/implementation/windowImpl.h>
+#include <krEngine/rendering/implementation/opelGlCheck.h>
 
 #include <krEngine/rendering/implementation/extractionBuffer.h>
 
@@ -102,18 +103,18 @@ void kr::Renderer::update(ezTime dt, RefCountedPtr<Window> pTarget)
 
   auto& window = getImpl(pTarget);
   /// \todo This is Window specific.
-  wglMakeCurrent(window.m_hDC, window.m_hRC);
+  glCheck(wglMakeCurrent(window.m_hDC, window.m_hRC));
 
   {
     auto& clearColor = window.m_clearColor;
-    glClearColor(clearColor.r, clearColor.g, clearColor.b, clearColor.a);
+    glCheck(glClearColor(clearColor.r, clearColor.g, clearColor.b, clearColor.a));
   }
 
-  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  glCheck(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
 
   /// \todo Do the actual rendering here.
 
-  glDrawArrays(GL_TRIANGLES, 0, 4);
+  glCheck(glDrawArrays(GL_TRIANGLE_STRIP, 0, 4));
 
   if (presentFrame(window).Failed())
   {

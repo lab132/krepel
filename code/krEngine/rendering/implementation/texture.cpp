@@ -1,9 +1,10 @@
 #include <krEngine/rendering/texture.h>
 #include <krEngine/rendering/implementation/textureImpl.h>
+#include <krEngine/rendering/implementation/opelGlCheck.h>
 
 #include <Foundation/IO/FileSystem/FileSystem.h>
 
-namespace{ enum { MaxTextureSlots = 80 };}
+namespace{ enum { MaxTextureSlots = 80 }; }
 
 using TextureContainer = ezDynamicArray<kr::TextureImpl*>;
 using TextureSlots = ezStaticArray<GLuint, MaxTextureSlots>;
@@ -25,9 +26,9 @@ namespace
       g_pTextures = new (m_mem_textures) TextureContainer();
       g_pFreeTextureSlots = new (m_mem_textureSlots) TextureSlots();
 
-      for (GLuint i = GL_TEXTURE0; i < GL_TEXTURE0 + MaxTextureSlots; ++i)
+      for (GLuint i = MaxTextureSlots; i > 0; --i)
       {
-        g_pFreeTextureSlots->PushBack(i);
+        g_pFreeTextureSlots->PushBack(i - 1);
       }
 
       g_initialized = true;
@@ -146,6 +147,7 @@ kr::RefCountedPtr<kr::Texture> kr::Texture::load(const char* filename)
   pTex->m_name = filename;
   pTex->m_image = move(img);
   pTex->m_slot = getNextFreeSlot();
+  glCheck(glGenTextures(1, &pTex->m_id));
 
   addInstance(pTex);
 
@@ -164,4 +166,15 @@ const kr::TextureName& kr::Texture::getName() const
 ezUInt32 kr::Texture::getSlot() const
 {
   return static_cast<ezUInt32>(getImpl(this)->m_slot);
+}
+
+ezUInt32 kr::Texture::getUnit() const
+{
+  auto slot = getSlot();
+  return GL_TEXTURE0 + slot;
+}
+
+ezUInt32 kr::Texture::getId() const
+{
+  return static_cast<ezUInt32>(getImpl(this)->m_id);
 }

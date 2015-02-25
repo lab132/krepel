@@ -48,11 +48,6 @@ namespace kr
     EZ_DISALLOW_COPY_AND_ASSIGN(FragmentShader);
   };
 
-  struct ShaderUniform
-  {
-    GLuint glLocation = -1;
-  };
-
   class ShaderProgram : public RefCounted
   {
   public: // *** Static API
@@ -69,9 +64,6 @@ namespace kr
   public: // *** Construction
     KR_ENGINE_API ~ShaderProgram();
 
-  public: // *** Accessors/Mutators
-    KR_ENGINE_API ShaderUniform getUniform(const char* uniformName);
-
   private: // *** Private Construction
     /// \brief Can only be constructed by link.
     ShaderProgram() = default;
@@ -79,14 +71,21 @@ namespace kr
     EZ_DISALLOW_COPY_AND_ASSIGN(ShaderProgram);
   };
 
+  struct ShaderUniform
+  {
+    GLuint glLocation = -1;
+    RefCountedPtr<ShaderProgram> pShader;
+  };
+
+  KR_ENGINE_API ShaderUniform shaderUniformOf(RefCountedPtr<ShaderProgram> pShader,
+                                              const char* uniformName);
+
   /// \brief Uploads an \a ezColor value.
-  KR_ENGINE_API ezResult uploadUniformValue(RefCountedPtr<ShaderProgram> pShader,
-                                            ShaderUniform uniform,
+  KR_ENGINE_API ezResult uploadUniformValue(const ShaderUniform& uniform,
                                             ezColor value);
 
   /// \brief Uploads a texture slot.
-  KR_ENGINE_API ezResult uploadUniformValue(RefCountedPtr<ShaderProgram> pShader,
-                                            ShaderUniform uniform,
+  KR_ENGINE_API ezResult uploadUniformValue(const ShaderUniform& uniform,
                                             RefCountedPtr<Texture> pTex);
 
   KR_ENGINE_API ezResult use(RefCountedPtr<ShaderProgram> pShader);

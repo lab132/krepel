@@ -19,7 +19,7 @@ namespace krInternal
     ezDelegate<void()> m_func;
 
     template<typename F>
-    OnScopeExit(F func) : m_func(move(func)) {}
+    OnScopeExit(F func) : m_func(kr::move(func)) {}
     ~OnScopeExit() { m_func(); }
   };
 }

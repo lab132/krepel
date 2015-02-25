@@ -1,4 +1,5 @@
 #include <krEngine/rendering/vertexBuffer.h>
+#include <krEngine/rendering/implementation/opelGlCheck.h>
 
 #include <Foundation/Reflection/Reflection.h>
 
@@ -90,7 +91,7 @@ kr::RefCountedPtr<kr::VertexBuffer> kr::VertexBuffer::create(BufferUsage usage,
 
 kr::VertexBuffer::~VertexBuffer()
 {
-  glDeleteBuffers(1, &m_glHandle);
+  glCheck(glDeleteBuffers(1, &m_glHandle));
   m_glHandle = 0;
 }
 
@@ -143,7 +144,7 @@ ezResult kr::setupLayout(RefCountedPtr<VertexBuffer> pVertBuffer,
   if (vao == 0)
   {
     // Create a new one.
-    glGenVertexArrays(1, &vao);
+    glCheck(glGenVertexArrays(1, &vao));
 
     // Remember it.
     auto& entry = pVertBuffer->m_Vaos.ExpandAndGetRef();
@@ -151,14 +152,14 @@ ezResult kr::setupLayout(RefCountedPtr<VertexBuffer> pVertBuffer,
     entry.pProgram = pProgram;
   }
 
-  glBindVertexArray(vao);
+  glCheck(glBindVertexArray(vao));
 
   // Bind Vertex Buffer Object
   // =========================
   auto hVbo = pVertBuffer->m_glHandle;
   auto vboTarget = static_cast<GLenum>(pVertBuffer->getTarget());
 
-  glBindBuffer(vboTarget, hVbo);
+  glCheck(glBindBuffer(vboTarget, hVbo));
 
   // Bind Vertex Attributes
   // ======================
@@ -195,6 +196,7 @@ ezResult kr::setupLayout(RefCountedPtr<VertexBuffer> pVertBuffer,
 
     // The reference to the attribute within the program.
     auto location = glGetAttribLocation(hProgram, attributeName);
+    glCheckLastError();
 
     if (location != -1)
     {
@@ -205,13 +207,13 @@ ezResult kr::setupLayout(RefCountedPtr<VertexBuffer> pVertBuffer,
       GLint numComponents;
       getSizeInfo(attributeType, type, numComponents);
 
-      glEnableVertexAttribArray(location);
-      glVertexAttribPointer(location,
-                            numComponents,
-                            type,
-                            GL_FALSE,
-                            stride,
-                            (void*)offset);
+      glCheck(glEnableVertexAttribArray(location));
+      glCheck(glVertexAttribPointer(location,
+                                    numComponents,
+                                    type,
+                                    GL_FALSE,
+                                    stride,
+                                    (void*)offset));
     }
     else
     {
@@ -224,8 +226,8 @@ ezResult kr::setupLayout(RefCountedPtr<VertexBuffer> pVertBuffer,
 
   /// \todo Do the following two calls using some kind of ON_SCOPE_EXIT mechanism.
 
-  glBindVertexArray(0);
-  glBindBuffer(vboTarget, 0);
+  glCheck(glBindVertexArray(0));
+  glCheck(glBindBuffer(vboTarget, 0));
 
   return result;
 }
@@ -249,10 +251,10 @@ ezResult kr::uploadData(RefCountedPtr<VertexBuffer> pVertBuffer,
 
   EZ_ASSERT(glIsBuffer(handle) == GL_TRUE, "Invalid vertex buffer");
 
-  glBindBuffer(target, handle);
+  glCheck(glBindBuffer(target, handle));
   // TODO Could optimize here by using glBufferSubData instead.
-  glBufferData(target, (GLsizeiptr)byteCount, bytes, usage);
-  glBindBuffer(target, 0);
+  glCheck(glBufferData(target, (GLsizeiptr)byteCount, bytes, usage));
+  glCheck(glBindBuffer(target, 0));
 
   return EZ_SUCCESS;
 }
@@ -276,7 +278,7 @@ ezResult kr::use(RefCountedPtr<VertexBuffer> pVertBuffer,
   {
     if (pair.pProgram == pProgram)
     {
-      glBindVertexArray(pair.hVao);
+      glCheck(glBindVertexArray(pair.hVao));
     return EZ_SUCCESS;
     }
   }
@@ -285,12 +287,15 @@ ezResult kr::use(RefCountedPtr<VertexBuffer> pVertBuffer,
                  "in given vertex buffer "
                  "for given program.");
 
-  glBindVertexArray(0);
+  glCheck(glBindVertexArray(0));
   return EZ_FAILURE;
 }
 
 void kr::unuse(RefCountedPtr<VertexBuffer> pVertBuffer,
                RefCountedPtr<ShaderProgram> pProgram)
 {
-  glBindVertexArray(0);
+  EZ_IGNORE_UNUSED(pVertBuffer);
+  EZ_IGNORE_UNUSED(pProgram);
+
+  glCheck(glBindVertexArray(0));
 }
