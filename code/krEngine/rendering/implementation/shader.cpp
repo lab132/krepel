@@ -173,16 +173,35 @@ kr::ShaderProgram::~ShaderProgram()
   m_glHandle = 0;
 }
 
-//kr::ShaderAttribute kr::getAttribute(ShaderProgram program, const char* attrName)
-//{
-//  EZ_ASSERT(isValid(program), "Invalid program.");
-//  auto location = glGetAttribLocation(program.glHandle, attrName);
-//
-//  if (location == 0)
-//    return ShaderAttribute();
-//
-//  ShaderAttribute sa;
-//  sa.glHandle = location;
-//  sa.program = program;
-//  return sa;
-//}
+kr::ShaderUniform kr::ShaderProgram::getUniform(const char* uniformName)
+{
+  ShaderUniform u;
+  u.glLocation = glGetUniformLocation(m_glHandle, uniformName);
+
+  if (u.glLocation == -1)
+  {
+    ezLog::Warning("Cannot find uniform location for name '%s'.", uniformName);
+  }
+
+  return u;
+}
+
+static bool g_usingProgram = false;
+
+KR_ENGINE_API ezResult kr::use(RefCountedPtr<ShaderProgram> pShader)
+{
+  EZ_ASSERT(!g_usingProgram,
+            "Some other shader program is already in use. Is this intentional?");
+  g_usingProgram = true;
+  if (isNull(pShader))
+    return EZ_FAILURE;
+
+  glUseProgram(pShader->m_glHandle);
+  return EZ_SUCCESS;
+}
+
+void kr::unuse(RefCountedPtr<ShaderProgram> pShader)
+{
+  glUseProgram(0);
+  g_usingProgram = false;
+}

@@ -34,7 +34,7 @@ EZ_CREATE_SIMPLE_TEST(VertexBuffer, Basics)
 
   EZ_TEST_BLOCK(ezTestBlock::Enabled, "Create")
   {
-    auto pVB = VertexBuffer::create();
+    auto pVB = VertexBuffer::create(BufferUsage::StaticDraw, PrimitiveType::Triangles);
   }
 
   EZ_TEST_BLOCK(ezTestBlock::Enabled, "Layout and Upload")
@@ -48,7 +48,7 @@ EZ_CREATE_SIMPLE_TEST(VertexBuffer, Basics)
     auto col = glGetAttribLocation(h, "vs_color");
     auto coord = glGetAttribLocation(h, "vs_texCoords");
 
-    auto pVB = VertexBuffer::create();
+    auto pVB = VertexBuffer::create(BufferUsage::StaticDraw, PrimitiveType::Triangles);
     EZ_TEST_BOOL(setupLayout(pVB, pProgram, "TestLayout").Succeeded());
     TestLayout data[4];
     data[0].pos.Set(-1,  1);

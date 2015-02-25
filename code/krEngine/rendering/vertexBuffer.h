@@ -24,12 +24,33 @@ namespace kr
     Array = GL_ARRAY_BUFFER
   };
 
+  enum class PrimitiveType
+  {
+    Points = GL_POINTS,
+
+    LineStrip = GL_LINE_STRIP,
+    LineLoop = GL_LINE_LOOP,
+    Lines = GL_LINES,
+    LineStripAdjacency = GL_LINE_STRIP_ADJACENCY,
+    LinesAdjacency = GL_LINES_ADJACENCY,
+
+    TriangleStrip = GL_TRIANGLE_STRIP,
+    TriangleFan = GL_TRIANGLE_FAN,
+    Triangles = GL_TRIANGLES,
+    TriangleStripAdjacency = GL_TRIANGLE_STRIP_ADJACENCY,
+    TrianglesAdjacency = GL_TRIANGLES_ADJACENCY,
+
+    Patches = GL_PATCHES
+  };
+
   class VertexBuffer : public RefCounted
   {
   public: // *** Static API
     using ReleasePolicy = RefCountedReleasePolicies::DefaultDelete;
 
-    KR_ENGINE_API static RefCountedPtr<VertexBuffer> create();
+    KR_ENGINE_API
+    static RefCountedPtr<VertexBuffer> create(BufferUsage usage,
+                                              PrimitiveType primitive);
 
   public: // *** Types
     struct VertexArrayProgramPair
@@ -39,7 +60,8 @@ namespace kr
     };
 
   public: // *** Data
-    BufferUsage m_usage = BufferUsage::StaticDraw;
+    BufferUsage m_usage;       ///< Set on construction.
+    PrimitiveType m_primitive; ///< Set on construction.
     BufferTarget m_target = BufferTarget::Array;
 
     GLuint m_glHandle = 0;
@@ -48,6 +70,9 @@ namespace kr
   public: // *** Accessors/Mutators
     void setUsage(BufferUsage usage) { m_usage = usage; }
     BufferUsage getUsage() const { return m_usage; }
+
+    void setPrimitive(PrimitiveType primitive) { m_primitive = primitive; }
+    PrimitiveType getPrimitive() const { return m_primitive; }
 
     void setTarget(BufferTarget target) { m_target = target; }
     BufferTarget getTarget() const { return m_target; }
@@ -64,15 +89,16 @@ namespace kr
 
   /// \brief Sets the layout of this vertex buffer for the given program.
   /// \param layoutTypeName
-  ///        The name of a reflectable (ezRTTI) type descibing the
-  ///        vertex buffer layout. Yes, this is Black Magic™.
+  ///   The name of a reflectable (ezRTTI) type descibing the
+  ///   vertex buffer layout. Yes, this is Black Magic™.
   KR_ENGINE_API ezResult setupLayout(RefCountedPtr<VertexBuffer> pVertBuffer,
-                                         RefCountedPtr<ShaderProgram> program,
-                                         const char* layoutTypeName);
+                                     RefCountedPtr<ShaderProgram> program,
+                                     const char* layoutTypeName);
 
   KR_ENGINE_API ezResult uploadData(RefCountedPtr<VertexBuffer> pVertBuffer,
-                                        ezUInt32 byteCount, const void* bytes,
-                                        ezUInt32 offet = 0);
+                                    ezUInt32 byteCount,
+                                    const void* bytes,
+                                    ezUInt32 offet = 0);
 
   template<typename T>
   ezResult uploadData(RefCountedPtr<VertexBuffer> pVertBuffer,
@@ -85,6 +111,9 @@ namespace kr
                       offset);                     // offset
   }
 
-  KR_ENGINE_API ezResult bind(RefCountedPtr<VertexBuffer> pVertBuffer,
-                              RefCountedPtr<ShaderProgram> pProgram);
+  KR_ENGINE_API ezResult use(RefCountedPtr<VertexBuffer> pVertBuffer,
+                             RefCountedPtr<ShaderProgram> pProgram);
+
+  KR_ENGINE_API void unuse(RefCountedPtr<VertexBuffer> pVertBuffer,
+                           RefCountedPtr<ShaderProgram> pProgram);
 }

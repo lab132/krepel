@@ -31,6 +31,8 @@ namespace kr
     ezUInt32 getWidth() const { return getImage().GetWidth(); }
     ezUInt32 getHeight() const { return getImage().GetHeight(); }
 
+    KR_ENGINE_API ezUInt32 getSlot() const;
+
   protected: // *** Construction
     Texture() = default; ///< Default ctor (private).
 

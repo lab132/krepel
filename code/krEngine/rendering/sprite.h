@@ -1,6 +1,8 @@
 #pragma once
 #include <krEngine/referenceCounting.h>
 #include <krEngine/rendering/texture.h>
+#include <krEngine/rendering/vertexBuffer.h>
+#include <krEngine/rendering/shader.h>
 
 namespace kr
 {
@@ -10,13 +12,27 @@ namespace kr
     /// \brief \c true if the state was altered without updating.
     bool m_needsUpdate = false;
 
+    ShaderUniform m_uTexture;
+    ShaderUniform m_uColor;
+
+    RefCountedPtr<ShaderProgram> m_pShader;
+
+    RefCountedPtr<VertexBuffer> m_pVertexBuffer;
+
     /// \brief Handle to the texture used by this sprite.
     RefCountedPtr<Texture> m_pTexture;
 
     /// \brief The bounds (or "view") of this sprite into the texture.
-    ezRectU32 m_bounds;
+    ///
+    /// By default, the entire texture is used.
+    ezRectU32 m_bounds = { 0u, 0u };
+
+    ezColor m_color = ezColor::GetWhite();
 
   public: // *** Accessors/Mutators
+    void setColor(ezColor c) { m_color = move(c); }
+    ezColor getColor() const { return m_color; }
+
     /// \brief Set the current texture.
     void setTexture(RefCountedPtr<Texture> pTex)
     {

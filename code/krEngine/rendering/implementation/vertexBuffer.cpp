@@ -62,7 +62,8 @@ static void getSizeInfo(ezVariant::Type::Enum t, GLenum& type, GLint& numCompone
   }
 }
 
-kr::RefCountedPtr<kr::VertexBuffer> kr::VertexBuffer::create()
+kr::RefCountedPtr<kr::VertexBuffer> kr::VertexBuffer::create(BufferUsage usage,
+                                                             PrimitiveType primitive)
 {
   GLuint handle;
   glGenBuffers(1, &handle);
@@ -82,6 +83,8 @@ kr::RefCountedPtr<kr::VertexBuffer> kr::VertexBuffer::create()
 
   auto pVertexBuffer = EZ_DEFAULT_NEW(VertexBuffer);
   pVertexBuffer->m_glHandle = handle;
+  pVertexBuffer->m_usage = usage;
+  pVertexBuffer->m_primitive = primitive;
   return pVertexBuffer;
 }
 
@@ -236,7 +239,7 @@ ezResult kr::uploadData(RefCountedPtr<VertexBuffer> pVertBuffer,
 
   if (isNull(pVertBuffer))
   {
-    ezLog::Warning("Cannot upload data to an invalid buffer.");
+    ezLog::Warning("Invalid vertex buffer object.");
     return EZ_FAILURE;
   }
 
@@ -254,17 +257,40 @@ ezResult kr::uploadData(RefCountedPtr<VertexBuffer> pVertBuffer,
   return EZ_SUCCESS;
 }
 
-ezResult kr::bind(RefCountedPtr<VertexBuffer> pVertBuffer,
-                  RefCountedPtr<ShaderProgram> pProgram)
+ezResult kr::use(RefCountedPtr<VertexBuffer> pVertBuffer,
+             RefCountedPtr<ShaderProgram> pProgram)
 {
+  if (isNull(pVertBuffer))
+  {
+    ezLog::Warning("Invalid vertex buffer.");
+    return EZ_FAILURE;
+  }
+
+  if (isNull(pProgram))
+  {
+    ezLog::Warning("Invalid shader program.");
+    return EZ_FAILURE;
+  }
+
   for (auto& pair : pVertBuffer->m_Vaos)
   {
     if (pair.pProgram == pProgram)
     {
       glBindVertexArray(pair.hVao);
-      return EZ_SUCCESS;
+    return EZ_SUCCESS;
     }
   }
 
+  ezLog::Warning("No vertex array object found "
+                 "in given vertex buffer "
+                 "for given program.");
+
+  glBindVertexArray(0);
   return EZ_FAILURE;
+}
+
+void kr::unuse(RefCountedPtr<VertexBuffer> pVertBuffer,
+               RefCountedPtr<ShaderProgram> pProgram)
+{
+  glBindVertexArray(0);
 }

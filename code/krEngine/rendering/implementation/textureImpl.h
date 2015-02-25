@@ -10,6 +10,7 @@ namespace kr
     ~TextureImpl();
 
   public: // *** Data
+    GLuint m_slot = -1;
     TextureName m_name;
     ezImage m_image;
   };
@@ -24,4 +25,7 @@ namespace kr
   /// \return Pointer to a valid texture instance.
   ///         If not found, will yield a \a nullptr.
   TextureImpl* findInstance(const char* textureName);
+
+  GLuint getNextFreeSlot();
+  void freeSlot(GLuint slot);
 }

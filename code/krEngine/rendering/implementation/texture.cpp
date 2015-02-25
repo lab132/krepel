@@ -3,9 +3,13 @@
 
 #include <Foundation/IO/FileSystem/FileSystem.h>
 
+namespace{ enum { MaxTextureSlots = 80 };}
+
 using TextureContainer = ezDynamicArray<kr::TextureImpl*>;
+using TextureSlots = ezStaticArray<GLuint, MaxTextureSlots>;
 
 static TextureContainer* g_pTextures;
+static TextureSlots* g_pFreeTextureSlots;
 static bool g_initialized = false;
 
 namespace
@@ -19,6 +23,12 @@ namespace
     ON_CORE_STARTUP
     {
       g_pTextures = new (m_mem_textures) TextureContainer();
+      g_pFreeTextureSlots = new (m_mem_textureSlots) TextureSlots();
+
+      for (GLuint i = GL_TEXTURE0; i < GL_TEXTURE0 + MaxTextureSlots; ++i)
+      {
+        g_pFreeTextureSlots->PushBack(i);
+      }
 
       g_initialized = true;
     }
@@ -39,6 +49,7 @@ namespace
 
   private:
     char m_mem_textures[sizeof(TextureContainer)];
+    char m_mem_textureSlots[sizeof(TextureSlots)];
   EZ_END_SUBSYSTEM_DECLARATION
 }
 
@@ -74,11 +85,39 @@ kr::TextureImpl* kr::findInstance(const char* textureName)
   return nullptr;
 }
 
+GLuint kr::getNextFreeSlot()
+{
+  EZ_ASSERT(!g_pFreeTextureSlots->IsEmpty(),
+            "No more available textures slots. Max: %u", MaxTextureSlots);
+  auto slot = g_pFreeTextureSlots->PeekBack();
+  g_pFreeTextureSlots->PopBack();
+  return slot;
+}
+
+void kr::freeSlot(GLuint slot)
+{
+  g_pFreeTextureSlots->PushBack(slot);
+}
+
+
 kr::TextureImpl::~TextureImpl()
 {
+  freeSlot(m_slot);
   removeInstance(this);
 }
 
+// static
+void kr::Texture::release(Texture*& pTex)
+{
+  if (isNull(pTex))
+    return;
+
+  auto pImpl = getImpl(pTex);
+  EZ_DEFAULT_DELETE(pImpl);
+  pTex = nullptr;
+}
+
+// static
 kr::RefCountedPtr<kr::Texture> kr::Texture::load(const char* filename)
 {
   EZ_LOG_BLOCK("Loading Texture", filename);
@@ -106,6 +145,7 @@ kr::RefCountedPtr<kr::Texture> kr::Texture::load(const char* filename)
   EZ_ASSERT(isValid(pTex), "Out of memory?");
   pTex->m_name = filename;
   pTex->m_image = move(img);
+  pTex->m_slot = getNextFreeSlot();
 
   addInstance(pTex);
 
@@ -121,12 +161,7 @@ const kr::TextureName& kr::Texture::getName() const
   return getImpl(this)->m_name;
 }
 
-void kr::Texture::release(Texture*& pTex)
+ezUInt32 kr::Texture::getSlot() const
 {
-  if (isNull(pTex))
-    return;
-
-  auto pImpl = getImpl(pTex);
-  EZ_DEFAULT_DELETE(pImpl);
-  pTex = nullptr;
+  return static_cast<ezUInt32>(getImpl(this)->m_slot);
 }

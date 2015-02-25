@@ -157,7 +157,7 @@ namespace kr
   }
 
   template<typename T>
-  inline void invalidate(const RefCountedPtr<T>& p)
+  inline void invalidate(RefCountedPtr<T>& p)
   {
     p = nullptr;
   }

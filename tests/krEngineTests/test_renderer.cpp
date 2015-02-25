@@ -47,9 +47,9 @@ EZ_CREATE_SIMPLE_TEST(Renderer, Experiments)
   auto fs = FragmentShader::loadAndCompile("<shader>texturedQuad.fs");
   auto prg = ShaderProgram::link(vs, fs);
   EZ_TEST_BOOL(isValid(prg));
-
-  // TODO Should be done in a more sophisticated way.
-  glUseProgram(prg->m_glHandle);
+  //KR_SCOPED_USE(prg);
+  //glUseProgram(prg->m_glHandle);
+  use(prg);
 
   // Vertices
   // ========
@@ -71,7 +71,7 @@ EZ_CREATE_SIMPLE_TEST(Renderer, Experiments)
 
   // Vertex Buffer
   // =============
-  auto vb = VertexBuffer::create();
+  auto vb = VertexBuffer::create(BufferUsage::StaticDraw, PrimitiveType::Triangles);
   //EZ_TEST_BOOL(setupLayout(vb, prg, "Vertex").Succeeded());
   setupLayout(vb, prg, "Vertex");
   EZ_TEST_BOOL(uploadData(vb, ezMakeArrayPtr(vertices)).Succeeded());
@@ -107,10 +107,13 @@ EZ_CREATE_SIMPLE_TEST(Renderer, Experiments)
     glUniform1i(u_texture, 0);// Assign slot 0 to the texture.
   }
 
-  bind(vb, prg);
+
+  //glBindVertexArray(vb->m_Vaos[0].hVao);
+
+  EZ_TEST_BOOL(use(vb, prg).Succeeded());
 
   auto now = ezTime::Now();
-  auto targetTime = now + ezTime::Seconds(4);
+  auto targetTime = now + ezTime::Seconds(2);
   while(now < targetTime)
   {
     auto dt = ezTime::Now() - now;
@@ -121,6 +124,8 @@ EZ_CREATE_SIMPLE_TEST(Renderer, Experiments)
 
     now += dt;
   }
+
+  unuse(vb, prg);
 
   ezStartup::ShutdownEngine();
 }
