@@ -81,12 +81,12 @@ namespace kr
                                               const char* uniformName);
 
   /// \brief Uploads an \a ezColor value.
-  KR_ENGINE_API ezResult uploadUniformValue(const ShaderUniform& uniform,
-                                            ezColor value);
+  KR_ENGINE_API ezResult uploadData(const ShaderUniform& uniform,
+                                    ezColor value);
 
   /// \brief Uploads a texture slot.
-  KR_ENGINE_API ezResult uploadUniformValue(const ShaderUniform& uniform,
-                                            RefCountedPtr<Texture> pTex);
+  KR_ENGINE_API ezResult uploadData(const ShaderUniform& uniform,
+                                    TextureSlot slot);
 
   KR_ENGINE_API ezResult use(RefCountedPtr<ShaderProgram> pShader);
   KR_ENGINE_API void unuse(RefCountedPtr<ShaderProgram> pShader);

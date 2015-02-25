@@ -31,10 +31,7 @@ namespace kr
     ezUInt32 getWidth() const { return getImage().GetWidth(); }
     ezUInt32 getHeight() const { return getImage().GetHeight(); }
 
-    KR_ENGINE_API ezUInt32 getSlot() const;
-
-    KR_ENGINE_API ezUInt32 getUnit() const;
-
+    /// The result of glGenTextures()
     KR_ENGINE_API ezUInt32 getId() const;
 
   protected: // *** Construction
@@ -43,5 +40,22 @@ namespace kr
   private: // *** Type Constraints
     Texture(const Texture&) = delete;         ///< No copy.
     void operator =(const Texture&) = delete; ///< No assignment.
+  };
+
+  struct TextureSlot
+  {
+    ezInt32 value = -1;
+
+    TextureSlot() = default;
+    explicit TextureSlot(ezInt32 v) : value(v){}
+  };
+
+  /// \brief Restores the texture 2D binding at the end of the scope.
+  struct RestoreTexture2dOnScopeExit
+  {
+    ezInt32 previous;
+
+    KR_ENGINE_API RestoreTexture2dOnScopeExit();
+    KR_ENGINE_API ~RestoreTexture2dOnScopeExit();
   };
 }

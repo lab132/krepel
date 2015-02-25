@@ -4,13 +4,9 @@
 
 #include <Foundation/IO/FileSystem/FileSystem.h>
 
-namespace{ enum { MaxTextureSlots = 80 }; }
-
 using TextureContainer = ezDynamicArray<kr::TextureImpl*>;
-using TextureSlots = ezStaticArray<GLuint, MaxTextureSlots>;
 
 static TextureContainer* g_pTextures;
-static TextureSlots* g_pFreeTextureSlots;
 static bool g_initialized = false;
 
 namespace
@@ -24,12 +20,6 @@ namespace
     ON_CORE_STARTUP
     {
       g_pTextures = new (m_mem_textures) TextureContainer();
-      g_pFreeTextureSlots = new (m_mem_textureSlots) TextureSlots();
-
-      for (GLuint i = MaxTextureSlots; i > 0; --i)
-      {
-        g_pFreeTextureSlots->PushBack(i - 1);
-      }
 
       g_initialized = true;
     }
@@ -50,7 +40,6 @@ namespace
 
   private:
     char m_mem_textures[sizeof(TextureContainer)];
-    char m_mem_textureSlots[sizeof(TextureSlots)];
   EZ_END_SUBSYSTEM_DECLARATION
 }
 
@@ -86,24 +75,9 @@ kr::TextureImpl* kr::findInstance(const char* textureName)
   return nullptr;
 }
 
-GLuint kr::getNextFreeSlot()
-{
-  EZ_ASSERT(!g_pFreeTextureSlots->IsEmpty(),
-            "No more available textures slots. Max: %u", MaxTextureSlots);
-  auto slot = g_pFreeTextureSlots->PeekBack();
-  g_pFreeTextureSlots->PopBack();
-  return slot;
-}
-
-void kr::freeSlot(GLuint slot)
-{
-  g_pFreeTextureSlots->PushBack(slot);
-}
-
 
 kr::TextureImpl::~TextureImpl()
 {
-  freeSlot(m_slot);
   removeInstance(this);
 }
 
@@ -146,8 +120,30 @@ kr::RefCountedPtr<kr::Texture> kr::Texture::load(const char* filename)
   EZ_ASSERT(isValid(pTex), "Out of memory?");
   pTex->m_name = filename;
   pTex->m_image = move(img);
-  pTex->m_slot = getNextFreeSlot();
   glCheck(glGenTextures(1, &pTex->m_id));
+
+  // Upload Pixel Data
+  // =================
+  auto pixels = pTex->m_image.GetSubImagePointer<void>();
+  RestoreTexture2dOnScopeExit restore;
+  glCheck(glBindTexture(GL_TEXTURE_2D, pTex->m_id));
+  /// \todo Check if GetNumMipLevels() - 1 is ok here.
+  glCheck(glTexImage2D(GL_TEXTURE_2D,                       // Target
+                       pTex->m_image.GetNumMipLevels() - 1, // (Mip) Level
+                       GL_RGBA,                             // Format used by OpenGL (not our pixels).
+                       pTex->m_image.GetWidth(),            // Texture width
+                       pTex->m_image.GetHeight(),           // Texture height
+                       0,                                   // Must be 0, as per the specification.
+                       GL_BGRA,                             // Format of the pixels (see last argument).
+                       GL_UNSIGNED_BYTE,                    // Size per pixel.
+                       pixels));                            // The actual pixel data.
+
+  // Set Default Sampling Options
+  // ============================
+  glCheck(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT));
+  glCheck(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT));
+  glCheck(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
+  glCheck(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
 
   addInstance(pTex);
 
@@ -163,18 +159,17 @@ const kr::TextureName& kr::Texture::getName() const
   return getImpl(this)->m_name;
 }
 
-ezUInt32 kr::Texture::getSlot() const
-{
-  return static_cast<ezUInt32>(getImpl(this)->m_slot);
-}
-
-ezUInt32 kr::Texture::getUnit() const
-{
-  auto slot = getSlot();
-  return GL_TEXTURE0 + slot;
-}
-
 ezUInt32 kr::Texture::getId() const
 {
   return static_cast<ezUInt32>(getImpl(this)->m_id);
+}
+
+kr::RestoreTexture2dOnScopeExit::RestoreTexture2dOnScopeExit()
+{
+  glCheck(glGetIntegerv(GL_TEXTURE_BINDING_2D, &previous));
+}
+
+kr::RestoreTexture2dOnScopeExit::~RestoreTexture2dOnScopeExit()
+{
+  glCheck(glBindTexture(GL_TEXTURE_2D, previous));
 }

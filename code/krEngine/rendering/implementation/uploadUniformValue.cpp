@@ -18,8 +18,8 @@
   } while (false)
 
 
-ezResult kr::uploadUniformValue(const ShaderUniform& uniform,
-                                ezColor value)
+ezResult kr::uploadData(const ShaderUniform& uniform,
+                        ezColor value)
 {
   PRECONDITIONS(uniform, "ezColor");
 
@@ -30,16 +30,14 @@ ezResult kr::uploadUniformValue(const ShaderUniform& uniform,
   return EZ_SUCCESS;
 }
 
-ezResult kr::uploadUniformValue(const ShaderUniform& uniform,
-                                RefCountedPtr<Texture> pTex)
+ezResult kr::uploadData(const ShaderUniform& uniform,
+                        TextureSlot slot)
 {
   PRECONDITIONS(uniform, "Texture");
 
-  /// \todo Set active texture as well?? (glActiveTexture(...))
-
   glCheck(glProgramUniform1i(uniform.pShader->m_glHandle,
                              uniform.glLocation,
-                             pTex->getSlot()));
+                             slot.value));
 
   return EZ_SUCCESS;
 }

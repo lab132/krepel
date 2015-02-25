@@ -14,15 +14,15 @@ EZ_CREATE_SIMPLE_TEST(Texture, Loading)
 
   EZ_TEST_BLOCK(ezTestBlock::Enabled, "Load and Unload")
   {
-    auto pTex = Texture::load("<texture>Test_4x4.bmp");
+    auto pTex = Texture::load("<texture>test_4x4.bmp");
     EZ_TEST_BOOL_MSG(isValid(pTex), "Unable to load image.");
   }
 
   EZ_TEST_BLOCK(ezTestBlock::Enabled, "Multiple Load/Unload Calls")
   {
-    auto pTex1 = Texture::load("<texture>Test_4x4.bmp");
+    auto pTex1 = Texture::load("<texture>test_4x4.bmp");
     EZ_TEST_BOOL(isValid(pTex1));
-    auto pTex2 = Texture::load("<texture>Test_4x4.bmp");
+    auto pTex2 = Texture::load("<texture>test_4x4.bmp");
     EZ_TEST_BOOL(isValid(pTex1));
 
     EZ_TEST_BOOL_MSG(pTex1 == pTex2,

@@ -119,11 +119,6 @@ void kr::update(Sprite& sprite)
     bounds.height = pTexture->getHeight();
   }
 
-  // Update Uniforms
-  // ===============
-  uploadUniformValue(sprite.m_uColor, sprite.m_color);
-  uploadUniformValue(sprite.m_uTexture, pTexture);
-
   // Finish Updating
   // ===============
   sprite.m_needsUpdate = false;
@@ -155,7 +150,6 @@ void kr::draw(Sprite& sprite)
 
   // Update Uniforms
   // ===============
-  uploadUniformValue(sprite.m_uColor, sprite.m_color);
-  uploadUniformValue(sprite.m_uTexture, sprite.m_pTexture);
-
+  uploadData(sprite.m_uColor, sprite.m_color);
+  uploadData(sprite.m_uTexture, TextureSlot(0));
 }

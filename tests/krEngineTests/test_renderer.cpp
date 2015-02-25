@@ -65,10 +65,10 @@ EZ_CREATE_SIMPLE_TEST(Renderer, Experiments)
     vertices[2].color = ezColor::GetBlue();
     vertices[3].color = ezColor::GetYellow();
 
-    vertices[0].texCoords.Set(0.0f, 1.0f); // Upper Left
+    vertices[0].texCoords.Set(0.0f, 2.0f); // Upper Left
     vertices[1].texCoords.Set(0.0f, 0.0f); // Lower Left
-    vertices[2].texCoords.Set(1.0f, 1.0f); // Upper Right
-    vertices[3].texCoords.Set(1.0f, 0.0f); // Lower Right
+    vertices[2].texCoords.Set(2.0f, 2.0f); // Upper Right
+    vertices[3].texCoords.Set(2.0f, 0.0f); // Lower Right
 
     // Vertex Buffer
     // =============
@@ -80,30 +80,19 @@ EZ_CREATE_SIMPLE_TEST(Renderer, Experiments)
     // Texture
     // =======
     auto tex = Texture::load("<texture>kitten.dds");
-    if(true)
-    {
-      EZ_TEST_BOOL(isValid(tex));
+    EZ_TEST_BOOL(isValid(tex));
 
-      glActiveTexture(tex->getUnit());
-      glBindTexture(GL_TEXTURE_2D, tex->getId());
-      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    GLuint sampler = 0;
+    glGenSamplers(1, &sampler);
+    glSamplerParameteri(sampler, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
+    glSamplerParameteri(sampler, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
+    glSamplerParameteri(sampler, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glSamplerParameteri(sampler, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-      auto pixels = tex->getImage().GetSubImagePointer<void>();
-      glTexImage2D(GL_TEXTURE_2D,    // Target
-                   0,                // (Mip) Level
-                   GL_RGBA,          // Format used by OpenGL, not the pixels.
-                   tex->getWidth(),  // Texture width
-                   tex->getHeight(), // Texture height
-                   0,                // Must be 0, as per the specification.
-                   GL_BGRA,          // Format of the pixels (see last argument).
-                   GL_UNSIGNED_BYTE, // Size per pixel.
-                   pixels);          // The actual pixel data.
-      // TODO This must be done in a more sophisticated way.
-      uploadUniformValue(shaderUniformOf(prg, "u_texture"), tex);
-    }
+    uploadData(shaderUniformOf(prg, "u_texture"), TextureSlot(0));
+
+    //glBindSampler(0, sampler);
+    glBindTexture(GL_TEXTURE_2D, tex->getId());
 
     EZ_TEST_BOOL(use(vb, prg).Succeeded());
     KR_ON_SCOPE_EXIT{ unuse(vb, prg); };
