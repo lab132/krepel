@@ -9,6 +9,7 @@ namespace kr
   public: // *** Data
     /// \note You should not fiddle around with this directly.
     GLuint m_glHandle = 0;
+    ezString128 m_resourceId;
 
   public: // *** Static API
     using ReleasePolicy = RefCountedReleasePolicies::DefaultDelete;
@@ -33,6 +34,7 @@ namespace kr
   public: // *** Data
     /// \note You should not fiddle around with this directly.
     GLuint m_glHandle = 0;
+    ezString128 m_resourceId;
 
   public: // *** Static API
     using ReleasePolicy = RefCountedReleasePolicies::DefaultDelete;
@@ -60,10 +62,18 @@ namespace kr
     /// \brief Links the given vertex and fragment shaders \a pVS and \a pFS to a program.
     KR_ENGINE_API static RefCountedPtr<ShaderProgram> link(VertexShaderPtr pVS,
                                                            FragmentShaderPtr pFS);
+    static RefCountedPtr<ShaderProgram> loadAndLink(const char* vertexShaderFilename,
+                                                    const char* fragmentShaderFilename)
+    {
+      return link(VertexShader::loadAndCompile(vertexShaderFilename),
+                  FragmentShader::loadAndCompile(fragmentShaderFilename));
+    }
 
   public: // *** Data
     /// \note You should not fiddle around with this directly.
     GLuint m_glHandle = 0;
+    VertexShaderPtr m_pVertexShader;
+    FragmentShaderPtr m_pFragmentShader;
 
   public: // *** Construction
     KR_ENGINE_API ~ShaderProgram();

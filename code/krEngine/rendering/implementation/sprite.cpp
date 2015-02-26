@@ -1,4 +1,5 @@
 #include <krEngine/rendering/sprite.h>
+#include <krEngine/rendering/implementation/spriteDrawing.h>
 #include <krEngine/rendering/shader.h>
 #include <krEngine/rendering/implementation/opelGlCheck.h>
 
@@ -39,15 +40,28 @@ static kr::VertexBufferPtr createVertexBuffer(kr::ShaderProgramPtr pShader)
 
   /// \todo Make use of bounds here.
 
-  vertices[0].pos.Set(-0.5f, -0.5f); // Lower Left
-  vertices[1].pos.Set(-0.5f,  0.5f); // Upper Left
-  vertices[2].pos.Set( 0.5f, -0.5f); // Lower Right
-  vertices[3].pos.Set( 0.5f,  0.5f); // Upper Right
+  const auto tw = 512;
+  const auto th = 512;
 
-  vertices[0].texCoords.Set(0.0f, 1.0f); // Upper Left
-  vertices[1].texCoords.Set(0.0f, 0.0f); // Lower Left
-  vertices[2].texCoords.Set(1.0f, 1.0f); // Upper Right
-  vertices[3].texCoords.Set(1.0f, 0.0f); // Lower Right
+  const auto x = 32;
+  const auto y = 32;
+  const auto w = x + 256;
+  const auto h = y + 256;
+
+  auto left   = float(x) / float(tw);
+  auto right  = float(w) / float(tw);
+  auto top    = float(h) / float(th);
+  auto bottom = float(y) / float(th);
+
+  vertices[0].pos.Set(left  * 2 - 1,bottom * 2 - 1); // Lower Left
+  vertices[1].pos.Set(left  * 2 - 1,top    * 2 - 1); // Upper Left
+  vertices[2].pos.Set(right * 2 - 1,bottom * 2 - 1); // Lower Right
+  vertices[3].pos.Set(right * 2 - 1,top    * 2 - 1); // Upper Right
+
+  vertices[0].texCoords.Set(left,  top);
+  vertices[1].texCoords.Set(left,  bottom);
+  vertices[2].texCoords.Set(right, top);
+  vertices[3].texCoords.Set(right, bottom);
 
   uploadData(pVB, ezMakeArrayPtr(vertices));
 
@@ -61,22 +75,8 @@ static kr::ShaderProgramPtr createSpriteShader()
   EZ_LOG_BLOCK("Create Shader", "Sprite");
 
   auto vsName = "<shader>sprite.vs";
-  auto vs = VertexShader::loadAndCompile(vsName);
-  if (isNull(vs))
-  {
-    EZ_REPORT_FAILURE("Failed to load vertex shader '%s'.", vsName);
-    return nullptr;
-  }
-
   auto fsName = "<shader>sprite.fs";
-  auto fs = FragmentShader::loadAndCompile(fsName);
-  if (isNull(fs))
-  {
-    EZ_REPORT_FAILURE("Failed to load fragment shader '%s'.", fsName);
-    return nullptr;
-  }
-
-  auto prg = ShaderProgram::link(vs, fs);
+  auto prg = ShaderProgram::loadAndLink(vsName, fsName);
   if (isNull(prg))
   {
     EZ_REPORT_FAILURE("Failed to link shaders to program: '%s' and '%s'", vsName, fsName);
@@ -88,6 +88,8 @@ static kr::ShaderProgramPtr createSpriteShader()
 
 void kr::update(Sprite& sprite)
 {
+  EZ_LOG_BLOCK("Updating Sprite");
+
   if (isNull(sprite.m_pShader))
   {
     sprite.m_pShader = createSpriteShader();
@@ -104,6 +106,12 @@ void kr::update(Sprite& sprite)
   {
     ezLog::Warning("Sprite has no texture yet. Ignoring.");
     return;
+  }
+
+  if (isNull(sprite.m_pSampler))
+  {
+    sprite.m_pSampler = Sampler::create();
+    ezLog::Debug("Using default texture sampler for sprite.");
   }
 
   // Update Bounds
@@ -126,6 +134,10 @@ void kr::update(Sprite& sprite)
 
 void kr::draw(Sprite& sprite)
 {
+  EZ_LOG_BLOCK("Drawing Sprite");
+
+  RestoreTexture2dOnScopeExit restoreTexture;
+
   // If the sprite needs an update, try doing that.
   if (sprite.m_needsUpdate)
     update(sprite);
@@ -152,4 +164,11 @@ void kr::draw(Sprite& sprite)
   // ===============
   uploadData(sprite.m_uColor, sprite.m_color);
   uploadData(sprite.m_uTexture, TextureSlot(0));
+
+  use(sprite.m_pSampler, TextureSlot(0));
+  KR_ON_SCOPE_EXIT{ unuse(sprite.m_pSampler, TextureSlot(0)); };
+
+  glCheck(glBindTexture(GL_TEXTURE_2D, sprite.m_pTexture->getId()));
+
+  glCheck(glDrawArrays((GLenum)sprite.m_pVertexBuffer->getPrimitive(), 0, 4));
 }

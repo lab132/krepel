@@ -121,3 +121,34 @@ void kr::Renderer::update(ezTime dt, RefCountedPtr<Window> pTarget)
     ezLog::Warning("Failed to present frame.");
   }
 }
+
+#include <krEngine/rendering/implementation/spriteDrawing.h>
+void kr::Renderer::update(ezTime dt, RefCountedPtr<Window> pTarget, Sprite& sprite)
+{
+  if(isNull(pTarget))
+  {
+    ezLog::Warning("Invalid target window.");
+    return;
+  }
+
+  auto& window = getImpl(pTarget);
+  /// \todo This is Window specific.
+  glCheck(wglMakeCurrent(window.m_hDC, window.m_hRC));
+
+  {
+    auto& clearColor = window.m_clearColor;
+    glCheck(glClearColor(clearColor.r, clearColor.g, clearColor.b, clearColor.a));
+  }
+
+  glCheck(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
+
+  /// \todo Do the actual rendering here.
+
+  draw(sprite);
+  //glCheck(glDrawArrays(GL_TRIANGLE_STRIP, 0, 4));
+
+  if (presentFrame(window).Failed())
+  {
+    ezLog::Warning("Failed to present frame.");
+  }
+}

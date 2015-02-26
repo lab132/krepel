@@ -55,20 +55,44 @@ EZ_CREATE_SIMPLE_TEST(Renderer, Experiments)
     // Vertices
     // ========
     Vertex vertices[4];
-    vertices[0].pos.Set(-0.5f, -0.5f); // Lower Left
-    vertices[1].pos.Set(-0.5f,  0.5f); // Upper Left
-    vertices[2].pos.Set( 0.5f, -0.5f); // Lower Right
-    vertices[3].pos.Set( 0.5f,  0.5f); // Upper Right
+
+    const auto tw = 512;
+    const auto th = 512;
+
+    const auto x = 32;
+    const auto y = 32;
+    const auto w = x + 256;
+    const auto h = y + 256;
+
+    auto left   = float(x) / float(tw);
+    auto right  = float(w) / float(tw);
+    auto top    = float(h) / float(th);
+    auto bottom = float(y) / float(th);
+
+    //vertices[0].pos.Set(-1.0f, -1.0f); // Lower Left
+    //vertices[1].pos.Set(-1.0f,  1.0f); // Upper Left
+    //vertices[2].pos.Set( 1.0f, -1.0f); // Lower Right
+    //vertices[3].pos.Set( 1.0f,  1.0f); // Upper Right
+
+    vertices[0].pos.Set(left  * 2 - 1,bottom * 2 - 1); // Lower Left
+    vertices[1].pos.Set(left  * 2 - 1,top    * 2 - 1); // Upper Left
+    vertices[2].pos.Set(right * 2 - 1,bottom * 2 - 1); // Lower Right
+    vertices[3].pos.Set(right * 2 - 1,top    * 2 - 1); // Upper Right
 
     vertices[0].color = ezColor::GetRed();
     vertices[1].color = ezColor::GetGreen();
     vertices[2].color = ezColor::GetBlue();
     vertices[3].color = ezColor::GetYellow();
 
-    vertices[0].texCoords.Set(0.0f, 2.0f); // Upper Left
-    vertices[1].texCoords.Set(0.0f, 0.0f); // Lower Left
-    vertices[2].texCoords.Set(2.0f, 2.0f); // Upper Right
-    vertices[3].texCoords.Set(2.0f, 0.0f); // Lower Right
+    //vertices[0].texCoords.Set(0.0f, 1.0f); // Upper Left
+    //vertices[1].texCoords.Set(0.0f, 0.0f); // Lower Left
+    //vertices[2].texCoords.Set(1.0f, 1.0f); // Upper Right
+    //vertices[3].texCoords.Set(1.0f, 0.0f); // Lower Right
+
+    vertices[0].texCoords.Set(left,  top);
+    vertices[1].texCoords.Set(left,  bottom);
+    vertices[2].texCoords.Set(right, top);
+    vertices[3].texCoords.Set(right, bottom);
 
     // Vertex Buffer
     // =============

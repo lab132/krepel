@@ -19,6 +19,8 @@ namespace kr
 
     VertexBufferPtr m_pVertexBuffer;
 
+    SamplerPtr m_pSampler;
+
     /// \brief Handle to the texture used by this sprite.
     TexturePtr m_pTexture;
 
@@ -30,6 +32,8 @@ namespace kr
     ezColor m_color = ezColor::GetWhite();
 
   public: // *** Accessors/Mutators
+    bool getNeedsUpdate() const { return m_needsUpdate; }
+
     void setColor(ezColor c) { m_color = move(c); }
     ezColor getColor() const { return m_color; }
 
@@ -61,12 +65,17 @@ namespace kr
 
   public: // *** Friends
     friend KR_ENGINE_API void update(Sprite& sprite);
-    friend KR_ENGINE_API void draw(Sprite& sprite);
+    friend void draw(Sprite& sprite);
   };
+
+  /// \brief Initializes a sprite.
+  /// \note This is actually just a forced update call.
+  inline ezResult initialize(Sprite& sprite)
+  {
+    update(sprite);
+    return sprite.getNeedsUpdate() ? EZ_FAILURE : EZ_SUCCESS;
+  }
 
   /// \brief Updates the internal state of \a sprite.
   KR_ENGINE_API void update(Sprite& sprite);
-
-  /// \brief Draws the given \a sprite.
-  KR_ENGINE_API void draw(Sprite& sprite);
 }

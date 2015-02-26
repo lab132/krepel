@@ -75,6 +75,7 @@ kr::RefCountedPtr<kr::VertexShader> kr::VertexShader::loadAndCompile(const char*
 
   auto pVS = EZ_DEFAULT_NEW(VertexShader);
   pVS->m_glHandle = handle;
+  pVS->m_resourceId = filename;
 
   return pVS;
 }
@@ -97,6 +98,7 @@ kr::RefCountedPtr<kr::FragmentShader> kr::FragmentShader::loadAndCompile(const c
 
   auto pFS = EZ_DEFAULT_NEW(FragmentShader);
   pFS->m_glHandle = handle;
+  pFS->m_resourceId = filename;
 
   return pFS;
 }
@@ -142,6 +144,8 @@ kr::RefCountedPtr<kr::ShaderProgram> kr::ShaderProgram::link(VertexShaderPtr pVS
   {
     auto pProgram = EZ_DEFAULT_NEW(ShaderProgram);
     pProgram->m_glHandle = hProgram;
+    pProgram->m_pVertexShader = pVS;
+    pProgram->m_pFragmentShader = pFS;
     return pProgram;
   }
 
@@ -175,6 +179,8 @@ kr::RefCountedPtr<kr::ShaderProgram> kr::ShaderProgram::link(VertexShaderPtr pVS
 
 kr::ShaderProgram::~ShaderProgram()
 {
+  invalidate(m_pFragmentShader);
+  invalidate(m_pVertexShader);
   glCheck(glDeleteProgram(m_glHandle));
   m_glHandle = 0;
 }
