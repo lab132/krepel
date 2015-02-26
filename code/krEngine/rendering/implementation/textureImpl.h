@@ -10,7 +10,7 @@ namespace kr
     ~TextureImpl();
 
   public: // *** Data
-    GLuint m_id = 0;
+    GLuint m_glHandle = 0;
     TextureName m_name;
     ezImage m_image;
   };

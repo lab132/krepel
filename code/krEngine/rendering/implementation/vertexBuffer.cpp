@@ -3,6 +3,52 @@
 
 #include <Foundation/Reflection/Reflection.h>
 
+namespace
+{
+  struct VBShaderPair
+  {
+    kr::VertexBufferPtr pVertexBuffer;
+    kr::ShaderProgramPtr pShader;
+    GLuint glHandle_VAO = 0;
+  };
+}
+
+using VertexBufferBindings = ezHybridArray<VBShaderPair, 8>;
+
+static VertexBufferBindings* g_pVertexBufferBindings;
+static bool g_initialized = false;
+
+EZ_BEGIN_SUBSYSTEM_DECLARATION(krEngine, VertexBuffers)
+  BEGIN_SUBSYSTEM_DEPENDENCIES
+    "Foundation",
+    "Core"
+  END_SUBSYSTEM_DEPENDENCIES
+
+  ON_CORE_STARTUP
+  {
+    g_pVertexBufferBindings = new (m_mem_vbBindings) VertexBufferBindings();
+
+    g_initialized = true;
+  }
+
+  ON_CORE_SHUTDOWN
+  {
+    if (g_pVertexBufferBindings->GetCount() > 0)
+    {
+      ezLog::Error("There are still %u active shader program bindings!",
+                    g_pVertexBufferBindings->GetCount());
+    }
+
+    g_pVertexBufferBindings->~VertexBufferBindings();
+    g_pVertexBufferBindings = nullptr;
+
+    g_initialized = false;
+  }
+
+private:
+  ezUByte m_mem_vbBindings[sizeof(VertexBufferBindings)];
+EZ_END_SUBSYSTEM_DECLARATION
+
 /// \note Not all types are supported.
 static void getSizeInfo(ezVariant::Type::Enum t, GLenum& type, GLint& numComponents)
 {
@@ -96,7 +142,7 @@ kr::VertexBuffer::~VertexBuffer()
 }
 
 ezResult kr::setupLayout(VertexBufferPtr pVertBuffer,
-                         ShaderProgramPtr pProgram,
+                         ShaderProgramPtr pShader,
                          const char* layoutTypeName)
 {
   EZ_LOG_BLOCK("Setup Vertex Buffer Layout");
@@ -107,7 +153,7 @@ ezResult kr::setupLayout(VertexBufferPtr pVertBuffer,
     return EZ_FAILURE;
   }
 
-  if (isNull(pProgram))
+  if (isNull(pShader))
   {
     ezLog::Warning("Shader program is nullptr. Aborting.");
     return EZ_FAILURE;
@@ -132,7 +178,7 @@ ezResult kr::setupLayout(VertexBufferPtr pVertBuffer,
   for (ezUInt32 i = 0; i < pVertBuffer->m_Vaos.GetCount(); ++i)
   {
     auto& pair = pVertBuffer->m_Vaos[i];
-    if (pair.pProgram == pProgram)
+    if (pair.pShader == pShader)
     {
       ezLog::Debug("Overwriting existing vertex buffer layout binding.");
       vao = pair.hVao;
@@ -149,7 +195,7 @@ ezResult kr::setupLayout(VertexBufferPtr pVertBuffer,
     // Remember it.
     auto& entry = pVertBuffer->m_Vaos.ExpandAndGetRef();
     entry.hVao = vao;
-    entry.pProgram = pProgram;
+    entry.pShader = pShader;
   }
 
   glCheck(glBindVertexArray(vao));
@@ -171,7 +217,7 @@ ezResult kr::setupLayout(VertexBufferPtr pVertBuffer,
 
   auto result = EZ_SUCCESS;
   size_t offset = 0;
-  auto hProgram = pProgram->m_glHandle;
+  auto hProgram = pShader->m_glHandle;
 
   for (ezUInt32 i = 0; i < props.GetCount(); ++i)
   {
@@ -259,41 +305,85 @@ ezResult kr::uploadData(VertexBufferPtr pVertBuffer,
   return EZ_SUCCESS;
 }
 
-ezResult kr::use(VertexBufferPtr pVertBuffer, ShaderProgramPtr pProgram)
+ezResult kr::bind(VertexBufferPtr pVertBuffer, ShaderProgramPtr pShader)
 {
   if (isNull(pVertBuffer))
   {
-    ezLog::Warning("Invalid vertex buffer.");
+    ezLog::Warning("Cannot bind nullptr as vertex buffer. Ignoring.");
     return EZ_FAILURE;
   }
 
-  if (isNull(pProgram))
+  if (isNull(pShader))
   {
-    ezLog::Warning("Invalid shader program.");
+    ezLog::Warning("Cannot accept nullptr as program to bind vertex buffer to. Ignoring.");
     return EZ_FAILURE;
   }
+
+  GLuint handle = 0;
 
   for (auto& pair : pVertBuffer->m_Vaos)
   {
-    if (pair.pProgram == pProgram)
+    if (pair.pShader == pShader)
     {
-      glCheck(glBindVertexArray(pair.hVao));
-    return EZ_SUCCESS;
+      handle = pair.hVao;
+      break;
     }
   }
 
-  ezLog::Warning("No vertex array object found "
-                 "in given vertex buffer "
-                 "for given program.");
+  if (handle == 0)
+  {
+    ezLog::Warning("No vertex array object found "
+                   "in given vertex buffer "
+                   "for given program.");
+    return EZ_FAILURE;
+  }
 
-  glCheck(glBindVertexArray(0));
-  return EZ_FAILURE;
+  // Bind the vertex array object.
+  glCheck(glBindVertexArray(handle));
+
+  // Save the handle.
+  auto& pair = g_pVertexBufferBindings->ExpandAndGetRef();
+  pair.pVertexBuffer = move(pVertBuffer);
+  pair.pShader = move(pShader);
+  pair.glHandle_VAO = handle;
+
+  return EZ_SUCCESS;
 }
 
-void kr::unuse(VertexBufferPtr pVertBuffer, ShaderProgramPtr pProgram)
+ezResult kr::restoreLastVertexBuffer(ShaderProgramPtr pShader)
 {
-  EZ_IGNORE_UNUSED(pVertBuffer);
-  EZ_IGNORE_UNUSED(pProgram);
+  if (g_pVertexBufferBindings->IsEmpty())
+  {
+    ezLog::Warning("No last texture 2D to restore!");
+    return EZ_FAILURE;
+  }
 
-  glCheck(glBindVertexArray(0));
+  if (g_pVertexBufferBindings->PeekBack().pShader != pShader)
+  {
+    ezLog::SeriousWarning("Unsupported use of restoreLastVertexBuffer(). "
+                          "You should have called it right after bind(), "
+                          "before doing another bind. "
+                          "Maybe we'll support multiple vertex buffers "
+                          "some time in the future.");
+    return EZ_FAILURE;
+  }
+
+  // Drop the current binding.
+  g_pVertexBufferBindings->PopBack();
+
+  if(g_pVertexBufferBindings->IsEmpty())
+  {
+    glCheck(glBindVertexArray(0));
+    return EZ_SUCCESS;
+  }
+
+  // Get the previous shader and vertex.
+  auto& pair = g_pVertexBufferBindings->PeekBack();
+
+  EZ_ASSERT(pair.pShader == pShader, "Invalid binding state.");
+
+  // And actually bind it again.
+  glCheck(glBindVertexArray(pair.glHandle_VAO));
+
+  return EZ_SUCCESS;
 }

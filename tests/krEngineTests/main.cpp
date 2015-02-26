@@ -6,6 +6,8 @@
 #include <TestFramework/Utilities/TestSetup.h>
 #include <Foundation/Communication/GlobalEvent.h>
 
+#include <Foundation/Logging/VisualStudioWriter.h>
+
 static ezString64 g_texturesDir;
 static ezString64 g_shadersDir;
 static bool g_initialized = false;
@@ -35,6 +37,8 @@ EZ_ON_GLOBAL_EVENT(ezStartup_StartupCore_End)
                                  ezFileSystem::ReadOnly,
                                  "testData",
                                  "shader"); // To be used as"<shader>Lighting.vs"
+
+  ezGlobalLog::AddLogWriter(ezLogWriter::VisualStudio::LogMessageHandler);
 
   g_initialized = true;
 }

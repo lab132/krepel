@@ -29,9 +29,12 @@ set(FILES
 
   # Renderer
   rendering/renderer.h
+  rendering/extraction.h
   rendering/implementation/renderer.cpp
   rendering/implementation/extractionBuffer.h
   rendering/implementation/extractionBuffer.cpp
+  rendering/implementation/extractionData.h
+  rendering/implementation/extractionData.cpp
 
   # Window
   rendering/window.h
@@ -42,7 +45,6 @@ set(FILES
   # Sprite
   rendering/sprite.h
   rendering/implementation/sprite.cpp
-  rendering/implementation/spriteDrawing.h
 
   # Texture
   rendering/texture.h

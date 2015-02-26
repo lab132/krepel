@@ -9,17 +9,17 @@ kr::ExtractionBuffer::ExtractionBuffer(ezAllocatorBase* pAllocator) :
 kr::ExtractionBuffer::~ExtractionBuffer()
 {
   m_pAllocator->Deallocate(m_data);
-  m_current = m_end = nullptr;
+  m_current = m_max = nullptr;
 }
 
-void* kr::ExtractionBuffer::allocate(size_t bytes, size_t alignment)
+void* kr::ExtractionBuffer::allocate(size_t alignedSize)
 {
   EZ_ASSERT(m_mode == Mode::WriteOnly, "Invalid operation in this mode.");
 
   // Check if we need to grow.
   // =========================
   auto cap = getByteCapacity();
-  while (getNumAllocatedBytes() + bytes > cap)
+  while (getNumAllocatedBytes() + alignedSize > cap)
   {
     cap *= 2;
   }
@@ -32,18 +32,10 @@ void* kr::ExtractionBuffer::allocate(size_t bytes, size_t alignment)
   // Do the allocation
   // =================
 
-  // Align m_current
-  /// \todo Fix this unnecessarily slow alignment adjustment.
-  while ((size_t)m_current % alignment != 0)
-    ++m_current;
-
-  // Assign the aligned pointer.
   auto result = m_current;
 
-  // Advance the aligned m_current.
-  m_current += bytes;
+  m_current += alignedSize;
 
-  EZ_CHECK_ALIGNMENT(result, alignment);
   return result;
 }
 
@@ -68,5 +60,5 @@ void kr::ExtractionBuffer::grow(size_t newCapacity)
   // Update the pointers.
   m_data = newMem;
   m_current = m_data + currentlyAllocatedBytes;
-  m_end = m_data + newCapacity;
+  m_max = m_data + newCapacity;
 }

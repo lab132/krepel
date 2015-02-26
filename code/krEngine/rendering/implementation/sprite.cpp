@@ -1,5 +1,4 @@
 #include <krEngine/rendering/sprite.h>
-#include <krEngine/rendering/implementation/spriteDrawing.h>
 #include <krEngine/rendering/shader.h>
 #include <krEngine/rendering/implementation/opelGlCheck.h>
 
@@ -130,45 +129,4 @@ void kr::update(Sprite& sprite)
   // Finish Updating
   // ===============
   sprite.m_needsUpdate = false;
-}
-
-void kr::draw(Sprite& sprite)
-{
-  EZ_LOG_BLOCK("Drawing Sprite");
-
-  RestoreTexture2dOnScopeExit restoreTexture;
-
-  // If the sprite needs an update, try doing that.
-  if (sprite.m_needsUpdate)
-    update(sprite);
-
-  // If it still needs an update, something went wrong there.
-  if (sprite.m_needsUpdate)
-    return;
-
-  // If there is no shader, we cannot draw.
-  if (isNull(sprite.m_pShader))
-    return;
-
-  // Set Active Shader
-  // =================
-  use(sprite.m_pShader);
-  KR_ON_SCOPE_EXIT{ unuse(sprite.m_pShader); };
-
-  // Set Active Vertex Buffer
-  // ========================
-  use(sprite.m_pVertexBuffer, sprite.m_pShader);
-  KR_ON_SCOPE_EXIT{ unuse(sprite.m_pVertexBuffer, sprite.m_pShader); };
-
-  // Update Uniforms
-  // ===============
-  uploadData(sprite.m_uColor, sprite.m_color);
-  uploadData(sprite.m_uTexture, TextureSlot(0));
-
-  use(sprite.m_pSampler, TextureSlot(0));
-  KR_ON_SCOPE_EXIT{ unuse(sprite.m_pSampler, TextureSlot(0)); };
-
-  glCheck(glBindTexture(GL_TEXTURE_2D, sprite.m_pTexture->getId()));
-
-  glCheck(glDrawArrays((GLenum)sprite.m_pVertexBuffer->getPrimitive(), 0, 4));
 }

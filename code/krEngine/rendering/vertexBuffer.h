@@ -56,7 +56,7 @@ namespace kr
     struct VertexArrayProgramPair
     {
       GLuint hVao = 0;
-      ShaderProgramPtr pProgram;
+      ShaderProgramPtr pShader;
     };
 
   public: // *** Data
@@ -89,12 +89,12 @@ namespace kr
 
   using VertexBufferPtr = RefCountedPtr<VertexBuffer>;
 
-  /// \brief Sets the layout of this vertex buffer for the given program.
+  /// \brief Sets the layout of this vertex buffer for the given \a pShader.
   /// \param layoutTypeName
   ///   The name of a reflectable (ezRTTI) type descibing the
   ///   vertex buffer layout. Yes, this is Black Magic™.
   KR_ENGINE_API ezResult setupLayout(VertexBufferPtr pVertBuffer,
-                                     ShaderProgramPtr program,
+                                     ShaderProgramPtr pShader,
                                      const char* layoutTypeName);
 
   KR_ENGINE_API ezResult uploadData(VertexBufferPtr pVertBuffer,
@@ -113,7 +113,12 @@ namespace kr
                       offset);                     // offset
   }
 
-  KR_ENGINE_API ezResult use(VertexBufferPtr pVertBuffer, ShaderProgramPtr pProgram);
+  KR_ENGINE_API ezResult bind(VertexBufferPtr pVertBuffer, ShaderProgramPtr pProgram);
 
-  KR_ENGINE_API void unuse(VertexBufferPtr pVertBuffer, ShaderProgramPtr pProgram);
+  KR_ENGINE_API ezResult restoreLastVertexBuffer(ShaderProgramPtr pProgram);
 }
+
+/// \brief Binds the given vertex buffer for the given shader program for the current scope.
+#define KR_RAII_BIND_VERTEX_BUFFER(vb, prg) \
+  ::kr::bind(vb, prg);                      \
+  KR_ON_SCOPE_EXIT { ::kr::restoreLastVertexBuffer(prg); }

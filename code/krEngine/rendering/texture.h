@@ -32,7 +32,7 @@ namespace kr
     ezUInt32 getHeight() const { return getImage().GetHeight(); }
 
     /// The result of glGenTextures()
-    KR_ENGINE_API ezUInt32 getId() const;
+    KR_ENGINE_API ezUInt32 getGlHandle() const;
 
   protected: // *** Construction
     Texture() = default; ///< Default ctor (private).
@@ -52,14 +52,8 @@ namespace kr
     explicit TextureSlot(ezInt32 v) : value(v){}
   };
 
-  /// \brief Restores the texture 2D binding at the end of the scope.
-  struct RestoreTexture2dOnScopeExit
-  {
-    ezInt32 previous;
-
-    KR_ENGINE_API RestoreTexture2dOnScopeExit();
-    KR_ENGINE_API ~RestoreTexture2dOnScopeExit();
-  };
+  KR_ENGINE_API ezResult bind(TexturePtr pTexture, TextureSlot slot);
+  KR_ENGINE_API ezResult restoreLastTexture2D(TextureSlot slot);
 
   // Texture Sampling
   // ================
@@ -103,6 +97,8 @@ namespace kr
     KR_ENGINE_API void setWrapping(TextureWrapping wrapping);
     TextureWrapping getWrapping() const { return m_wrapping; }
 
+    ezUInt32 getGlHandle() const { return m_glHandle; }
+
   public: // *** Construction
     KR_ENGINE_API ~Sampler();
 
@@ -116,6 +112,15 @@ namespace kr
 
   using SamplerPtr = RefCountedPtr<Sampler>;
 
-  KR_ENGINE_API void use(SamplerPtr pSampler, TextureSlot slot);
-  KR_ENGINE_API void unuse(SamplerPtr pSampler, TextureSlot slot);
+  KR_ENGINE_API ezResult bind(SamplerPtr pSampler, TextureSlot slot);
+
+  KR_ENGINE_API ezResult restoreLastSampler(TextureSlot slot);
 }
+
+#define KR_RAII_BIND_TEXTURE_2D(tex, slot) \
+  ::kr::bind(tex, slot);                   \
+  KR_ON_SCOPE_EXIT { ::kr::restoreLastTexture2D(slot); }
+
+#define KR_RAII_BIND_SAMPLER(sampler, slot) \
+  ::kr::bind(sampler, slot);                   \
+  KR_ON_SCOPE_EXIT { ::kr::restoreLastSampler(slot); }

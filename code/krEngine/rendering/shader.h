@@ -20,6 +20,9 @@ namespace kr
   public: // *** Construction
     KR_ENGINE_API ~VertexShader();
 
+  public: // *** Accessors/Mutators
+    ezUInt32 getGlHandle() const { return m_glHandle; }
+
   private: // *** Private Construction
     /// \brief Can only be constructed by loadAndCompile.
     VertexShader() = default;
@@ -44,6 +47,9 @@ namespace kr
 
   public: // *** Construction
     KR_ENGINE_API ~FragmentShader();
+
+  public: // *** Accessors/Mutators
+    ezUInt32 getGlHandle() const { return m_glHandle; }
 
   private: // *** Private Construction
     /// \brief Can only be constructed by loadAndCompile.
@@ -71,12 +77,15 @@ namespace kr
 
   public: // *** Data
     /// \note You should not fiddle around with this directly.
-    GLuint m_glHandle = 0;
+    ezUInt32 m_glHandle = 0;
     VertexShaderPtr m_pVertexShader;
     FragmentShaderPtr m_pFragmentShader;
 
   public: // *** Construction
     KR_ENGINE_API ~ShaderProgram();
+
+  public: // *** Accessors/Mutators
+    ezUInt32 getGlHandle() const { return m_glHandle; }
 
   private: // *** Private Construction
     /// \brief Can only be constructed by link.
@@ -104,6 +113,13 @@ namespace kr
   KR_ENGINE_API ezResult uploadData(const ShaderUniform& uniform,
                                     TextureSlot slot);
 
-  KR_ENGINE_API ezResult use(ShaderProgramPtr pShader);
-  KR_ENGINE_API void unuse(ShaderProgramPtr pShader);
+  KR_ENGINE_API ezResult bind(ShaderProgramPtr pShader);
+
+  /// \see KR_RAII_BIND_SHADER
+  KR_ENGINE_API ezResult restoreLastShaderProgram();
 }
+
+/// \brief Binds the given shader for the current scope.
+#define KR_RAII_BIND_SHADER(shader) \
+  ::kr::bind(shader);               \
+  KR_ON_SCOPE_EXIT { ::kr::restoreLastShaderProgram(); }

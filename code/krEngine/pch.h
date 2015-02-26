@@ -11,6 +11,9 @@
 // ezEngine
 // ========
 #include <Foundation/Basics.h>
+#include <Foundation/Math/Declarations.h>
+#include <Foundation/Math/Transform.h>
+
 #include <Core/PCH.h>
 #include <CoreUtils/PCH.h>
 #include <System/PCH.h>

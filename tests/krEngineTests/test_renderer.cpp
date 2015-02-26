@@ -1,8 +1,4 @@
-#include <krEngine/rendering/renderer.h>
-#include <krEngine/rendering/window.h>
-#include <krEngine/rendering/shader.h>
-#include <krEngine/rendering/vertexBuffer.h>
-#include <krEngine/rendering/texture.h>
+#include <krEngine/rendering.h>
 
 namespace
 {
@@ -49,8 +45,7 @@ EZ_CREATE_SIMPLE_TEST(Renderer, Experiments)
     auto prg = ShaderProgram::link(vs, fs);
     EZ_TEST_BOOL(isValid(prg));
 
-    use(prg);
-    KR_ON_SCOPE_EXIT{ unuse(prg); };
+    KR_RAII_BIND_SHADER(prg);
 
     // Vertices
     // ========
@@ -107,15 +102,13 @@ EZ_CREATE_SIMPLE_TEST(Renderer, Experiments)
     EZ_TEST_BOOL(isValid(tex));
 
     auto pSampler = Sampler::create();
-    use(pSampler, TextureSlot(0));
-    KR_ON_SCOPE_EXIT{ unuse(pSampler, TextureSlot(0)); };
+    KR_RAII_BIND_SAMPLER(pSampler, TextureSlot(0));
 
     uploadData(shaderUniformOf(prg, "u_texture"), TextureSlot(0));
 
-    glBindTexture(GL_TEXTURE_2D, tex->getId());
+    glBindTexture(GL_TEXTURE_2D, tex->getGlHandle());
 
-    EZ_TEST_BOOL(use(vb, prg).Succeeded());
-    KR_ON_SCOPE_EXIT{ unuse(vb, prg); };
+    KR_RAII_BIND_VERTEX_BUFFER(vb, prg);
 
     bool run = true;
     pWindow->getEvent().AddEventHandler([&run](const WindowEventArgs& e)

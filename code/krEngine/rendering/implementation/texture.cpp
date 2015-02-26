@@ -5,43 +5,72 @@
 #include <Foundation/IO/FileSystem/FileSystem.h>
 
 using TextureContainer = ezDynamicArray<kr::TextureImpl*>;
+using TextureBindings = ezHybridArray<kr::TexturePtr, 8>;
+using SamplerBindings = ezHybridArray<kr::SamplerPtr, 8>;
 
 static TextureContainer* g_pTextures;
+static TextureBindings* g_pTextureBindings;
+static SamplerBindings* g_pSamplerBindings;
 static bool g_initialized = false;
 
-namespace
-{
-  EZ_BEGIN_SUBSYSTEM_DECLARATION(SpriteEngine, Textures)
-    BEGIN_SUBSYSTEM_DEPENDENCIES
-      "Foundation",
-      "Core"
-    END_SUBSYSTEM_DEPENDENCIES
+EZ_BEGIN_SUBSYSTEM_DECLARATION(krEngine, Textures)
+  BEGIN_SUBSYSTEM_DEPENDENCIES
+    "Foundation",
+    "Core"
+  END_SUBSYSTEM_DEPENDENCIES
 
-    ON_CORE_STARTUP
+  ON_CORE_STARTUP
+  {
+    g_pTextures = new (m_mem_textures) TextureContainer();
+    g_pTextureBindings = new (m_mem_textureBindings) TextureBindings();
+    g_pSamplerBindings = new (m_mem_samplerBindings) SamplerBindings();
+
+    g_initialized = true;
+  }
+
+  ON_CORE_SHUTDOWN
+  {
+    // Sampler Bindings
+    // ================
+    if (g_pSamplerBindings->GetCount() > 0)
     {
-      g_pTextures = new (m_mem_textures) TextureContainer();
-
-      g_initialized = true;
+      ezLog::Error("There are still %u active sampler bindings!",
+                    g_pSamplerBindings->GetCount());
     }
 
-    ON_CORE_SHUTDOWN
+    g_pSamplerBindings->~SamplerBindings();
+    g_pSamplerBindings = nullptr;
+
+    // Texture Bindings
+    // ================
+    if (g_pTextureBindings->GetCount() > 0)
     {
-      if (g_pTextures->GetCount() > 0)
-      {
-        ezLog::Error("%u Texture(s) were not properly released yet!",
-                     g_pTextures->GetCount());
-      }
-
-      g_pTextures->~TextureContainer();
-      g_pTextures = nullptr;
-
-      g_initialized = false;
+      ezLog::Error("There are still %u active texture bindings!",
+                    g_pTextureBindings->GetCount());
     }
 
-  private:
-    char m_mem_textures[sizeof(TextureContainer)];
-  EZ_END_SUBSYSTEM_DECLARATION
-}
+    g_pTextureBindings->~TextureBindings();
+    g_pTextureBindings = nullptr;
+
+    // Texture Instances
+    // =================
+    if (g_pTextures->GetCount() > 0)
+    {
+      ezLog::Error("%u Texture(s) were not properly released yet!",
+                    g_pTextures->GetCount());
+    }
+
+    g_pTextures->~TextureContainer();
+    g_pTextures = nullptr;
+
+    g_initialized = false;
+  }
+
+private:
+  ezUByte m_mem_textures[sizeof(TextureContainer)];
+  ezUByte m_mem_textureBindings[sizeof(TextureBindings)];
+  ezUByte m_mem_samplerBindings[sizeof(SamplerBindings)];
+EZ_END_SUBSYSTEM_DECLARATION
 
 kr::TextureImpl* kr::getImpl(Texture* pTex)
 {
@@ -119,13 +148,15 @@ kr::RefCountedPtr<kr::Texture> kr::Texture::load(const char* filename)
   EZ_ASSERT(isValid(pTex), "Out of memory?");
   pTex->m_name = filename;
   pTex->m_image = move(img);
-  glCheck(glGenTextures(1, &pTex->m_id));
+  glCheck(glGenTextures(1, &pTex->m_glHandle));
 
   // Upload Pixel Data
   // =================
   auto pixels = pTex->m_image.GetSubImagePointer<void>();
-  RestoreTexture2dOnScopeExit restore;
-  glCheck(glBindTexture(GL_TEXTURE_2D, pTex->m_id));
+
+  KR_RAII_BIND_TEXTURE_2D(pTex, TextureSlot(0));
+
+  glCheck(glBindTexture(GL_TEXTURE_2D, pTex->m_glHandle));
   /// \todo Check if GetNumMipLevels() - 1 is ok here.
   glCheck(glTexImage2D(GL_TEXTURE_2D,                       // Target
                        pTex->m_image.GetNumMipLevels() - 1, // (Mip) Level
@@ -158,19 +189,60 @@ const kr::TextureName& kr::Texture::getName() const
   return getImpl(this)->m_name;
 }
 
-ezUInt32 kr::Texture::getId() const
+ezUInt32 kr::Texture::getGlHandle() const
 {
-  return static_cast<ezUInt32>(getImpl(this)->m_id);
+  return static_cast<ezUInt32>(getImpl(this)->m_glHandle);
 }
 
-kr::RestoreTexture2dOnScopeExit::RestoreTexture2dOnScopeExit()
+ezResult kr::bind(TexturePtr pTexture, TextureSlot slot)
 {
-  glCheck(glGetIntegerv(GL_TEXTURE_BINDING_2D, &previous));
+  if (isNull(pTexture))
+  {
+    ezLog::Warning("Cannot bind nullptr as texture. Ignoring.");
+    return EZ_FAILURE;
+  }
+
+  auto handle = pTexture->getGlHandle();
+
+  // Set the active texture unit.
+  glCheck(glActiveTexture(GL_TEXTURE0 + slot.value));
+
+  // Bind the texture.
+  glCheck(glBindTexture(GL_TEXTURE_2D, handle));
+
+  // Save the texture ptr.
+  g_pTextureBindings->ExpandAndGetRef() = move(pTexture);
+
+  return EZ_SUCCESS;
 }
 
-kr::RestoreTexture2dOnScopeExit::~RestoreTexture2dOnScopeExit()
+ezResult kr::restoreLastTexture2D(TextureSlot slot)
 {
-  glCheck(glBindTexture(GL_TEXTURE_2D, previous));
+  if (g_pTextureBindings->IsEmpty())
+  {
+    ezLog::Warning("No last texture 2D to restore!");
+    return EZ_FAILURE;
+  }
+
+  // Drop the current binding.
+  g_pTextureBindings->PopBack();
+
+  // Set the active texture unit.
+  glCheck(glActiveTexture(GL_TEXTURE0 + slot.value));
+
+  if(g_pTextureBindings->IsEmpty())
+  {
+    glCheck(glBindTexture(GL_TEXTURE_2D, 0));
+    return EZ_SUCCESS;
+  }
+
+  // Get the handle of the current binding.
+  auto handle = g_pTextureBindings->PeekBack()->getGlHandle();
+
+  // And actually bind it again.
+  glCheck(glBindTexture(GL_TEXTURE_2D, handle));
+
+  return EZ_SUCCESS;
 }
 
 // static
@@ -246,13 +318,47 @@ void kr::Sampler::setWrapping(TextureWrapping wrapping)
   glCheck(glSamplerParameteri(m_glHandle, GL_TEXTURE_WRAP_T, value));
 }
 
-void kr::use(SamplerPtr pSampler, TextureSlot slot)
+ezResult kr::bind(SamplerPtr pSampler, TextureSlot slot)
 {
+  if (isNull(pSampler))
+  {
+    ezLog::Warning("Cannot bind nullptr as sampler. Ignoring.");
+    return EZ_FAILURE;
+  }
+
+  auto handle = pSampler->getGlHandle();
+
+  // Bind the texture.
   glCheck(glBindSampler(slot.value, pSampler->m_glHandle));
+
+  // Save the handle.
+  g_pSamplerBindings->ExpandAndGetRef() = move(pSampler);
+
+  return EZ_SUCCESS;
 }
 
-void kr::unuse(SamplerPtr pSampler, TextureSlot slot)
+ezResult kr::restoreLastSampler(TextureSlot slot)
 {
-  EZ_IGNORE_UNUSED(pSampler);
-  glCheck(glBindSampler(slot.value, 0));
+  if (g_pSamplerBindings->IsEmpty())
+  {
+    ezLog::Warning("No last texture 2D to restore!");
+    return EZ_FAILURE;
+  }
+
+  // Drop the current binding.
+  g_pSamplerBindings->PopBack();
+
+  if(g_pSamplerBindings->IsEmpty())
+  {
+    glCheck(glBindSampler(slot.value, 0));
+    return EZ_SUCCESS;
+  }
+
+  // Get the handle of the current binding.
+  auto handle = g_pSamplerBindings->PeekBack()->getGlHandle();
+
+  // And actually bind it again.
+  glCheck(glBindSampler(slot.value, handle));
+
+  return EZ_SUCCESS;
 }

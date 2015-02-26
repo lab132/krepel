@@ -1,4 +1,5 @@
 #pragma once
+#include <krEngine/rendering/implementation/extractionData.h>
 
 namespace kr
 {
@@ -23,7 +24,15 @@ namespace kr
     template<typename T>
     T* allocate()
     {
-      return (T*)allocate(sizeof(T), EZ_ALIGNMENT_OF(T));
+      EZ_CHECK_AT_COMPILETIME((std::is_base_of<ExtractionData, T>::value));
+
+      auto alignment = EZ_ALIGNMENT_OF(T);
+      auto alignedSize = ezMemoryUtils::AlignSize(sizeof(T), alignment);
+      auto result =  new (allocate(alignedSize)) T;
+      EZ_CHECK_ALIGNMENT(result, alignment);
+      result->type = static_cast<ExtractionDataType>(T::Type);
+      result->byteCount = alignedSize;
+      return static_cast<T*>(result);
     }
 
     /// \brief Reset the current allocation pointer.
@@ -34,7 +43,7 @@ namespace kr
     size_t getNumAllocatedBytes() const { return m_current - m_data; }
 
     /// \brief Number of bytes currently available without having to grow.
-    size_t getByteCapacity() const { return m_end - m_data; }
+    size_t getByteCapacity() const { return m_max - m_data; }
 
     void setGrowthAllowed(bool allowed) { m_growthAllowed = allowed; }
 
@@ -48,15 +57,18 @@ namespace kr
       writeOnly->m_mode = Mode::WriteOnly;
     }
 
+    friend ezUByte* begin(ExtractionBuffer& e) { return e.m_data; }
+    friend ezUByte* end(ExtractionBuffer& e) { return e.m_current; }
+
   private: // *** Internal Functions
-    void* allocate(size_t bytes, size_t alignment);
+    void* allocate(size_t alignedSize);
     void grow(size_t newCapacity);
 
   private: // *** Internal Data
     ezAllocatorBase* m_pAllocator;
     ezUByte* m_data = nullptr;
     ezUByte* m_current = nullptr;
-    ezUByte* m_end = nullptr;
+    ezUByte* m_max = nullptr;
     Mode::Enum m_mode = Mode::WriteOnly;
     bool m_growthAllowed = true;
 

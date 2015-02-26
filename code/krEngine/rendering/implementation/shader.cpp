@@ -3,6 +3,42 @@
 
 #include <Foundation/IO/FileSystem/FileReader.h>
 
+using ShaderBindings = ezHybridArray<kr::ShaderProgramPtr, 8>;
+
+static ShaderBindings* g_pShaderBindings;
+static bool g_initialized = false;
+
+EZ_BEGIN_SUBSYSTEM_DECLARATION(krEngine, Shaders)
+  BEGIN_SUBSYSTEM_DEPENDENCIES
+    "Foundation",
+    "Core"
+  END_SUBSYSTEM_DEPENDENCIES
+
+  ON_CORE_STARTUP
+  {
+    g_pShaderBindings = new (m_mem_shaderBindings) ShaderBindings();
+
+    g_initialized = true;
+  }
+
+  ON_CORE_SHUTDOWN
+  {
+    if (g_pShaderBindings->GetCount() > 0)
+    {
+      ezLog::Error("There are still %u active shader program bindings!",
+                    g_pShaderBindings->GetCount());
+    }
+
+    g_pShaderBindings->~ShaderBindings();
+    g_pShaderBindings = nullptr;
+
+    g_initialized = false;
+  }
+
+private:
+  ezUByte m_mem_shaderBindings[sizeof(ShaderBindings)];
+EZ_END_SUBSYSTEM_DECLARATION
+
 static GLuint loadAndCompileShader(GLuint type, const char* filename)
 {
   // Read file content
@@ -211,31 +247,50 @@ kr::ShaderUniform kr::shaderUniformOf(ShaderProgramPtr pShader, const char* unif
   return u;
 }
 
-static kr::ShaderProgramPtr g_currentShader;
-
-KR_ENGINE_API ezResult kr::use(ShaderProgramPtr pShader)
+ezResult kr::bind(ShaderProgramPtr pShader)
 {
-  EZ_ASSERT(isNull(g_currentShader),
-            "Some other shader program is already in use. Is this intentional?");
   if (isNull(pShader))
+  {
+    ezLog::Warning("Cannot bind nullptr as shader program. Ignoring.");
     return EZ_FAILURE;
+  }
 
-  glCheck(glUseProgram(pShader->m_glHandle));
-  g_currentShader = pShader;
+  auto handle = pShader->getGlHandle();
+
+  // Set the active shader program.
+  glCheck(glUseProgram(handle));
+
+  // Save the shader program.
+  g_pShaderBindings->ExpandAndGetRef() = move(pShader);
+
   return EZ_SUCCESS;
 }
 
-void kr::unuse(ShaderProgramPtr pShader)
+ezResult kr::restoreLastShaderProgram()
 {
-    EZ_ASSERT(g_currentShader == pShader,
-              "Calling unuse with a shader that is not in use!");
-  if (g_currentShader == pShader)
+  if (g_pShaderBindings->IsEmpty())
+  {
+    ezLog::Warning("No last texture 2D to restore!");
+    return EZ_FAILURE;
+  }
+
+  // Drop the current binding.
+  g_pShaderBindings->PopBack();
+
+  if(g_pShaderBindings->IsEmpty())
   {
     glCheck(glUseProgram(0));
-    g_currentShader = nullptr;
+    return EZ_SUCCESS;
   }
-}
 
+  // Get the handle of the current binding.
+  auto handle = g_pShaderBindings->PeekBack()->getGlHandle();
+
+  // And actually bind it again.
+  glCheck(glUseProgram(handle));
+
+  return EZ_SUCCESS;
+}
 
 #define PRECONDITIONS_FOR_UPLOAD(uniform, type)    \
   EZ_LOG_BLOCK("Uploading Uniform Value", type);   \
@@ -257,7 +312,7 @@ void kr::unuse(ShaderProgramPtr pShader)
 ezResult kr::uploadData(const ShaderUniform& uniform,
                         ezColor value)
 {
-  PRECONDITIONS_FOR_UPLOAD(uniform, "ezColor");
+  PRECONDITIONS_FOR_UPLOAD(uniform, "Color");
 
   glCheck(glProgramUniform4fv(uniform.pShader->m_glHandle,
                               uniform.glLocation,
@@ -277,6 +332,5 @@ ezResult kr::uploadData(const ShaderUniform& uniform,
 
   return EZ_SUCCESS;
 }
-
 
 #undef PRECONDITIONS_FOR_UPLOAD

@@ -1,6 +1,4 @@
-#include <krEngine/rendering/sprite.h>
-#include <krEngine/rendering/renderer.h>
-#include <krEngine/rendering/window.h>
+#include <krEngine/rendering.h>
 
 EZ_CREATE_SIMPLE_TEST_GROUP(Sprite);
 
@@ -15,6 +13,7 @@ EZ_CREATE_SIMPLE_TEST(Sprite, Workflow)
   s.setTexture(Texture::load("<texture>kitten.dds"));
   s.setBounds(ezRectU32(0, 0, 512, 512));
   initialize(s);
+  s.getSampler()->setFiltering(TextureFiltering::Nearest);
 
   ezStartup::StartupEngine();
 
@@ -26,12 +25,18 @@ EZ_CREATE_SIMPLE_TEST(Sprite, Workflow)
       run = false;
   });
 
+  Renderer::addExtractionListener([&s](Renderer::Extractor& e)
+  {
+    ezTransform t;
+    extract(e, s, t);
+  });
+
   ezTime dt;
   while(run)
   {
     processWindowMessages(pWindow);
     Renderer::extract();
-    Renderer::update(dt, pWindow, s);
+    Renderer::update(dt, pWindow);
   }
 
   ezStartup::ShutdownEngine();

@@ -1,20 +1,26 @@
 #include <krEngine/rendering/renderer.h>
+#include <krEngine/rendering/extraction.h>
 #include <krEngine/rendering/window.h>
+
 #include <krEngine/rendering/implementation/windowImpl.h>
 #include <krEngine/rendering/implementation/opelGlCheck.h>
-
 #include <krEngine/rendering/implementation/extractionBuffer.h>
+#include <krEngine/rendering/implementation/extractionData.h>
 
 namespace
 {
-  using ExtractionAllocator = ezAllocator<ezMemoryPolicies::ezAlignedHeapAllocation, ezMemoryTrackingFlags::All>;
+  using ExtractionAllocator = ezAllocator<ezMemoryPolicies::ezAlignedHeapAllocation,
+                                          ezMemoryTrackingFlags::All>;
+
 }
 
 // Globals
 // =======
 static bool g_initialized = false;
+
 static kr::ExtractionBuffer* g_pReadBuffer;
 static kr::ExtractionBuffer* g_pWriteBuffer;
+static kr::Renderer::ExtractionEvent g_ExtractionEvent;
 
 void GLAPIENTRY debugCallbackOpenGL(GLenum source,
                                     GLenum type,
@@ -30,28 +36,28 @@ void GLAPIENTRY debugCallbackOpenGL(GLenum source,
 // clang-format off
 namespace kr
 {
-  EZ_BEGIN_SUBSYSTEM_DECLARATION(SpriteEngine, Renderer)
+  EZ_BEGIN_SUBSYSTEM_DECLARATION(krEngine, Renderer)
     BEGIN_SUBSYSTEM_DEPENDENCIES
     "Foundation",
     "Core"
     END_SUBSYSTEM_DEPENDENCIES
 
-    SpriteEngineRendererSubSystem() :
+    krEngineRendererSubSystem() :
       m_extractionAllocator("Extraction")
     {
     }
 
     ExtractionAllocator m_extractionAllocator;
 
-    char m_readBufferMemory[sizeof(ExtractionBuffer)];
-    char m_writeBufferMemory[sizeof(ExtractionBuffer)];
+    ezByte m_mem_readBuffer[sizeof(ExtractionBuffer)];
+    ezByte m_mem_writeBuffer[sizeof(ExtractionBuffer)];
 
     ON_CORE_STARTUP
     {
-      g_pReadBuffer = new (m_readBufferMemory) ExtractionBuffer(&m_extractionAllocator);
+      g_pReadBuffer = new (m_mem_readBuffer) ExtractionBuffer(&m_extractionAllocator);
       g_pReadBuffer->setMode(ExtractionBuffer::Mode::ReadOnly);
 
-      g_pWriteBuffer = new (m_writeBufferMemory) ExtractionBuffer(&m_extractionAllocator);
+      g_pWriteBuffer = new (m_mem_writeBuffer) ExtractionBuffer(&m_extractionAllocator);
       g_pReadBuffer->setMode(ExtractionBuffer::Mode::WriteOnly);
 
       g_initialized = true;
@@ -82,8 +88,50 @@ namespace kr
 }
 // clang-format on
 
+namespace kr
+{
+  namespace Renderer
+  {
+    class ExtractorImpl : public Extractor
+    {
+    public:
+      ExtractorImpl() = default;
+    };
+  }
+}
+
+static void renderExtractionData(ezUByte* current, ezUByte* max)
+{
+  using namespace kr;
+
+  while(current < max)
+  {
+    auto data = reinterpret_cast<ExtractionData*>(current);
+
+    switch(data->type)
+    {
+    case ExtractionDataType::Sprite:
+    {
+      auto& sprite = *static_cast<SpriteData*>(data);
+      draw(sprite);
+      sprite.~SpriteData();
+    }
+      break;
+    default:
+      EZ_REPORT_FAILURE("Unknown extraction data type.");
+      break;
+    }
+
+    EZ_ASSERT(current + data->byteCount <= max, "Must never exceed max!");
+    current += data->byteCount;
+  }
+}
+
 void kr::Renderer::extract()
 {
+  g_pWriteBuffer->reset();
+  ExtractorImpl e;
+  g_ExtractionEvent.Broadcast(e);
   swap(g_pReadBuffer, g_pWriteBuffer);
 }
 
@@ -105,6 +153,8 @@ void kr::Renderer::update(ezTime dt, RefCountedPtr<Window> pTarget)
   /// \todo This is Window specific.
   glCheck(wglMakeCurrent(window.m_hDC, window.m_hRC));
 
+  // Clear the Screen
+  // ================
   {
     auto& clearColor = window.m_clearColor;
     glCheck(glClearColor(clearColor.r, clearColor.g, clearColor.b, clearColor.a));
@@ -112,9 +162,16 @@ void kr::Renderer::update(ezTime dt, RefCountedPtr<Window> pTarget)
 
   glCheck(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
 
-  /// \todo Do the actual rendering here.
+  // Render the Data
+  // ===============
+  {
+    ezUByte* current = begin(*g_pReadBuffer);
+    ezUByte* max = end(*g_pReadBuffer);
+    renderExtractionData(current, max);
+  }
 
-  glCheck(glDrawArrays(GL_TRIANGLE_STRIP, 0, 4));
+  // Swap Buffers
+  // ============
 
   if (presentFrame(window).Failed())
   {
@@ -122,33 +179,29 @@ void kr::Renderer::update(ezTime dt, RefCountedPtr<Window> pTarget)
   }
 }
 
-#include <krEngine/rendering/implementation/spriteDrawing.h>
-void kr::Renderer::update(ezTime dt, RefCountedPtr<Window> pTarget, Sprite& sprite)
+void kr::Renderer::addExtractionListener(ExtractionEventListener listener)
 {
-  if(isNull(pTarget))
-  {
-    ezLog::Warning("Invalid target window.");
-    return;
-  }
+  g_ExtractionEvent.AddEventHandler(listener);
+}
 
-  auto& window = getImpl(pTarget);
-  /// \todo This is Window specific.
-  glCheck(wglMakeCurrent(window.m_hDC, window.m_hRC));
+void kr::Renderer::removeExtractionListener(ExtractionEventListener listener)
+{
+  g_ExtractionEvent.RemoveEventHandler(listener);
+}
 
-  {
-    auto& clearColor = window.m_clearColor;
-    glCheck(glClearColor(clearColor.r, clearColor.g, clearColor.b, clearColor.a));
-  }
+void kr::extract(Renderer::Extractor& e,
+                 const Sprite& sprite,
+                 ezTransform transform)
+{
+  auto pData = g_pWriteBuffer->allocate<SpriteData>();
+  pData->pTexture = sprite.getTexture();
+  pData->pVertexBuffer = sprite.getVertexBuffer();
+  pData->pShader = sprite.getShader();
+  pData->pSampler = sprite.getSampler();
 
-  glCheck(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
+  pData->uColor = sprite.getColorUniform();
+  pData->uTexture = sprite.getTextureUniform();
 
-  /// \todo Do the actual rendering here.
-
-  draw(sprite);
-  //glCheck(glDrawArrays(GL_TRIANGLE_STRIP, 0, 4));
-
-  if (presentFrame(window).Failed())
-  {
-    ezLog::Warning("Failed to present frame.");
-  }
+  pData->transform = move(transform);
+  pData->color = sprite.getColor();
 }
