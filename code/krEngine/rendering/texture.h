@@ -58,4 +58,62 @@ namespace kr
     KR_ENGINE_API RestoreTexture2dOnScopeExit();
     KR_ENGINE_API ~RestoreTexture2dOnScopeExit();
   };
+
+  // Texture Sampling
+  // ================
+
+  enum class TextureFiltering
+  {
+    Nearest,
+    Linear,
+    NearestMipMapNearest,
+    LinearMipMapNearest,
+    NearestMpMapLinear,
+    LinearMpMapLinear,
+  };
+
+  enum class TextureWrapping
+  {
+    Repeat,
+    MirroredRepeat,
+    ClampToEdge,
+    ClampToBorder,
+  };
+
+  class Sampler : public RefCounted
+  {
+  public: // *** Static API
+    using ReleasePolicy = RefCountedReleasePolicies::DefaultDelete;
+
+    KR_ENGINE_API static RefCountedPtr<Sampler> create();
+
+  public: // *** Data
+    ezUInt32 m_glHandle;
+
+  private: // *** Data
+    TextureFiltering m_filtering = TextureFiltering::Nearest;
+    TextureWrapping m_wrapping = TextureWrapping::Repeat;
+
+  public: // *** Accessors/Mutators
+    KR_ENGINE_API void setFiltering(TextureFiltering filtering);
+    TextureFiltering getFiltering() const { return m_filtering; }
+
+    KR_ENGINE_API void setWrapping(TextureWrapping wrapping);
+    TextureWrapping getWrapping() const { return m_wrapping; }
+
+  public: // *** Construction
+    KR_ENGINE_API ~Sampler();
+
+  protected: // *** Construction
+    Sampler() = default; ///< Protected default ctor.
+
+  private: // *** Construction
+    Sampler(const Sampler&) = delete;         ///< No copy.
+    void operator =(const Sampler&) = delete; ///< No assignment.
+  };
+
+  using SamplerPtr = RefCountedPtr<Sampler>;
+
+  KR_ENGINE_API void use(SamplerPtr pSampler, TextureSlot slot);
+  KR_ENGINE_API void unuse(SamplerPtr pSampler, TextureSlot slot);
 }

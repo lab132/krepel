@@ -75,7 +75,6 @@ kr::TextureImpl* kr::findInstance(const char* textureName)
   return nullptr;
 }
 
-
 kr::TextureImpl::~TextureImpl()
 {
   removeInstance(this);
@@ -172,4 +171,88 @@ kr::RestoreTexture2dOnScopeExit::RestoreTexture2dOnScopeExit()
 kr::RestoreTexture2dOnScopeExit::~RestoreTexture2dOnScopeExit()
 {
   glCheck(glBindTexture(GL_TEXTURE_2D, previous));
+}
+
+// static
+kr::RefCountedPtr<kr::Sampler> kr::Sampler::create()
+{
+  GLuint h;
+  glCheck(glCreateSamplers(1, &h));
+  if (glIsSampler(h) != GL_TRUE)
+  {
+    ezLog::Warning("Unable to create sampler object.");
+    return nullptr;
+  }
+
+  auto pSampler = EZ_DEFAULT_NEW(Sampler);
+  pSampler->m_glHandle = h;
+  pSampler->setFiltering(pSampler->m_filtering);
+  pSampler->setWrapping(pSampler->m_wrapping);
+  return pSampler;
+}
+
+kr::Sampler::~Sampler()
+{
+  glCheck(glDeleteSamplers(1, &m_glHandle));
+}
+
+static GLenum translate(kr::TextureFiltering f)
+{
+  switch(f)
+  {
+  case kr::TextureFiltering::Nearest:              return GL_NEAREST;
+  case kr::TextureFiltering::Linear:               return GL_LINEAR;
+  case kr::TextureFiltering::NearestMipMapNearest: return GL_NEAREST_MIPMAP_NEAREST;
+  case kr::TextureFiltering::LinearMipMapNearest:  return GL_LINEAR_MIPMAP_NEAREST;
+  case kr::TextureFiltering::NearestMpMapLinear:   return GL_NEAREST_MIPMAP_LINEAR;
+  case kr::TextureFiltering::LinearMpMapLinear:    return GL_LINEAR_MIPMAP_LINEAR;
+  default:
+    break;
+  }
+
+  EZ_REPORT_FAILURE("Invalid input.");
+  return 0;
+}
+
+static GLenum translate(kr::TextureWrapping w)
+{
+  switch(w)
+  {
+  case kr::TextureWrapping::Repeat:         return GL_REPEAT;
+  case kr::TextureWrapping::MirroredRepeat: return GL_MIRRORED_REPEAT;
+  case kr::TextureWrapping::ClampToEdge:    return GL_CLAMP_TO_EDGE;
+  case kr::TextureWrapping::ClampToBorder:  return GL_CLAMP_TO_BORDER;
+  default:
+    break;
+  }
+
+  EZ_REPORT_FAILURE("Invalid input.");
+  return 0;
+}
+
+void kr::Sampler::setFiltering(TextureFiltering filtering)
+{
+  m_filtering = filtering;
+  auto value = translate(filtering);
+  glCheck(glSamplerParameteri(m_glHandle, GL_TEXTURE_MIN_FILTER, value));
+  glCheck(glSamplerParameteri(m_glHandle, GL_TEXTURE_MAG_FILTER, value));
+}
+
+void kr::Sampler::setWrapping(TextureWrapping wrapping)
+{
+  m_wrapping = wrapping;
+  auto value = translate(m_wrapping);
+  glCheck(glSamplerParameteri(m_glHandle, GL_TEXTURE_WRAP_S, value));
+  glCheck(glSamplerParameteri(m_glHandle, GL_TEXTURE_WRAP_T, value));
+}
+
+void kr::use(SamplerPtr pSampler, TextureSlot slot)
+{
+  glCheck(glBindSampler(slot.value, pSampler->m_glHandle));
+}
+
+void kr::unuse(SamplerPtr pSampler, TextureSlot slot)
+{
+  EZ_IGNORE_UNUSED(pSampler);
+  glCheck(glBindSampler(slot.value, 0));
 }

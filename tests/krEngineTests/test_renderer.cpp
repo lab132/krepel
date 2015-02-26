@@ -82,23 +82,18 @@ EZ_CREATE_SIMPLE_TEST(Renderer, Experiments)
     auto tex = Texture::load("<texture>kitten.dds");
     EZ_TEST_BOOL(isValid(tex));
 
-    GLuint sampler = 0;
-    glGenSamplers(1, &sampler);
-    glSamplerParameteri(sampler, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
-    glSamplerParameteri(sampler, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
-    glSamplerParameteri(sampler, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glSamplerParameteri(sampler, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    auto pSampler = Sampler::create();
+    use(pSampler, TextureSlot(0));
+    KR_ON_SCOPE_EXIT{ unuse(pSampler, TextureSlot(0)); };
 
     uploadData(shaderUniformOf(prg, "u_texture"), TextureSlot(0));
 
-    //glBindSampler(0, sampler);
     glBindTexture(GL_TEXTURE_2D, tex->getId());
 
     EZ_TEST_BOOL(use(vb, prg).Succeeded());
     KR_ON_SCOPE_EXIT{ unuse(vb, prg); };
 
     bool run = true;
-
     pWindow->getEvent().AddEventHandler([&run](const WindowEventArgs& e)
     {
       if (e.type == WindowEventArgs::ClickClose)
