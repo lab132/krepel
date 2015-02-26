@@ -26,6 +26,8 @@ namespace kr
     EZ_DISALLOW_COPY_AND_ASSIGN(VertexShader);
   };
 
+  using VertexShaderPtr = RefCountedPtr<VertexShader>;
+
   class FragmentShader : public RefCounted
   {
   public: // *** Data
@@ -48,15 +50,17 @@ namespace kr
     EZ_DISALLOW_COPY_AND_ASSIGN(FragmentShader);
   };
 
+  using FragmentShaderPtr = RefCountedPtr<FragmentShader>;
+
   class ShaderProgram : public RefCounted
   {
   public: // *** Static API
     using ReleasePolicy = RefCountedReleasePolicies::DefaultDelete;
 
     /// \brief Links the given vertex and fragment shaders \a pVS and \a pFS to a program.
-    KR_ENGINE_API
-    static RefCountedPtr<ShaderProgram> link(RefCountedPtr<VertexShader> pVS,
-                                             RefCountedPtr<FragmentShader> pFS);
+    KR_ENGINE_API static RefCountedPtr<ShaderProgram> link(VertexShaderPtr pVS,
+                                                           FragmentShaderPtr pFS);
+
   public: // *** Data
     /// \note You should not fiddle around with this directly.
     GLuint m_glHandle = 0;
@@ -71,13 +75,15 @@ namespace kr
     EZ_DISALLOW_COPY_AND_ASSIGN(ShaderProgram);
   };
 
+  using ShaderProgramPtr = RefCountedPtr<ShaderProgram>;
+
   struct ShaderUniform
   {
     GLuint glLocation = -1;
-    RefCountedPtr<ShaderProgram> pShader;
+    ShaderProgramPtr pShader;
   };
 
-  KR_ENGINE_API ShaderUniform shaderUniformOf(RefCountedPtr<ShaderProgram> pShader,
+  KR_ENGINE_API ShaderUniform shaderUniformOf(ShaderProgramPtr pShader,
                                               const char* uniformName);
 
   /// \brief Uploads an \a ezColor value.
@@ -88,6 +94,6 @@ namespace kr
   KR_ENGINE_API ezResult uploadData(const ShaderUniform& uniform,
                                     TextureSlot slot);
 
-  KR_ENGINE_API ezResult use(RefCountedPtr<ShaderProgram> pShader);
-  KR_ENGINE_API void unuse(RefCountedPtr<ShaderProgram> pShader);
+  KR_ENGINE_API ezResult use(ShaderProgramPtr pShader);
+  KR_ENGINE_API void unuse(ShaderProgramPtr pShader);
 }

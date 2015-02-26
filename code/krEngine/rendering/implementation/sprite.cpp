@@ -24,7 +24,7 @@ EZ_BEGIN_STATIC_REFLECTED_TYPE(SpriteVertex, ezNoBase, 1, ezRTTINoAllocator);
   EZ_END_PROPERTIES
 EZ_END_STATIC_REFLECTED_TYPE();
 
-static kr::RefCountedPtr<kr::VertexBuffer> createVertexBuffer(kr::RefCountedPtr<kr::ShaderProgram> pShader)
+static kr::VertexBufferPtr createVertexBuffer(kr::ShaderProgramPtr pShader)
 {
   using namespace kr;
 
@@ -54,7 +54,7 @@ static kr::RefCountedPtr<kr::VertexBuffer> createVertexBuffer(kr::RefCountedPtr<
   return pVB;
 }
 
-static kr::RefCountedPtr<kr::ShaderProgram> createSpriteShader()
+static kr::ShaderProgramPtr createSpriteShader()
 {
   using namespace kr;
 

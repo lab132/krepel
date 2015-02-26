@@ -107,9 +107,8 @@ kr::FragmentShader::~FragmentShader()
   m_glHandle = 0;
 }
 
-kr::RefCountedPtr<kr::ShaderProgram>
-kr::ShaderProgram::link(RefCountedPtr<VertexShader> pVS,
-                        RefCountedPtr<FragmentShader> pFS)
+kr::RefCountedPtr<kr::ShaderProgram> kr::ShaderProgram::link(VertexShaderPtr pVS,
+                                                             FragmentShaderPtr pFS)
 {
   if (isNull(pVS))
   {
@@ -180,7 +179,7 @@ kr::ShaderProgram::~ShaderProgram()
   m_glHandle = 0;
 }
 
-kr::ShaderUniform kr::shaderUniformOf(RefCountedPtr<ShaderProgram> pShader, const char* uniformName)
+kr::ShaderUniform kr::shaderUniformOf(ShaderProgramPtr pShader, const char* uniformName)
 {
   EZ_ASSERT(isValid(pShader), "Invalid shader program.");
   if(isNull(pShader))
@@ -206,9 +205,9 @@ kr::ShaderUniform kr::shaderUniformOf(RefCountedPtr<ShaderProgram> pShader, cons
   return u;
 }
 
-static kr::RefCountedPtr<kr::ShaderProgram> g_currentShader;
+static kr::ShaderProgramPtr g_currentShader;
 
-KR_ENGINE_API ezResult kr::use(RefCountedPtr<ShaderProgram> pShader)
+KR_ENGINE_API ezResult kr::use(ShaderProgramPtr pShader)
 {
   EZ_ASSERT(isNull(g_currentShader),
             "Some other shader program is already in use. Is this intentional?");
@@ -220,7 +219,7 @@ KR_ENGINE_API ezResult kr::use(RefCountedPtr<ShaderProgram> pShader)
   return EZ_SUCCESS;
 }
 
-void kr::unuse(RefCountedPtr<ShaderProgram> pShader)
+void kr::unuse(ShaderProgramPtr pShader)
 {
     EZ_ASSERT(g_currentShader == pShader,
               "Calling unuse with a shader that is not in use!");

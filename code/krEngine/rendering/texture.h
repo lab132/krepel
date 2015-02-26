@@ -42,6 +42,8 @@ namespace kr
     void operator =(const Texture&) = delete; ///< No assignment.
   };
 
+  using TexturePtr = RefCountedPtr<Texture>;
+
   struct TextureSlot
   {
     ezInt32 value = -1;

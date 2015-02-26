@@ -15,12 +15,12 @@ namespace kr
     ShaderUniform m_uTexture;
     ShaderUniform m_uColor;
 
-    RefCountedPtr<ShaderProgram> m_pShader;
+    ShaderProgramPtr m_pShader;
 
-    RefCountedPtr<VertexBuffer> m_pVertexBuffer;
+    VertexBufferPtr m_pVertexBuffer;
 
     /// \brief Handle to the texture used by this sprite.
-    RefCountedPtr<Texture> m_pTexture;
+    TexturePtr m_pTexture;
 
     /// \brief The bounds (or "view") of this sprite into the texture.
     ///
@@ -34,14 +34,14 @@ namespace kr
     ezColor getColor() const { return m_color; }
 
     /// \brief Set the current texture.
-    void setTexture(RefCountedPtr<Texture> pTex)
+    void setTexture(TexturePtr pTex)
     {
       m_needsUpdate = true;
       m_pTexture = pTex;
     }
 
     /// \brief Gets the handle to the current texture.
-    RefCountedPtr<Texture> getTexture() const
+    TexturePtr getTexture() const
     {
       return m_pTexture;
     }

@@ -95,8 +95,8 @@ kr::VertexBuffer::~VertexBuffer()
   m_glHandle = 0;
 }
 
-ezResult kr::setupLayout(RefCountedPtr<VertexBuffer> pVertBuffer,
-                         RefCountedPtr<ShaderProgram> pProgram,
+ezResult kr::setupLayout(VertexBufferPtr pVertBuffer,
+                         ShaderProgramPtr pProgram,
                          const char* layoutTypeName)
 {
   EZ_LOG_BLOCK("Setup Vertex Buffer Layout");
@@ -232,7 +232,7 @@ ezResult kr::setupLayout(RefCountedPtr<VertexBuffer> pVertBuffer,
   return result;
 }
 
-ezResult kr::uploadData(RefCountedPtr<VertexBuffer> pVertBuffer,
+ezResult kr::uploadData(VertexBufferPtr pVertBuffer,
                         ezUInt32 byteCount,
                         const void* bytes,
                         ezUInt32 offet)
@@ -259,8 +259,7 @@ ezResult kr::uploadData(RefCountedPtr<VertexBuffer> pVertBuffer,
   return EZ_SUCCESS;
 }
 
-ezResult kr::use(RefCountedPtr<VertexBuffer> pVertBuffer,
-             RefCountedPtr<ShaderProgram> pProgram)
+ezResult kr::use(VertexBufferPtr pVertBuffer, ShaderProgramPtr pProgram)
 {
   if (isNull(pVertBuffer))
   {
@@ -291,8 +290,7 @@ ezResult kr::use(RefCountedPtr<VertexBuffer> pVertBuffer,
   return EZ_FAILURE;
 }
 
-void kr::unuse(RefCountedPtr<VertexBuffer> pVertBuffer,
-               RefCountedPtr<ShaderProgram> pProgram)
+void kr::unuse(VertexBufferPtr pVertBuffer, ShaderProgramPtr pProgram)
 {
   EZ_IGNORE_UNUSED(pVertBuffer);
   EZ_IGNORE_UNUSED(pProgram);
