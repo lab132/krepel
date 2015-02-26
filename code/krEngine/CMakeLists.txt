@@ -51,7 +51,6 @@ set(FILES
   # Shaders
   rendering/shader.h
   rendering/implementation/shader.cpp
-  rendering/implementation/uploadUniformValue.cpp
 
   # VertexBuffer
   rendering/vertexBuffer.h

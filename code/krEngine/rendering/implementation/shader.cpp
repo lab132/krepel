@@ -229,3 +229,48 @@ void kr::unuse(ShaderProgramPtr pShader)
     g_currentShader = nullptr;
   }
 }
+
+
+#define PRECONDITIONS_FOR_UPLOAD(uniform, type)    \
+  EZ_LOG_BLOCK("Uploading Uniform Value", type);   \
+  do                                               \
+  {                                                \
+    if (isNull(uniform.pShader))                   \
+    {                                              \
+      ezLog::Warning("Invalid shader object.");    \
+      return EZ_FAILURE;                           \
+    }                                              \
+    if (uniform.glLocation == -1)                  \
+    {                                              \
+      ezLog::Warning("Invalid uniform location."); \
+      return EZ_FAILURE;                           \
+    }                                              \
+  } while (false)
+
+
+ezResult kr::uploadData(const ShaderUniform& uniform,
+                        ezColor value)
+{
+  PRECONDITIONS_FOR_UPLOAD(uniform, "ezColor");
+
+  glCheck(glProgramUniform4fv(uniform.pShader->m_glHandle,
+                              uniform.glLocation,
+                              1, value.GetData()));
+
+  return EZ_SUCCESS;
+}
+
+ezResult kr::uploadData(const ShaderUniform& uniform,
+                        TextureSlot slot)
+{
+  PRECONDITIONS_FOR_UPLOAD(uniform, "Texture");
+
+  glCheck(glProgramUniform1i(uniform.pShader->m_glHandle,
+                             uniform.glLocation,
+                             slot.value));
+
+  return EZ_SUCCESS;
+}
+
+
+#undef PRECONDITIONS_FOR_UPLOAD
