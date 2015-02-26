@@ -12,7 +12,6 @@ EZ_CREATE_SIMPLE_TEST(Sprite, Workflow)
 
   Sprite s;
   s.setTexture(Texture::load("<texture>kitten.dds"));
-  s.setBounds(ezRectU32(0, 0, 512, 512));
   initialize(s);
   s.getSampler()->setFiltering(TextureFiltering::Nearest);
 

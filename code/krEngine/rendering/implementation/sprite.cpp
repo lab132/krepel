@@ -1,22 +1,9 @@
+#include <krEngine/pch.h>
 #include <krEngine/rendering/sprite.h>
 #include <krEngine/rendering/shader.h>
 #include <krEngine/rendering/implementation/opelGlCheck.h>
 
-#include <Foundation/Reflection/Reflection.h>
-
-namespace
-{
-  struct SpriteVertex
-  {
-    // *** Per-Vertex Data
-    ezVec2 pos = ezVec2::ZeroVector();
-    ezVec2 texCoords = ezVec2::ZeroVector();
-  };
-}
-
-EZ_DECLARE_REFLECTABLE_TYPE(EZ_NO_LINKAGE, SpriteVertex);
-
-EZ_BEGIN_STATIC_REFLECTED_TYPE(SpriteVertex, ezNoBase, 1, ezRTTINoAllocator);
+EZ_BEGIN_STATIC_REFLECTED_TYPE(krSpriteVertex, ezNoBase, 1, ezRTTINoAllocator);
   EZ_BEGIN_PROPERTIES
     // We use the names used in the shader here.
     EZ_MEMBER_PROPERTY("vs_position",  pos),
@@ -33,36 +20,7 @@ static kr::VertexBufferPtr createVertexBuffer(kr::ShaderProgramPtr pShader)
   auto pVB = VertexBuffer::create(BufferUsage::StaticDraw,
                                   PrimitiveType::TriangleStrip);
 
-  setupLayout(pVB, pShader, "SpriteVertex");
-
-  SpriteVertex vertices[4];
-
-  /// \todo Make use of bounds here.
-
-  const auto tw = 512;
-  const auto th = 512;
-
-  const auto x = 32;
-  const auto y = 32;
-  const auto w = x + 256;
-  const auto h = y + 256;
-
-  auto left   = float(x) / float(tw);
-  auto right  = float(w) / float(tw);
-  auto top    = float(h) / float(th);
-  auto bottom = float(y) / float(th);
-
-  vertices[0].pos.Set(left  * 2 - 1,bottom * 2 - 1); // Lower Left
-  vertices[1].pos.Set(left  * 2 - 1,top    * 2 - 1); // Upper Left
-  vertices[2].pos.Set(right * 2 - 1,bottom * 2 - 1); // Lower Right
-  vertices[3].pos.Set(right * 2 - 1,top    * 2 - 1); // Upper Right
-
-  vertices[0].texCoords.Set(left,  top);
-  vertices[1].texCoords.Set(left,  bottom);
-  vertices[2].texCoords.Set(right, top);
-  vertices[3].texCoords.Set(right, bottom);
-
-  uploadData(pVB, ezMakeArrayPtr(vertices));
+  setupLayout(pVB, pShader, "krSpriteVertex");
 
   return pVB;
 }
@@ -85,10 +43,37 @@ static kr::ShaderProgramPtr createSpriteShader()
   return prg;
 }
 
+kr::Sprite::Sprite()
+{
+  m_needUpdate.Add(SpriteComponents::LocalBounds);
+  m_needUpdate.Add(SpriteComponents::Cutout);
+}
+
+void kr::Sprite::setLocalBounds(ezRectFloat newLocalBounds)
+{
+  m_localBounds = move(newLocalBounds);
+  m_needUpdate.Add(SpriteComponents::LocalBounds);
+}
+
+void kr::Sprite::setCutout(ezRectU32 newCutout)
+{
+  m_cutout = newCutout;
+  if (m_cutout.HasNonZeroArea() && isValid(m_pTexture))
+  {
+    m_cutout.x = 0;
+    m_cutout.y = 0;
+    m_cutout.width = m_pTexture->getWidth();
+    m_cutout.height = m_pTexture->getHeight();
+  }
+  m_needUpdate.Add(SpriteComponents::Cutout);
+}
+
 void kr::update(Sprite& sprite)
 {
   EZ_LOG_BLOCK("Updating Sprite");
 
+  // Create Shader, If Needed
+  // ========================
   if (isNull(sprite.m_pShader))
   {
     sprite.m_pShader = createSpriteShader();
@@ -96,37 +81,98 @@ void kr::update(Sprite& sprite)
     sprite.m_uTexture = shaderUniformOf(sprite.m_pShader, "u_texture");
   }
 
+  // Create VertexBuffer, If Needed
+  // ==============================
   if (isNull(sprite.m_pVertexBuffer))
   {
     sprite.m_pVertexBuffer = createVertexBuffer(sprite.m_pShader);
   }
 
+  // Terminate, If There Is No Texture
+  // =================================
   if (isNull(sprite.m_pTexture))
   {
     ezLog::Warning("Sprite has no texture yet. Ignoring.");
     return;
   }
 
+  // Create Sampler, If Needed
+  // =========================
   if (isNull(sprite.m_pSampler))
   {
     sprite.m_pSampler = Sampler::create();
     ezLog::Debug("Using default texture sampler for sprite.");
   }
 
-  // Update Bounds
-  // =============
+  bool uploadVB = false;
 
-  auto& pTexture = sprite.m_pTexture;
-  auto& bounds = sprite.m_bounds;
-  if (bounds.HasNonZeroArea())
+  // Update Cutout
+  // =============
+  if(sprite.m_needUpdate.IsSet(SpriteComponents::Cutout))
   {
-    bounds.x = 0;
-    bounds.y = 0;
-    bounds.width = pTexture->getWidth();
-    bounds.height = pTexture->getHeight();
+    auto& pTexture = sprite.m_pTexture;
+    auto texWidth = pTexture->getWidth();
+    auto texHeight = pTexture->getHeight();
+
+    auto& cutout = sprite.m_cutout;
+    if (cutout.HasNonZeroArea())
+    {
+      auto l = float(cutout.x)      / float(texWidth);  // Left.
+      auto r = float(cutout.width)  / float(texWidth);  // Right.
+      auto t = float(cutout.height) / float(texHeight); // Top.
+      auto b = float(cutout.y)      / float(texHeight); // Bottom.
+
+      sprite.m_vertices[0].texCoords.Set(l, t);
+      sprite.m_vertices[1].texCoords.Set(l, b);
+      sprite.m_vertices[2].texCoords.Set(r, t);
+      sprite.m_vertices[3].texCoords.Set(r, b);
+    }
+    else
+    {
+      cutout.x = 0;
+      cutout.y = 0;
+      cutout.width = texWidth;
+      cutout.height = texHeight;
+
+      sprite.m_vertices[0].texCoords.Set(0, 1);
+      sprite.m_vertices[1].texCoords.Set(0, 0);
+      sprite.m_vertices[2].texCoords.Set(1, 1);
+      sprite.m_vertices[3].texCoords.Set(1, 0);
+    }
+
+    uploadVB = true;
+    sprite.m_needUpdate.Remove(SpriteComponents::Cutout);
   }
 
-  // Finish Updating
-  // ===============
-  sprite.m_needsUpdate = false;
+  // Update Local Bounds
+  // ===================
+  if(sprite.m_needUpdate.IsSet(SpriteComponents::LocalBounds))
+  {
+    auto& bounds = sprite.m_localBounds;
+
+    // If no bounds were set, use the texture as bounds.
+    if (!bounds.HasNonZeroArea())
+    {
+      auto& cutout = sprite.m_cutout;
+      bounds.x      = float(cutout.x);
+      bounds.y      = float(cutout.x);
+      bounds.width  = float(cutout.width);
+      bounds.height = float(cutout.height);
+    }
+
+    sprite.m_vertices[0].pos.Set(bounds.x,                bounds.y);
+    sprite.m_vertices[1].pos.Set(bounds.x,                bounds.y + bounds.height);
+    sprite.m_vertices[2].pos.Set(bounds.x + bounds.width, bounds.y);
+    sprite.m_vertices[3].pos.Set(bounds.x + bounds.width, bounds.y + bounds.height);
+
+    uploadVB = true;
+    sprite.m_needUpdate.Remove(SpriteComponents::LocalBounds);
+  }
+
+  // Upload VertexBuffer Data If Necessary
+  // =====================================
+  if (uploadVB)
+  {
+    uploadData(sprite.getVertexBuffer(), sprite.getVertices());
+  }
 }
