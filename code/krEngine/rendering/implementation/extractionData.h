@@ -1,4 +1,5 @@
 #pragma once
+#include <krEngine/transform2D.h>
 #include <krEngine/rendering/vertexBuffer.h>
 #include <krEngine/rendering/texture.h>
 #include <krEngine/rendering/sprite.h>
@@ -31,7 +32,7 @@ namespace kr
     ShaderUniform uTexture;
     ShaderUniform uColor;
 
-    ezTransform transform;
+    Transform2D transform;
     ezColor color;
   };
 

@@ -10,6 +10,14 @@ namespace kr
 
   template<typename T>
   inline void invalidate(T*& ptr) { ptr = nullptr; }
+
+  /// \brief Used to provide function or constructor overloads to initialize
+  ///        Something to zero.
+  enum ZeroInit { Zero };
+
+  /// \brief Used to provide function or constructor overloads to initialize
+  ///        Something to the identity form.
+  enum IdentityInit { Identity };
 }
 
 namespace krInternal

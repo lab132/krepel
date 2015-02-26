@@ -1,3 +1,4 @@
+#include <krEngine/transform2D.h>
 #include <krEngine/rendering.h>
 
 EZ_CREATE_SIMPLE_TEST_GROUP(Sprite);
@@ -27,7 +28,7 @@ EZ_CREATE_SIMPLE_TEST(Sprite, Workflow)
 
   Renderer::addExtractionListener([&s](Renderer::Extractor& e)
   {
-    ezTransform t;
+    Transform2D t(Zero);
     extract(e, s, t);
   });
 

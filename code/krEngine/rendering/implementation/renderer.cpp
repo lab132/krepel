@@ -191,7 +191,7 @@ void kr::Renderer::removeExtractionListener(ExtractionEventListener listener)
 
 void kr::extract(Renderer::Extractor& e,
                  const Sprite& sprite,
-                 ezTransform transform)
+                 Transform2D transform)
 {
   auto pData = g_pWriteBuffer->allocate<SpriteData>();
   pData->pTexture = sprite.getTexture();
