@@ -31,10 +31,14 @@ namespace kr
     SamplerPtr pSampler;
     ShaderUniform uTexture;
     ShaderUniform uColor;
+    ShaderUniform uViewMatrix;
+    ShaderUniform uProjectionMatrix;
 
     Transform2D transform;
     ezColor color;
   };
 
-  void draw(SpriteData& sprite);
+  void draw(SpriteData& sprite,
+            const ezMat4& viewMatrix,
+            const ezMat4& projectionMatrix);
 }

@@ -314,7 +314,7 @@ ezResult kr::uploadData(const ShaderUniform& uniform,
 {
   PRECONDITIONS_FOR_UPLOAD(uniform, "Color");
 
-  glCheck(glProgramUniform4fv(uniform.pShader->m_glHandle,
+  glCheck(glProgramUniform4fv(uniform.pShader->getGlHandle(),
                               uniform.glLocation,
                               1, value.GetData()));
 
@@ -326,9 +326,22 @@ ezResult kr::uploadData(const ShaderUniform& uniform,
 {
   PRECONDITIONS_FOR_UPLOAD(uniform, "Texture");
 
-  glCheck(glProgramUniform1i(uniform.pShader->m_glHandle,
+  glCheck(glProgramUniform1i(uniform.pShader->getGlHandle(),
                              uniform.glLocation,
                              slot.value));
+
+  return EZ_SUCCESS;
+}
+
+ezResult kr::uploadData(const ShaderUniform& uniform, const ezMat4& matrix)
+{
+  PRECONDITIONS_FOR_UPLOAD(uniform, "Matrix4x4");
+
+  glCheck(glProgramUniformMatrix4fv(uniform.pShader->getGlHandle(), // Program handle
+                                    1,                              // Number of matrices.
+                                    GL_FALSE,                       // Transpose?
+                                    uniform.glLocation,             // Uniform location.
+                                    matrix.m_fElementsCM));         // Matrix data.
 
   return EZ_SUCCESS;
 }

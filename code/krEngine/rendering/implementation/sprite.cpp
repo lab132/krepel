@@ -79,6 +79,8 @@ void kr::update(Sprite& sprite)
     sprite.m_pShader = createSpriteShader();
     sprite.m_uColor = shaderUniformOf(sprite.m_pShader, "u_color");
     sprite.m_uTexture = shaderUniformOf(sprite.m_pShader, "u_texture");
+    sprite.m_uViewMatrix = shaderUniformOf(sprite.m_pShader, "u_view");
+    sprite.m_uProjectionMatrix = shaderUniformOf(sprite.m_pShader, "u_projection");
   }
 
   // Create VertexBuffer, If Needed

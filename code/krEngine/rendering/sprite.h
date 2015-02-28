@@ -55,6 +55,8 @@ namespace kr
 
     ShaderUniform getTextureUniform() const { return m_uTexture; }
     ShaderUniform getColorUniform() const { return m_uColor; }
+    ShaderUniform getViewMatrixUniform() const { return m_uViewMatrix; }
+    ShaderUniform getProjectionMatrixUniform() const { return m_uProjectionMatrix; }
     ShaderProgramPtr getShader() const { return m_pShader; }
     VertexBufferPtr getVertexBuffer() const { return m_pVertexBuffer; }
     SamplerPtr getSampler() const { return m_pSampler; }
@@ -72,6 +74,8 @@ namespace kr
 
     ShaderUniform m_uTexture;
     ShaderUniform m_uColor;
+    ShaderUniform m_uViewMatrix;
+    ShaderUniform m_uProjectionMatrix;
 
     ShaderProgramPtr m_pShader;
 

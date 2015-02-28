@@ -1,6 +1,8 @@
 #include <krEngine/transform2D.h>
 #include <krEngine/rendering.h>
 
+#include <CoreUtils/Graphics/Camera.h>
+
 EZ_CREATE_SIMPLE_TEST_GROUP(Sprite);
 
 EZ_CREATE_SIMPLE_TEST(Sprite, Workflow)
@@ -9,6 +11,18 @@ EZ_CREATE_SIMPLE_TEST(Sprite, Workflow)
 
   auto pWindow = Window::open();
   pWindow->setClearColor(ezColor::GetCornflowerBlue());
+
+  ezCamera cam;
+  cam.SetCameraMode(ezCamera::OrthoFixedWidth,                 // Using an orthographic cam.
+                    (float)pWindow->getClientAreaSize().width, // Width of the orthographic cam.
+                    0.1f,                                      // Near plane.
+                    1.0f);                                     // Far plane.
+  cam.LookAt(ezVec3(0, 0, 1),  // Camera Position.
+             ezVec3(0, 0, 0)); // Target Position.
+
+  ezMat4 view, projection;
+  cam.GetViewMatrix(view);
+  cam.GetProjectionMatrix(16.0f/9.0f, ezProjectionDepthRange::MinusOneToOne, projection);
 
   Sprite s;
   s.setTexture(Texture::load("<texture>kitten.dds"));
@@ -25,8 +39,11 @@ EZ_CREATE_SIMPLE_TEST(Sprite, Workflow)
       run = false;
   });
 
-  Renderer::addExtractionListener([&s](Renderer::Extractor& e)
+  Renderer::addExtractionListener([&s, &cam](Renderer::Extractor& e)
   {
+    auto aspectRatio = 16.0f/9.0f;
+    extract(e, cam, aspectRatio);
+
     Transform2D t(Zero);
     extract(e, s, t);
   });

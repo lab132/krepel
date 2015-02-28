@@ -7,6 +7,8 @@
 #include <krEngine/rendering/implementation/extractionBuffer.h>
 #include <krEngine/rendering/implementation/extractionData.h>
 
+#include <CoreUtils/Graphics/Camera.h>
+
 namespace
 {
   using ExtractionAllocator = ezAllocator<ezMemoryPolicies::ezAlignedHeapAllocation,
@@ -21,6 +23,9 @@ static bool g_initialized = false;
 static kr::ExtractionBuffer* g_pReadBuffer;
 static kr::ExtractionBuffer* g_pWriteBuffer;
 static kr::Renderer::ExtractionEvent g_ExtractionEvent;
+
+static ezMat4 g_view;
+static ezMat4 g_projection;
 
 void GLAPIENTRY debugCallbackOpenGL(GLenum source,
                                     GLenum type,
@@ -60,6 +65,9 @@ namespace kr
       g_pWriteBuffer = new (m_mem_writeBuffer) ExtractionBuffer(&m_extractionAllocator);
       g_pReadBuffer->setMode(ExtractionBuffer::Mode::WriteOnly);
 
+      g_view.SetIdentity();
+      g_projection.SetIdentity();
+
       g_initialized = true;
     }
 
@@ -76,6 +84,9 @@ namespace kr
 
     ON_CORE_SHUTDOWN
     {
+      g_projection.SetIdentity();
+      g_view.SetIdentity();
+
       g_pWriteBuffer->~ExtractionBuffer();
       g_pWriteBuffer = nullptr;
 
@@ -113,7 +124,7 @@ static void renderExtractionData(ezUByte* current, ezUByte* max)
     case ExtractionDataType::Sprite:
     {
       auto& sprite = *static_cast<SpriteData*>(data);
-      draw(sprite);
+      draw(sprite, g_view, g_projection);
       sprite.~SpriteData();
     }
       break;
@@ -189,6 +200,14 @@ void kr::Renderer::removeExtractionListener(ExtractionEventListener listener)
   g_ExtractionEvent.RemoveEventHandler(listener);
 }
 
+void kr::extract(Renderer::Extractor& e, const ezCamera& cam, float aspectRatio)
+{
+  cam.GetViewMatrix(g_view);
+  cam.GetProjectionMatrix(aspectRatio,                           // Aspect Ratio, i.e. width / height
+                          ezProjectionDepthRange::MinusOneToOne, // The GL-Way.
+                          g_projection);                         // [out] Projection matrix.
+}
+
 void kr::extract(Renderer::Extractor& e,
                  const Sprite& sprite,
                  Transform2D transform)
@@ -201,6 +220,8 @@ void kr::extract(Renderer::Extractor& e,
 
   pData->uColor = sprite.getColorUniform();
   pData->uTexture = sprite.getTextureUniform();
+  pData->uViewMatrix = sprite.getViewMatrixUniform();
+  pData->uProjectionMatrix = sprite.getProjectionMatrixUniform();
 
   pData->transform = move(transform);
   pData->color = sprite.getColor();

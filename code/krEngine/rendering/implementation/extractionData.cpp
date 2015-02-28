@@ -1,7 +1,9 @@
 #include <krEngine/rendering/implementation/extractionData.h>
 #include <krEngine/rendering/implementation/opelGlCheck.h>
 
-void kr::draw(SpriteData& sprite)
+void kr::draw(SpriteData& sprite,
+              const ezMat4& viewMatrix,
+              const ezMat4& projectionMatrix)
 {
   EZ_LOG_BLOCK("Drawing Sprite");
 
@@ -25,6 +27,8 @@ void kr::draw(SpriteData& sprite)
   // ===============
   uploadData(sprite.uColor, sprite.color);
   uploadData(sprite.uTexture, textureSlot);
+  uploadData(sprite.uViewMatrix, viewMatrix);
+  uploadData(sprite.uProjectionMatrix, projectionMatrix);
 
   glCheck(glDrawArrays((GLenum)sprite.pVertexBuffer->getPrimitive(), 0, 4));
 }

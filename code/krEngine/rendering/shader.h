@@ -113,6 +113,9 @@ namespace kr
   KR_ENGINE_API ezResult uploadData(const ShaderUniform& uniform,
                                     TextureSlot slot);
 
+  KR_ENGINE_API ezResult uploadData(const ShaderUniform& uniform,
+                                    const ezMat4& matrix);
+
   KR_ENGINE_API ezResult bind(ShaderProgramPtr pShader);
 
   /// \see KR_RAII_BIND_SHADER
