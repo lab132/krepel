@@ -39,23 +39,49 @@ private:
   ezUByte m_mem_shaderBindings[sizeof(ShaderBindings)];
 EZ_END_SUBSYSTEM_DECLARATION
 
+static void logCompileStatus(GLuint hShader)
+{
+  ezHybridArray<GLchar, 512> log;
+
+  // Determine size of log
+  // =====================
+
+  GLint messageLength = 0;
+  glCheck(glGetShaderiv(hShader, GL_INFO_LOG_LENGTH, &messageLength));
+  log.SetCountUninitialized(messageLength);
+
+  // Get compilation log
+  // ===================
+
+  glCheck(glGetShaderInfoLog(hShader, messageLength, &messageLength, log.GetData()));
+
+  // Pipe the message through to the ezLog system
+  // ============================================
+
+  ezLog::Warning("%s", log.GetData());
+}
+
 static GLuint loadAndCompileShader(GLuint type, const char* filename)
 {
+  EZ_LOG_BLOCK("Loading and Compiling Shader From File", filename);
+
   // Read file content
   // =================
 
-  ezFileReader reader;
-  if (reader.Open(filename).Failed())
-    return 0;
+  ezStringBuilder code;
+  {
+    ezFileReader reader;
+    if(reader.Open(filename).Failed())
+      return 0;
 
-  ezStringBuilder buffer;
-  buffer.ReadAll(reader);
+    code.ReadAll(reader);
+  }
 
   // Create shader and set the source
   // ================================
 
-  const GLchar* source = buffer.GetData();
-  GLint sourceLength = buffer.GetCharacterCount();
+  const GLchar* source = code.GetData();
+  GLint sourceLength = code.GetCharacterCount();
 
   auto hShader = glCreateShader(type);
   glCheckLastError();
@@ -66,35 +92,21 @@ static GLuint loadAndCompileShader(GLuint type, const char* filename)
 
   glCheck(glCompileShader(hShader));
 
+  // Get the compilation status.
   GLint status;
   glCheck(glGetShaderiv(hShader, GL_COMPILE_STATUS, &status));
 
+  // If the compilation was a success, return the handle.
   if (status == GL_TRUE)
     return hShader;
 
-  EZ_LOG_BLOCK("Shader Compilation Error", filename);
+  // Shader Compilation Was Not Successful
+  // =====================================
 
-  // Determine size of log
-  // =====================
+  // Log the status message.
+  logCompileStatus(hShader);
 
-  GLint messageLength = 0;
-  glCheck(glGetShaderiv(hShader, GL_INFO_LOG_LENGTH, &messageLength));
-  buffer.Reserve((ezUInt32)messageLength - 1); // Subtract the null-terminator.
-
-  // Get compilation log
-  // ===================
-
-  GLchar* message = const_cast<GLchar*>(buffer.GetData());
-  glCheck(glGetShaderInfoLog(hShader, messageLength, &messageLength, message));
-
-  // Pipe the log to the ezLog system
-  // ================================
-
-  ezLog::Warning("%s", message);
-
-  // Finally, release the shader again
-  // =================================
-
+  // Release the shader.
   glCheck(glDeleteShader(hShader));
 
   return 0;
