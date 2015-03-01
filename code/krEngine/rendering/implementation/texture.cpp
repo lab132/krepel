@@ -249,7 +249,7 @@ ezResult kr::restoreLastTexture2D(TextureSlot slot)
 kr::RefCountedPtr<kr::Sampler> kr::Sampler::create()
 {
   GLuint h;
-  glCheck(glCreateSamplers(1, &h));
+  glCheck(glGenSamplers(1, &h));
   if (glIsSampler(h) != GL_TRUE)
   {
     ezLog::Warning("Unable to create sampler object.");

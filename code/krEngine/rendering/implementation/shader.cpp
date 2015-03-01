@@ -292,21 +292,25 @@ ezResult kr::restoreLastShaderProgram()
   return EZ_SUCCESS;
 }
 
-#define PRECONDITIONS_FOR_UPLOAD(uniform, type)    \
-  EZ_LOG_BLOCK("Uploading Uniform Value", type);   \
-  do                                               \
-  {                                                \
-    if (isNull(uniform.pShader))                   \
-    {                                              \
-      ezLog::Warning("Invalid shader object.");    \
-      return EZ_FAILURE;                           \
-    }                                              \
-    if (uniform.glLocation == -1)                  \
-    {                                              \
-      ezLog::Warning("Invalid uniform location."); \
-      return EZ_FAILURE;                           \
-    }                                              \
-  } while (false)
+static bool checkUniformUploadPreconditions(const kr::ShaderUniform& uniform)
+{
+  if (kr::isNull(uniform.pShader))
+  {
+    ezLog::Warning("Invalid shader object.");
+    return false;
+  }
+  if (uniform.glLocation == -1)
+  {
+    ezLog::Warning("Invalid uniform location.");
+    return false;
+  }
+
+  return true;
+}
+
+#define PRECONDITIONS_FOR_UPLOAD(uniform, type)  \
+  EZ_LOG_BLOCK("Uploading Uniform Value", type); \
+  if(!checkUniformUploadPreconditions(uniform)) return EZ_FAILURE;
 
 
 ezResult kr::uploadData(const ShaderUniform& uniform,
