@@ -230,6 +230,8 @@ void kr::extract(Renderer::Extractor& e,
 
   pData->uColor = sprite.getColorUniform();
   pData->uTexture = sprite.getTextureUniform();
+  pData->uOrigin = sprite.getOriginUniform();
+  pData->uRotation = sprite.getRotationUniform();
   pData->uViewMatrix = sprite.getViewMatrixUniform();
   pData->uProjectionMatrix = sprite.getProjectionMatrixUniform();
 

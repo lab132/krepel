@@ -55,6 +55,8 @@ namespace kr
 
     ShaderUniform getTextureUniform() const { return m_uTexture; }
     ShaderUniform getColorUniform() const { return m_uColor; }
+    ShaderUniform getOriginUniform() const { return m_uOrigin; }
+    ShaderUniform getRotationUniform() const { return m_uRotation; }
     ShaderUniform getViewMatrixUniform() const { return m_uViewMatrix; }
     ShaderUniform getProjectionMatrixUniform() const { return m_uProjectionMatrix; }
     ShaderProgramPtr getShader() const { return m_pShader; }
@@ -72,13 +74,6 @@ namespace kr
     /// \brief The quad the texture will be rendered to.
     krSpriteVertex m_vertices[4];
 
-    ShaderUniform m_uTexture;
-    ShaderUniform m_uColor;
-    ShaderUniform m_uViewMatrix;
-    ShaderUniform m_uProjectionMatrix;
-
-    ShaderProgramPtr m_pShader;
-
     VertexBufferPtr m_pVertexBuffer;
 
     SamplerPtr m_pSampler;
@@ -92,8 +87,17 @@ namespace kr
     /// \brief Cutout of the texture. By default, the entire texture is shown.
     ezRectU32 m_cutout = { 0u, 0u };
 
-
     ezColor m_color = ezColor::GetWhite();
+
+    ShaderProgramPtr m_pShader;
+
+    ShaderUniform m_uTexture;
+    ShaderUniform m_uColor;
+    ShaderUniform m_uTransform;
+    ShaderUniform m_uOrigin;
+    ShaderUniform m_uRotation;
+    ShaderUniform m_uViewMatrix;
+    ShaderUniform m_uProjectionMatrix;
   };
 
   /// \brief Updates the internal state of \a sprite.

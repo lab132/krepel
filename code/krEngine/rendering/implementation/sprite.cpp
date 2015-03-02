@@ -70,10 +70,12 @@ void kr::update(Sprite& sprite)
   if (isNull(sprite.m_pShader))
   {
     sprite.m_pShader = createSpriteShader();
-    sprite.m_uColor = shaderUniformOf(sprite.m_pShader, "u_color");
-    sprite.m_uTexture = shaderUniformOf(sprite.m_pShader, "u_texture");
-    sprite.m_uViewMatrix = shaderUniformOf(sprite.m_pShader, "u_view");
+    sprite.m_uOrigin           = shaderUniformOf(sprite.m_pShader, "u_origin");
+    sprite.m_uRotation         = shaderUniformOf(sprite.m_pShader, "u_rotation");
+    sprite.m_uViewMatrix       = shaderUniformOf(sprite.m_pShader, "u_view");
     sprite.m_uProjectionMatrix = shaderUniformOf(sprite.m_pShader, "u_projection");
+    sprite.m_uColor            = shaderUniformOf(sprite.m_pShader, "u_color");
+    sprite.m_uTexture          = shaderUniformOf(sprite.m_pShader, "u_texture");
   }
 
   // Create VertexBuffer, If Needed

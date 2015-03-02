@@ -354,10 +354,33 @@ ezResult kr::uploadData(const ShaderUniform& uniform, const ezMat4& matrix)
   PRECONDITIONS_FOR_UPLOAD(uniform, "Matrix4x4");
 
   glCheck(glProgramUniformMatrix4fv(uniform.pShader->getGlHandle(), // Shader program handle.
-                                    uniform.glLocation,     // Uniform location.
-                                    1,                      // Number of matrices.
-                                    GL_FALSE,               // Transpose?
-                                    matrix.m_fElementsCM)); // Matrix data.
+                                    uniform.glLocation,             // Uniform location.
+                                    1,                              // Number of matrices.
+                                    GL_FALSE,                       // Transpose?
+                                    matrix.m_fElementsCM));         // Matrix data.
+
+  return EZ_SUCCESS;
+}
+
+ezResult kr::uploadData(const ShaderUniform& uniform, const ezVec2& vec)
+{
+  PRECONDITIONS_FOR_UPLOAD(uniform, "Vec2");
+
+  glCheck(glProgramUniform2fv(uniform.pShader->getGlHandle(), // Shader program handle.
+                              uniform.glLocation,             // Uniform location.
+                              1,                              // Number of vectors.
+                              vec.GetData()));                // Vector data.
+
+  return EZ_SUCCESS;
+}
+
+ezResult kr::uploadData(const ShaderUniform& uniform, const ezAngle& angle)
+{
+  PRECONDITIONS_FOR_UPLOAD(uniform, "Angle");
+
+  glCheck(glProgramUniform1f(uniform.pShader->getGlHandle(), // Shader program handle.
+                             uniform.glLocation,             // Uniform location.
+                             angle.GetRadian()));            // Matrix data.
 
   return EZ_SUCCESS;
 }

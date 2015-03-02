@@ -31,6 +31,8 @@ namespace kr
     SamplerPtr pSampler;
     ShaderUniform uTexture;
     ShaderUniform uColor;
+    ShaderUniform uOrigin;
+    ShaderUniform uRotation;
     ShaderUniform uViewMatrix;
     ShaderUniform uProjectionMatrix;
 
