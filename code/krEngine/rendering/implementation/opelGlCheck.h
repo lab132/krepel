@@ -9,17 +9,17 @@ namespace krInternal
 }
 
 #if EZ_ENABLED(EZ_COMPILE_FOR_DEBUG)
-  #define glCheckLastError()                                                             \
-    do                                                                                   \
-    {                                                                                    \
-      ::krInternal::glCheckForError(EZ_STRINGIZE(call), EZ_SOURCE_FILE, EZ_SOURCE_LINE); \
+  #define glCheckLastError()                                                         \
+    do                                                                               \
+    {                                                                                \
+      ::krInternal::glCheckForError("<last-error>", EZ_SOURCE_FILE, EZ_SOURCE_LINE); \
     } while (false)
 
-  #define glCheck(call)   \
-    do                    \
-    {                     \
-      call;               \
-      glCheckLastError(); \
+  #define glCheck(call)                                                     \
+    do                                                                      \
+    {                                                                       \
+      call;                                                                 \
+      ::krInternal::glCheckForError(#call, EZ_SOURCE_FILE, EZ_SOURCE_LINE); \
     } while (false)
 
 #else

@@ -17,12 +17,8 @@ EZ_CREATE_SIMPLE_TEST(Sprite, Workflow)
                     (float)pWindow->getClientAreaSize().width, // Width of the orthographic cam.
                     0.1f,                                      // Near plane.
                     1.0f);                                     // Far plane.
-  cam.LookAt(ezVec3(0, 0, 1),  // Camera Position.
-             ezVec3(0, 0, 0)); // Target Position.
-
-  ezMat4 view, projection;
-  cam.GetViewMatrix(view);
-  cam.GetProjectionMatrix(16.0f/9.0f, ezProjectionDepthRange::MinusOneToOne, projection);
+  cam.LookAt(ezVec3(0, 0, 0.5f), // Camera Position.
+             ezVec3(0, 0, 0));   // Target Position.
 
   Sprite s;
   s.setTexture(Texture::load("<texture>kitten.dds"));

@@ -19,11 +19,13 @@ namespace
 // Globals
 // =======
 static bool g_initialized = false;
+static ezLogInterface* g_pLog = nullptr;
 
 static kr::ExtractionBuffer* g_pReadBuffer;
 static kr::ExtractionBuffer* g_pWriteBuffer;
 static kr::Renderer::ExtractionEvent g_ExtractionEvent;
 
+static bool g_isCameraSetForCurrentFrame = false;
 static ezMat4 g_view;
 static ezMat4 g_projection;
 
@@ -73,12 +75,13 @@ namespace kr
 
     ON_ENGINE_STARTUP
     {
+      g_pLog = ezGlobalLog::GetInstance();
       //glDebugMessageCallback(debugCallbackOpenGL, nullptr);
     }
 
     ON_ENGINE_SHUTDOWN
     {
-
+      g_pLog = nullptr;
       //glDebugMessageCallback(nullptr, nullptr);
     }
 
@@ -115,6 +118,8 @@ static void renderExtractionData(ezUByte* current, ezUByte* max)
 {
   using namespace kr;
 
+  g_isCameraSetForCurrentFrame = false;
+
   while(current < max)
   {
     auto data = reinterpret_cast<ExtractionData*>(current);
@@ -136,6 +141,11 @@ static void renderExtractionData(ezUByte* current, ezUByte* max)
     EZ_ASSERT(current + data->byteCount <= max, "Must never exceed max!");
     current += data->byteCount;
   }
+
+  if (!g_isCameraSetForCurrentFrame)
+  {
+    ezLog::Warning(g_pLog, "No camera set for current frame.");
+  }
 }
 
 void kr::Renderer::extract()
@@ -156,7 +166,7 @@ void kr::Renderer::update(ezTime dt, RefCountedPtr<Window> pTarget)
 {
   if(isNull(pTarget))
   {
-    ezLog::Warning("Invalid target window.");
+    ezLog::Warning(g_pLog, "Invalid target window.");
     return;
   }
 
@@ -186,7 +196,7 @@ void kr::Renderer::update(ezTime dt, RefCountedPtr<Window> pTarget)
 
   if (presentFrame(window).Failed())
   {
-    ezLog::Warning("Failed to present frame.");
+    ezLog::Warning(g_pLog, "Failed to present frame.");
   }
 }
 

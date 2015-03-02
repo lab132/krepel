@@ -57,14 +57,7 @@ void kr::Sprite::setLocalBounds(ezRectFloat newLocalBounds)
 
 void kr::Sprite::setCutout(ezRectU32 newCutout)
 {
-  m_cutout = newCutout;
-  if (m_cutout.HasNonZeroArea() && isValid(m_pTexture))
-  {
-    m_cutout.x = 0;
-    m_cutout.y = 0;
-    m_cutout.width = m_pTexture->getWidth();
-    m_cutout.height = m_pTexture->getHeight();
-  }
+  m_cutout = move(newCutout);
   m_needUpdate.Add(SpriteComponents::Cutout);
 }
 

@@ -353,11 +353,11 @@ ezResult kr::uploadData(const ShaderUniform& uniform, const ezMat4& matrix)
 {
   PRECONDITIONS_FOR_UPLOAD(uniform, "Matrix4x4");
 
-  glCheck(glProgramUniformMatrix4fv(uniform.pShader->getGlHandle(), // Program handle
-                                    1,                              // Number of matrices.
-                                    GL_FALSE,                       // Transpose?
-                                    uniform.glLocation,             // Uniform location.
-                                    matrix.m_fElementsCM));         // Matrix data.
+  glCheck(glProgramUniformMatrix4fv(uniform.pShader->getGlHandle(), // Shader program handle.
+                                    uniform.glLocation,     // Uniform location.
+                                    1,                      // Number of matrices.
+                                    GL_FALSE,               // Transpose?
+                                    matrix.m_fElementsCM)); // Matrix data.
 
   return EZ_SUCCESS;
 }

@@ -20,5 +20,5 @@ void main()
 {
   fs_texCoords = vs_texCoords;
   //gl_Position = u_projection * u_view * vec4(-vs_position, 0.0, 1.0);
-  gl_Position = u_view * u_projection * vec4(-vs_position, 0.0, 1.0);
+  gl_Position = u_projection * u_view * vec4(vs_position, 0.0, 1.0);
 }
