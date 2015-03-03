@@ -1,4 +1,5 @@
 #include <krEngine/pch.h>
+#include <krEngine/pch.h>
 #include <krEngine/rendering/sprite.h>
 #include <krEngine/rendering/shader.h>
 #include <krEngine/rendering/implementation/opelGlCheck.h>
