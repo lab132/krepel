@@ -1,5 +1,5 @@
 #pragma once
-#include <krEngine/rendering/implementation/extractionData.h>
+#include <krEngine/rendering/implementation/extractionDetails.h>
 
 namespace kr
 {

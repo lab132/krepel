@@ -38,8 +38,7 @@ set(FILES
   rendering/implementation/renderer.cpp
   rendering/implementation/extractionBuffer.h
   rendering/implementation/extractionBuffer.cpp
-  rendering/implementation/extractionData.h
-  rendering/implementation/extractionData.cpp
+  rendering/implementation/extractionDetails.h
 
   # Window
   rendering/window.h

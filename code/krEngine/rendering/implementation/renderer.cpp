@@ -5,7 +5,7 @@
 #include <krEngine/rendering/implementation/windowImpl.h>
 #include <krEngine/rendering/implementation/opelGlCheck.h>
 #include <krEngine/rendering/implementation/extractionBuffer.h>
-#include <krEngine/rendering/implementation/extractionData.h>
+#include <krEngine/rendering/implementation/extractionDetails.h>
 
 #include <CoreUtils/Graphics/Camera.h>
 
@@ -29,13 +29,13 @@ static bool g_isCameraSetForCurrentFrame = false;
 static ezMat4 g_view;
 static ezMat4 g_projection;
 
-void GLAPIENTRY debugCallbackOpenGL(GLenum source,
-                                    GLenum type,
-                                    GLuint id,
-                                    GLenum severity,
-                                    GLsizei length,
-                                    const GLchar* message,
-                                    const void* userParam)
+static void GLAPIENTRY debugCallbackOpenGL(GLenum source,
+                                           GLenum type,
+                                           GLuint id,
+                                           GLenum severity,
+                                           GLsizei length,
+                                           const GLchar* message,
+                                           const void* userParam)
 {
   /// \todo Implement me.
 }
@@ -144,6 +144,12 @@ static void renderExtractionData(ezUByte* current, ezUByte* max)
   }
 }
 
+static ezResult presentFrame(const kr::WindowImpl& window)
+{
+  return ::SwapBuffers(window.m_hDC) ? EZ_SUCCESS
+                                     : EZ_FAILURE;
+}
+
 void kr::Renderer::extract()
 {
   g_isCameraSetForCurrentFrame = false;
@@ -163,12 +169,6 @@ void kr::Renderer::extract()
   {
     ezLog::Warning(g_pLog, "No camera set for current frame.");
   }
-}
-
-static ezResult presentFrame(const kr::WindowImpl& window)
-{
-  return ::SwapBuffers(window.m_hDC) ? EZ_SUCCESS
-                                     : EZ_FAILURE;
 }
 
 void kr::Renderer::update(ezTime dt, RefCountedPtr<Window> pTarget)
@@ -219,6 +219,9 @@ void kr::Renderer::removeExtractionListener(ExtractionEventListener listener)
   g_ExtractionEvent.RemoveEventHandler(listener);
 }
 
+// Extraction
+// ==========
+
 void kr::extract(Renderer::Extractor& e, const ezCamera& cam, float aspectRatio)
 {
   cam.GetViewMatrix(g_view);
@@ -248,3 +251,41 @@ void kr::extract(Renderer::Extractor& e,
   pData->transform = move(transform);
   pData->color = sprite.getColor();
 }
+
+// Drawing
+// =======
+
+void kr::draw(SpriteData& sprite,
+              const ezMat4& viewMatrix,
+              const ezMat4& projectionMatrix)
+{
+  EZ_LOG_BLOCK("Drawing Sprite");
+
+  // If there is no shader, we cannot draw.
+  if (isNull(sprite.pShader))
+  {
+    ezLog::Warning("No shader to draw with.");
+    return;
+  }
+
+  TextureSlot textureSlot(0);
+
+  // Set Active Shader
+  // =================
+  KR_RAII_BIND_SHADER(sprite.pShader);
+  KR_RAII_BIND_VERTEX_BUFFER(sprite.pVertexBuffer, sprite.pShader);
+  KR_RAII_BIND_SAMPLER(sprite.pSampler, textureSlot);
+  KR_RAII_BIND_TEXTURE_2D(sprite.pTexture, textureSlot);
+
+  // Update Uniforms
+  // ===============
+  uploadData(sprite.uColor, sprite.color);
+  uploadData(sprite.uTexture, textureSlot);
+  uploadData(sprite.uOrigin, sprite.transform.m_position);
+  uploadData(sprite.uRotation, sprite.transform.m_rotation);
+  uploadData(sprite.uViewMatrix, viewMatrix);
+  uploadData(sprite.uProjectionMatrix, projectionMatrix);
+
+  glCheck(glDrawArrays((GLenum)sprite.pVertexBuffer->getPrimitive(), 0, 4));
+}
+
