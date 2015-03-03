@@ -6,6 +6,8 @@
 #include <TestFramework/Utilities/TestSetup.h>
 #include <Foundation/Communication/GlobalEvent.h>
 
+#include <Foundation/Logging/VisualStudioWriter.h>
+
 static ezString64 g_texturesDir;
 static ezString64 g_shadersDir;
 static bool g_initialized = false;
@@ -27,14 +29,16 @@ EZ_ON_GLOBAL_EVENT(ezStartup_StartupCore_End)
   // Textures dir
   ezFileSystem::AddDataDirectory(g_texturesDir.GetData(),
                                  ezFileSystem::ReadOnly,
-                                 "TestData",
-                                 "Textures"); // To be used as"<Textures>RedPants.dds"
+                                 "testData",
+                                 "texture"); // To be used as"<texture>RedPants.dds"
 
   // Shaders dir
   ezFileSystem::AddDataDirectory(g_shadersDir.GetData(),
                                  ezFileSystem::ReadOnly,
-                                 "TestData",
-                                 "Shaders"); // To be used as"<Shaders>Lighting.vs"
+                                 "testData",
+                                 "shader"); // To be used as"<shader>Lighting.vs"
+
+  ezGlobalLog::AddLogWriter(ezLogWriter::VisualStudio::LogMessageHandler);
 
   g_initialized = true;
 }
