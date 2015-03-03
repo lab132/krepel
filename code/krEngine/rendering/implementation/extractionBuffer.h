@@ -24,13 +24,16 @@ namespace kr
     template<typename T>
     T* allocate()
     {
-      EZ_CHECK_AT_COMPILETIME((std::is_base_of<ExtractionData, T>::value));
+      const auto type = static_cast<ExtractionDataType>(T::Type);
 
-      auto alignment = EZ_ALIGNMENT_OF(T);
-      auto alignedSize = ezMemoryUtils::AlignSize(sizeof(T), alignment);
+      EZ_CHECK_AT_COMPILETIME((std::is_base_of<ExtractionData, T>::value));
+      EZ_CHECK_AT_COMPILETIME(type != ExtractionDataType::Invalid);
+
+      const auto alignment = EZ_ALIGNMENT_OF(T);
+      const auto alignedSize = ezMemoryUtils::AlignSize(sizeof(T), alignment);
       auto result =  new (allocate(alignedSize)) T;
       EZ_CHECK_ALIGNMENT(result, alignment);
-      result->type = static_cast<ExtractionDataType>(T::Type);
+      result->type = type;
       result->byteCount = alignedSize;
       return static_cast<T*>(result);
     }

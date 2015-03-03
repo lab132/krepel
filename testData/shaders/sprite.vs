@@ -22,12 +22,14 @@ void main()
 {
   vec2 pos = u_origin + vs_position;
 
-  vec2 transformedPos;
+  vec4 transformedPos;
   transformedPos.x = pos.x * cos(u_rotation) - pos.y * sin(u_rotation);
   transformedPos.y = pos.x * sin(u_rotation) + pos.y * cos(u_rotation);
+  transformedPos.z = 0.0;
+  transformedPos.w = 1.0;
 
   fs_texCoords = vs_texCoords;
   gl_Position = u_projection
               * u_view
-              * vec4(transformedPos, 0.0, 1.0);
+              * transformedPos;
 }

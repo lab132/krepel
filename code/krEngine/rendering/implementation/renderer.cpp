@@ -118,12 +118,13 @@ static void renderExtractionData(ezUByte* current, ezUByte* max)
 {
   using namespace kr;
 
-  g_isCameraSetForCurrentFrame = false;
-
   while(current < max)
   {
+    // Only special `ExtractionData` can be allocated with our buffers.
     auto data = reinterpret_cast<ExtractionData*>(current);
 
+    // See what type the data is,
+    // then call a specialized function that processes the data.
     switch(data->type)
     {
     case ExtractionDataType::Sprite:
@@ -141,19 +142,27 @@ static void renderExtractionData(ezUByte* current, ezUByte* max)
     EZ_ASSERT(current + data->byteCount <= max, "Must never exceed max!");
     current += data->byteCount;
   }
-
-  if (!g_isCameraSetForCurrentFrame)
-  {
-    ezLog::Warning(g_pLog, "No camera set for current frame.");
-  }
 }
 
 void kr::Renderer::extract()
 {
+  g_isCameraSetForCurrentFrame = false;
+
+  // Reset the write buffer's allocation pointer.
   g_pWriteBuffer->reset();
+
+  // Broadcast the extraction event.
   ExtractorImpl e;
   g_ExtractionEvent.Broadcast(e);
+
+  // Swap read/write buffers.
   swap(g_pReadBuffer, g_pWriteBuffer);
+
+  // If no camera was set during the extraction event, emit a warning.
+  if (!g_isCameraSetForCurrentFrame)
+  {
+    ezLog::Warning(g_pLog, "No camera set for current frame.");
+  }
 }
 
 static ezResult presentFrame(const kr::WindowImpl& window)
@@ -164,7 +173,7 @@ static ezResult presentFrame(const kr::WindowImpl& window)
 
 void kr::Renderer::update(ezTime dt, RefCountedPtr<Window> pTarget)
 {
-  if(isNull(pTarget))
+  if (isNull(pTarget))
   {
     ezLog::Warning(g_pLog, "Invalid target window.");
     return;
@@ -216,6 +225,7 @@ void kr::extract(Renderer::Extractor& e, const ezCamera& cam, float aspectRatio)
   cam.GetProjectionMatrix(aspectRatio,                           // Aspect Ratio, i.e. width / height
                           ezProjectionDepthRange::MinusOneToOne, // The GL-Way.
                           g_projection);                         // [out] Projection matrix.
+  g_isCameraSetForCurrentFrame = true;
 }
 
 void kr::extract(Renderer::Extractor& e,

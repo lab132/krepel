@@ -22,8 +22,7 @@ EZ_CREATE_SIMPLE_TEST(Sprite, Workflow)
 
   Sprite s;
   s.setTexture(Texture::load("<texture>kitten.dds"));
-  //s.setCutout(ezRectU32(0, 0, 32, 32));
-  s.setLocalBounds(ezRectFloat(0, 0, 64, 64));
+  s.setLocalBounds(ezRectFloat(0, 0, 128, 128));
   initialize(s);
   s.getSampler()->setFiltering(TextureFiltering::Nearest);
 
@@ -43,7 +42,7 @@ EZ_CREATE_SIMPLE_TEST(Sprite, Workflow)
     extract(e, cam, aspectRatio);
 
     Transform2D t(Zero);
-    t.m_position.Set(-32.0f, -32.0f);
+    t.m_position.Set(-s.getLocalBounds().width / 2.0f);
     t.m_rotation = ezAngle::Degree(30.0f);
     extract(e, s, t);
   });

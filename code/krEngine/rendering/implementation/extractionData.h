@@ -9,16 +9,25 @@ namespace kr
   enum class ExtractionDataType
   {
     Invalid,
+
     Sprite,
   };
 
   struct ExtractionData
   {
+    enum { Type = ExtractionDataType::Invalid };
+
     ExtractionDataType type;
     size_t byteCount;
   };
 
   //////////////////////////////////////////////////////////////////////////
+
+  // Camera
+  // ======
+
+  // Sprite
+  // ======
 
   struct SpriteData : public ExtractionData
   {
