@@ -15,7 +15,7 @@ kr::ExtractionBuffer::~ExtractionBuffer()
 
 void* kr::ExtractionBuffer::allocate(size_t alignedSize)
 {
-  EZ_ASSERT(m_mode == Mode::WriteOnly, "Invalid operation in this mode.");
+  EZ_ASSERT_RELEASE(m_mode == Mode::WriteOnly, "Invalid operation in this mode.");
 
   // Check if we need to grow.
   // =========================
@@ -42,8 +42,8 @@ void* kr::ExtractionBuffer::allocate(size_t alignedSize)
 
 void kr::ExtractionBuffer::grow(size_t newCapacity)
 {
-  EZ_ASSERT(m_growthAllowed && m_mode == Mode::WriteOnly,
-            "Invalid operation: Growing is not allowed.");
+  EZ_ASSERT_RELEASE(m_growthAllowed && m_mode == Mode::WriteOnly,
+                    "Invalid operation: Growing is not allowed.");
 
   auto newMem = (ezUByte*)m_pAllocator->Allocate(newCapacity,
                                                 EZ_ALIGNMENT_OF(ezUByte));

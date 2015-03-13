@@ -17,13 +17,10 @@ namespace kr
   using ::std::forward;
   using ::std::begin;
   using ::std::end;
-
-  KR_ENGINE_API const char* getSomething();
 }
 
-#define KR_NOT_IMPLEMENTED throw std::exception("Not implemented.")
+#define KR_NOT_IMPLEMENTED EZ_ASSERT_NOT_IMPLEMENTED
 
 #include <krEngine/common/ezArrayPtrExtension.h>
-#include <krEngine/common/ezContainersExtension.h>
 #include <krEngine/common/ezTypesExtension.h>
 #include <krEngine/common/utils.h>

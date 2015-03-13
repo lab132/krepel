@@ -140,7 +140,7 @@ static void renderExtractionData(ezUByte* current, ezUByte* max)
       break;
     }
 
-    EZ_ASSERT(current + data->byteCount <= max, "Must never exceed max!");
+    EZ_ASSERT_DEV(current + data->byteCount <= max, "Must never exceed max!");
     current += data->byteCount;
   }
 }

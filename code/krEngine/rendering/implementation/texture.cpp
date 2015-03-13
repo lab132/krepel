@@ -97,7 +97,7 @@ kr::TextureImpl* kr::findInstance(const char* textureName)
 {
   for (auto pTex : *g_pTextures)
   {
-    EZ_ASSERT(pTex, "TextureContainer should not contain any nullptrs!");
+    EZ_ASSERT_DEV(pTex, "TextureContainer should not contain any nullptrs!");
     if (pTex->m_name == textureName)
       return pTex;
   }
@@ -126,8 +126,8 @@ kr::RefCountedPtr<kr::Texture> kr::Texture::load(const char* filename)
 {
   EZ_LOG_BLOCK("Loading Texture", filename);
 
-  EZ_ASSERT(g_initialized, "Textures subsystem not initialized. "
-                           "Did you forget to start the ezEngine?");
+  EZ_ASSERT_DEV(g_initialized, "Textures subsystem not initialized. "
+                               "Did you forget to start the ezEngine?");
 
   // See if this texture is already loaded.
   auto pTex = findInstance(filename);
@@ -146,7 +146,7 @@ kr::RefCountedPtr<kr::Texture> kr::Texture::load(const char* filename)
   }
 
   pTex = EZ_DEFAULT_NEW(TextureImpl);
-  EZ_ASSERT(isValid(pTex), "Out of memory?");
+  EZ_ASSERT_RELEASE(isValid(pTex), "Out of memory?");
   pTex->m_name = filename;
   pTex->m_image = move(img);
   glCheck(glGenTextures(1, &pTex->m_glHandle));

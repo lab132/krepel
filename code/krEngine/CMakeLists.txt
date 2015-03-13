@@ -10,7 +10,6 @@ set(FILES
   common.h
   common/ezArrayPtrExtension.h
   common/ezTypesExtension.h
-  common/ezContainersExtension.h
   common/utils.h
 
   ## ???

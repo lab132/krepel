@@ -88,31 +88,31 @@ namespace kr
   public: // *** Operators and implicit conversion
     operator T*()
     {
-      EZ_ASSERT(pRefCounted != nullptr, "Invalid operation.");
+      EZ_ASSERT_RELEASE(pRefCounted != nullptr, "Invalid operation.");
       return pRefCounted;
     }
 
     T& operator *()
     {
-      EZ_ASSERT(pRefCounted != nullptr, "Invalid operation.");
+      EZ_ASSERT_RELEASE(pRefCounted != nullptr, "Invalid operation.");
       return *pRefCounted;
     }
 
     const T& operator *() const
     {
-      EZ_ASSERT(pRefCounted != nullptr, "Invalid operation.");
+      EZ_ASSERT_RELEASE(pRefCounted != nullptr, "Invalid operation.");
       return *pRefCounted;
     }
 
     T* operator ->()
     {
-      EZ_ASSERT(pRefCounted != nullptr, "Invalid operation.");
+      EZ_ASSERT_RELEASE(pRefCounted != nullptr, "Invalid operation.");
       return pRefCounted;
     }
 
     const T* operator ->() const
     {
-      EZ_ASSERT(pRefCounted != nullptr, "Invalid operation.");
+      EZ_ASSERT_RELEASE(pRefCounted != nullptr, "Invalid operation.");
       return pRefCounted;
     }
 

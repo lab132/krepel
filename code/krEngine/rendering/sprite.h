@@ -87,7 +87,7 @@ namespace kr
     /// \brief Cutout of the texture. By default, the entire texture is shown.
     ezRectU32 m_cutout = { 0u, 0u };
 
-    ezColor m_color = ezColor::GetWhite();
+    ezColor m_color = ezColor::White;
 
     ShaderProgramPtr m_pShader;
 

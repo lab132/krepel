@@ -6,6 +6,7 @@ set(FILES
   pch.h
 
   main.cpp
+  common.h
 
   # General C++ feature tests.
   sanityTests.cpp

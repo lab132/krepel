@@ -18,15 +18,3 @@ ezArrayPtr<T> ezMakeArrayPtr(ezArrayBase<T, Derived>& arr)
   // ezArrayBase defines an implicit conversion operator to ezArrayPtr.
   return (ezArrayPtr<T>)arr;
 }
-
-template<typename T>
-T* begin(ezArrayPtr<T> arrayPtr)
-{
-  return arrayPtr.GetPtr();
-}
-
-template<typename T>
-T* end(ezArrayPtr<T> arrayPtr)
-{
-  return arrayPtr.GetPtr() + arrayPtr.GetCount();
-}

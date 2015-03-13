@@ -8,7 +8,7 @@ namespace
   struct TestLayout
   {
     ezVec2 pos;
-    ezColor color = ezColor::GetWhite();
+    ezColor color = ezColor::White;
     ezVec2 texCoords = ezVec2::ZeroVector();
   };
 }
@@ -32,6 +32,8 @@ EZ_CREATE_SIMPLE_TEST(VertexBuffer, Basics)
 
   auto pWindow = Window::open();
 
+  KR_TESTS_RAII_ENGINE_STARTUP;
+
   EZ_TEST_BLOCK(ezTestBlock::Enabled, "Create")
   {
     auto pVB = VertexBuffer::create(BufferUsage::StaticDraw, PrimitiveType::Triangles);
@@ -39,8 +41,8 @@ EZ_CREATE_SIMPLE_TEST(VertexBuffer, Basics)
 
   EZ_TEST_BLOCK(ezTestBlock::Enabled, "Layout and Upload")
   {
-    auto pVS = VertexShader::loadAndCompile("<Shaders>Valid.vs");
-    auto pFS = FragmentShader::loadAndCompile("<Shaders>Valid.fs");
+    auto pVS = VertexShader::loadAndCompile("<shader>Valid.vs");
+    auto pFS = FragmentShader::loadAndCompile("<shader>Valid.fs");
     auto pProgram = ShaderProgram::link(pVS, pFS);
 
     auto h = pProgram->m_glHandle;
