@@ -9,6 +9,7 @@ set(FILES
   ## ======
   common.h
   common/ezTypesExtension.h
+  common/ezMakeArrayPtr.h
   common/utils.h
 
   ## ???
