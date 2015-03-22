@@ -236,7 +236,7 @@ kr::ShaderProgram::~ShaderProgram()
 
 kr::ShaderUniform kr::shaderUniformOf(ShaderProgramPtr pShader, const char* uniformName)
 {
-  EZ_ASSERT(isValid(pShader), "Invalid shader program.");
+  EZ_ASSERT_DEV(isValid(pShader), "Invalid shader program.");
   if(isNull(pShader))
   {
     ezLog::Warning("Invalid shader program. Ignoring call.");

@@ -296,7 +296,7 @@ ezResult kr::uploadData(VertexBufferPtr pVertBuffer,
   auto target = static_cast<GLenum>(pVertBuffer->getTarget());
   auto usage = static_cast<GLenum>(pVertBuffer->getUsage());
 
-  EZ_ASSERT(glIsBuffer(handle) == GL_TRUE, "Invalid vertex buffer");
+  EZ_ASSERT_DEBUG(glIsBuffer(handle) == GL_TRUE, "Invalid vertex buffer");
 
   glCheck(glBindBuffer(target, handle));
   // TODO Could optimize here by using glBufferSubData instead.
@@ -381,7 +381,7 @@ ezResult kr::restoreLastVertexBuffer(ShaderProgramPtr pShader)
   // Get the previous shader and vertex.
   auto& pair = g_pVertexBufferBindings->PeekBack();
 
-  EZ_ASSERT(pair.pShader == pShader, "Invalid binding state.");
+  EZ_ASSERT_DEV(pair.pShader == pShader, "Invalid binding state.");
 
   // And actually bind it again.
   glCheck(glBindVertexArray(pair.glHandle_VAO));

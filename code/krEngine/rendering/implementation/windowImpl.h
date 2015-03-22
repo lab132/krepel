@@ -34,7 +34,7 @@ namespace kr
     HDC m_hDC = nullptr;
     HGLRC m_hRC = nullptr;
     WindowEvent m_Event;
-    ezColor m_clearColor = ezColor::GetBlack();
+    ezColor m_clearColor = ezColor::Black;
     WindowHandler m_handler;
 
     WindowImpl() : m_handler(m_Event) {}

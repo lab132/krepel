@@ -1,10 +1,16 @@
+#include <krEngineTests/pch.h>
 #include <krEngine/rendering/texture.h>
+#include <krEngine/rendering/window.h>
 
 EZ_CREATE_SIMPLE_TEST_GROUP(Texture);
 
 EZ_CREATE_SIMPLE_TEST(Texture, Loading)
 {
   using namespace kr;
+
+  auto pWindow = Window::open();
+
+  KR_TESTS_RAII_ENGINE_STARTUP;
 
   EZ_TEST_BLOCK(ezTestBlock::Enabled, "Non-existant Texture File")
   {
@@ -26,13 +32,17 @@ EZ_CREATE_SIMPLE_TEST(Texture, Loading)
     EZ_TEST_BOOL(isValid(pTex1));
 
     EZ_TEST_BOOL_MSG(pTex1 == pTex2,
-                     "Multiple Calls to Texture::load should result in the same handle!");
+                      "Multiple Calls to Texture::load should result in the same handle!");
   }
 }
 
 EZ_CREATE_SIMPLE_TEST(Texture, DataAccess)
 {
   using namespace kr;
+
+  auto pWindow = Window::open();
+
+  KR_TESTS_RAII_ENGINE_STARTUP;
 
   EZ_TEST_BLOCK(ezTestBlock::Enabled, "Width and Height")
   {

@@ -58,13 +58,13 @@ EZ_ON_GLOBAL_EVENT(ezStartup_ShutdownCore_Begin)
   g_initialized = false;
 }
 
-int main(int argc, char** argv)
+ezInt32 main(ezInt32 argc, const char** argv)
 {
   // Determine root dir.
   ezStringBuilder rootDir = ezOSFile::GetApplicationDirectory();
   rootDir.PathParentDirectory(3); // Three levels up.
   rootDir.MakeCleanPath();
-  EZ_ASSERT(rootDir.IsAbsolutePath(), "Need absolute path.");
+  EZ_ASSERT_DEBUG(rootDir.IsAbsolutePath(), "Need absolute path.");
 
   // Textures dir
   {
@@ -84,8 +84,10 @@ int main(int argc, char** argv)
   ezTestSetup::InitTestFramework("krEngineTests",
                                  "Krepel Engine Tests",
                                  argc,
-                                 (const char**)argv);
-  auto result = ezTestSetup::RunTests(argc, argv);
+                                 argv);
+  while (ezTestSetup::RunTests() == ezTestAppRun::Continue){}
+  auto result = ezTestSetup::GetFailedTestCount();
   ezTestSetup::DeInitTestFramework();
+
   return result;
 }

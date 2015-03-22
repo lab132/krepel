@@ -71,6 +71,9 @@ namespace kr
       g_view.SetIdentity();
       g_projection.SetIdentity();
 
+      // We are a GL renderer, so set the default projection to the GL-way.
+      ezProjectionDepthRange::Default = ezProjectionDepthRange::MinusOneToOne;
+
       g_initialized = true;
     }
 
@@ -140,7 +143,7 @@ static void renderExtractionData(ezUByte* current, ezUByte* max)
       break;
     }
 
-    EZ_ASSERT(current + data->byteCount <= max, "Must never exceed max!");
+    EZ_ASSERT_DEV(current + data->byteCount <= max, "Must never exceed max!");
     current += data->byteCount;
   }
 }
@@ -226,9 +229,8 @@ void kr::Renderer::removeExtractionListener(ExtractionEventListener listener)
 void kr::extract(Renderer::Extractor& e, const ezCamera& cam, float aspectRatio)
 {
   cam.GetViewMatrix(g_view);
-  cam.GetProjectionMatrix(aspectRatio,                           // Aspect Ratio, i.e. width / height
-                          ezProjectionDepthRange::MinusOneToOne, // The GL-Way.
-                          g_projection);                         // [out] Projection matrix.
+  cam.GetProjectionMatrix(aspectRatio,   // Aspect Ratio, i.e. width / height
+                          g_projection); // [out] Projection matrix.
   g_isCameraSetForCurrentFrame = true;
 }
 

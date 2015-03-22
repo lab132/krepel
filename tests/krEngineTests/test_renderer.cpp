@@ -5,7 +5,7 @@ namespace
   struct Vertex
   {
     ezVec2 pos;
-    ezColor color = ezColor::GetWhite();
+    ezColor color = ezColor::White;
     ezVec2 texCoords = ezVec2::ZeroVector();
   };
 }
@@ -33,9 +33,9 @@ EZ_CREATE_SIMPLE_TEST(Renderer, Experiments)
   desc.m_Title = "Sprite Test";
   auto pWindow = Window::open(desc);
   EZ_TEST_BOOL(isValid(pWindow));
-  pWindow->setClearColor(ezColor::GetCornflowerBlue());
+  pWindow->setClearColor(ezColor::CornflowerBlue);
 
-  ezStartup::StartupEngine();
+  KR_TESTS_RAII_ENGINE_STARTUP;
 
   {
     // Shaders and Shader Program
@@ -74,10 +74,10 @@ EZ_CREATE_SIMPLE_TEST(Renderer, Experiments)
     vertices[2].pos.Set(right * 2 - 1,bottom * 2 - 1); // Lower Right
     vertices[3].pos.Set(right * 2 - 1,top    * 2 - 1); // Upper Right
 
-    vertices[0].color = ezColor::GetRed();
-    vertices[1].color = ezColor::GetGreen();
-    vertices[2].color = ezColor::GetBlue();
-    vertices[3].color = ezColor::GetYellow();
+    vertices[0].color = ezColor::Red;
+    vertices[1].color = ezColor::Green;
+    vertices[2].color = ezColor::Blue;
+    vertices[3].color = ezColor::Yellow;
 
     //vertices[0].texCoords.Set(0.0f, 1.0f); // Upper Left
     //vertices[1].texCoords.Set(0.0f, 0.0f); // Lower Left
@@ -131,6 +131,4 @@ EZ_CREATE_SIMPLE_TEST(Renderer, Experiments)
       now += dt;
     }
   }
-
-  ezStartup::ShutdownEngine();
 }

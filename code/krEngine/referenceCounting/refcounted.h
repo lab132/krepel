@@ -94,7 +94,7 @@ namespace kr
   template<typename T>
   ezInt32 refCountOf(const T* pObj)
   {
-    EZ_ASSERT(pObj != nullptr, "Invalid object.");
+    EZ_ASSERT_RELEASE(pObj != nullptr, "Invalid object.");
     return pObj->refCountOf();
   }
 
@@ -112,7 +112,7 @@ namespace kr
   template<typename T>
   void addRef(T* pObj)
   {
-    EZ_ASSERT(pObj != nullptr, "Invalid object.");
+    EZ_ASSERT_RELEASE(pObj != nullptr, "Invalid object.");
     pObj->addRef();
   }
 
@@ -121,7 +121,7 @@ namespace kr
   template<typename T>
   void releaseRef(T*& pObj)
   {
-    EZ_ASSERT(pObj != nullptr, "Invalid object.");
+    EZ_ASSERT_RELEASE(pObj != nullptr, "Invalid object.");
 
     pObj->releaseRef();
     if (!isReferenced(pObj))

@@ -10,6 +10,8 @@ EZ_CREATE_SIMPLE_TEST(Shader, VertexShader)
   // Create window and rendering context
   auto pWindow = Window::open();
 
+  KR_TESTS_RAII_ENGINE_STARTUP;
+
   EZ_TEST_BLOCK(ezTestBlock::Enabled, "Load and Compile")
   {
     RefCountedPtr<VertexShader> pVS;
@@ -28,6 +30,8 @@ EZ_CREATE_SIMPLE_TEST(Shader, FragmentShader)
 
   // Create window and rendering context
   auto pWindow = Window::open();
+
+  KR_TESTS_RAII_ENGINE_STARTUP;
 
   EZ_TEST_BLOCK(ezTestBlock::Enabled, "Load and Compile")
   {
@@ -48,6 +52,8 @@ EZ_CREATE_SIMPLE_TEST(Shader, ShaderProgram)
 
   // Create window and rendering context
   auto pWindow = Window::open();
+
+  KR_TESTS_RAII_ENGINE_STARTUP;
 
   EZ_TEST_BLOCK(ezTestBlock::Enabled, "Attach and Link")
   {

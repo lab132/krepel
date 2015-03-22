@@ -10,7 +10,7 @@ EZ_CREATE_SIMPLE_TEST(Sprite, Workflow)
   using namespace kr;
 
   auto pWindow = Window::open();
-  pWindow->setClearColor(ezColor::GetCornflowerBlue());
+  pWindow->setClearColor(ezColor::CornflowerBlue);
 
   ezCamera cam;
   cam.SetCameraMode(ezCamera::OrthoFixedWidth,                 // Using an orthographic cam.
@@ -26,7 +26,7 @@ EZ_CREATE_SIMPLE_TEST(Sprite, Workflow)
   initialize(s);
   s.getSampler()->setFiltering(TextureFiltering::Nearest);
 
-  ezStartup::StartupEngine();
+  KR_TESTS_RAII_ENGINE_STARTUP;
 
   // Handle the close-event of the window.
   bool run = true;
@@ -54,6 +54,4 @@ EZ_CREATE_SIMPLE_TEST(Sprite, Workflow)
     Renderer::extract();
     Renderer::update(dt, pWindow);
   }
-
-  ezStartup::ShutdownEngine();
 }
