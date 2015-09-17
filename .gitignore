@@ -29,4 +29,7 @@
 # CMakeCache.txt
 # CmakeFiles/
 
-output/
+[tT]humbs.[dD][bB]
+
+/output/
+/workspace/
