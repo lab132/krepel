@@ -1,3 +1,4 @@
+#include <krEngineTests/pch.h>
 
 EZ_CREATE_SIMPLE_TEST_GROUP(Common);
 

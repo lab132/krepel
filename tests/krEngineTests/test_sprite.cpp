@@ -1,3 +1,5 @@
+#include <krEngineTests/pch.h>
+
 #include <krEngine/transform2D.h>
 #include <krEngine/rendering.h>
 

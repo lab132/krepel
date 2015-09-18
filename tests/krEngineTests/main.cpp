@@ -1,3 +1,4 @@
+#include <krEngineTests/pch.h>
 
 #include <Foundation/Configuration/Startup.h>
 #include <Foundation/IO/OSFile.h>
@@ -62,7 +63,7 @@ ezInt32 main(ezInt32 argc, const char** argv)
 {
   // Determine root dir.
   ezStringBuilder rootDir = ezOSFile::GetApplicationDirectory();
-  rootDir.PathParentDirectory(3); // Three levels up.
+  rootDir.PathParentDirectory();
   rootDir.MakeCleanPath();
   EZ_ASSERT_DEBUG(rootDir.IsAbsolutePath(), "Need absolute path.");
 

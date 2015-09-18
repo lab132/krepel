@@ -1,4 +1,5 @@
-#include <krEngine/rendering/implementation/extractionData.h>
+#include <krEngine/pch.h>
+#include <krEngine/rendering/implementation/extractionDetails.h>
 #include <krEngine/rendering/implementation/opelGlCheck.h>
 
 void kr::draw(SpriteData& sprite,

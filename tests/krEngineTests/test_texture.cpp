@@ -1,4 +1,5 @@
 #include <krEngineTests/pch.h>
+
 #include <krEngine/rendering/texture.h>
 #include <krEngine/rendering/window.h>
 

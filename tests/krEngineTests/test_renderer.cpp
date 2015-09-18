@@ -1,3 +1,5 @@
+#include <krEngineTests/pch.h>
+
 #include <krEngine/rendering.h>
 
 namespace

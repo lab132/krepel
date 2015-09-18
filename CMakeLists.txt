@@ -1,23 +1,17 @@
 #cmake
 
-# our dependency 'cotire' needs at least this version
-cmake_minimum_required(VERSION 2.8.12 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.2 FATAL_ERROR)
 
-# name of the entire project
+# Name of the entire project.
 project("krepel")
 
-set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/buildSystem/CMake")
+set(KREPEL_DIR "${CMAKE_SOURCE_DIR}")
+set(KREPEL_BIN_DIR "${KREPEL_DIR}/bin" CACHE PATH "Krepel binaries directory (.exe, .dll, .pdb, .so).")
+set(KREPEL_LIB_DIR "${KREPEL_DIR}/lib" CACHE PATH "Krepel libraries directory (.lib, .a, .exp, .dylib)")
 
-# Set the default output dirs.
-set(BIELD_OUTPUT_DIR "${CMAKE_SOURCE_DIR}/output")
-set(BIELD_OUTPUT_DIR_BIN "${BIELD_OUTPUT_DIR}/bin")
-set(BIELD_OUTPUT_DIR_LIB "${BIELD_OUTPUT_DIR}/lib")
+set(CMAKE_MODULE_PATH "${KREPEL_DIR}/build/CMake/")
+include("krepel")
 
-# Include the Bield master script.
-include(bield)
-
-# The sub-directory 'code' contains all source code.
-add_subdirectory("code") # execute CMake code in code/CMakeLists.txt
-
-# The sub-directory 'tests' contains all test code.
+include_directories("code")
+add_subdirectory("code")
 add_subdirectory("tests")
