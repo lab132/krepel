@@ -1,6 +1,7 @@
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
+# Use at least C++11
 set(CMAKE_CXX_STANDARD 11)
 
 set(CMAKE_DEBUG_POSTFIX          "-debug"   CACHE STRING "e.g. krepel-debug.dll")
@@ -45,3 +46,6 @@ function(kr_set_pch PCH_H PCH_CPP)
 endfunction()
 
 include(krepel.${CMAKE_SYSTEM_NAME})
+
+include(target-glew)
+include(target-ezEngine)
