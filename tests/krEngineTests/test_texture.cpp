@@ -1,55 +1,58 @@
 #include <krEngineTests/pch.h>
+#include <catch.hpp>
 
 #include <krEngine/rendering/texture.h>
 #include <krEngine/rendering/window.h>
 
-EZ_CREATE_SIMPLE_TEST_GROUP(Texture);
-
-EZ_CREATE_SIMPLE_TEST(Texture, Loading)
+TEST_CASE("Loading", "[texture]")
 {
   using namespace kr;
+
+  KR_TESTS_RAII_CORE_STARTUP;
 
   auto pWindow = Window::open();
 
   KR_TESTS_RAII_ENGINE_STARTUP;
 
-  EZ_TEST_BLOCK(ezTestBlock::Enabled, "Non-existant Texture File")
+  SECTION("Non-existant Texture File")
   {
     auto pTex = Texture::load("<GetOuttaHere!>I do not exist.nope");
-    EZ_TEST_BOOL(isNull(pTex));
+    REQUIRE(isNull(pTex));
   }
 
-  EZ_TEST_BLOCK(ezTestBlock::Enabled, "Load and Unload")
+  SECTION("Load and Unload")
   {
     auto pTex = Texture::load("<texture>test_4x4.bmp");
-    EZ_TEST_BOOL_MSG(isValid(pTex), "Unable to load image.");
+    REQUIRE(isValid(pTex));
   }
 
-  EZ_TEST_BLOCK(ezTestBlock::Enabled, "Multiple Load/Unload Calls")
+  SECTION("Multiple Load/Unload Calls")
   {
     auto pTex1 = Texture::load("<texture>test_4x4.bmp");
-    EZ_TEST_BOOL(isValid(pTex1));
+    REQUIRE(isValid(pTex1));
     auto pTex2 = Texture::load("<texture>test_4x4.bmp");
-    EZ_TEST_BOOL(isValid(pTex1));
+    REQUIRE(isValid(pTex1));
 
-    EZ_TEST_BOOL_MSG(pTex1 == pTex2,
-                      "Multiple Calls to Texture::load should result in the same handle!");
+    // Multiple Calls to Texture::load should result in the same handle!
+    REQUIRE(pTex1 == pTex2);
   }
 }
 
-EZ_CREATE_SIMPLE_TEST(Texture, DataAccess)
+TEST_CASE("Data Access", "[texture]")
 {
   using namespace kr;
+
+  KR_TESTS_RAII_CORE_STARTUP;
 
   auto pWindow = Window::open();
 
   KR_TESTS_RAII_ENGINE_STARTUP;
 
-  EZ_TEST_BLOCK(ezTestBlock::Enabled, "Width and Height")
+  SECTION("Width and Height")
   {
     auto pTex = Texture::load("<texture>Test_4x4.bmp");
 
-    EZ_TEST_INT(pTex->getWidth(), 4);
-    EZ_TEST_INT(pTex->getHeight(), 4);
+    REQUIRE(pTex->getWidth() == 4u);
+    REQUIRE(pTex->getHeight() == 4u);
   }
 }

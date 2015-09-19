@@ -1,4 +1,5 @@
 #include <krEngineTests/pch.h>
+#include <catch.hpp>
 
 #include <krEngine/rendering/window.h>
 #include <krEngine/rendering/vertexBuffer.h>
@@ -26,22 +27,22 @@ EZ_BEGIN_STATIC_REFLECTED_TYPE(TestLayout, ezNoBase, 1, ezRTTINoAllocator);
   EZ_END_PROPERTIES
 EZ_END_STATIC_REFLECTED_TYPE();
 
-EZ_CREATE_SIMPLE_TEST_GROUP(VertexBuffer);
-
-EZ_CREATE_SIMPLE_TEST(VertexBuffer, Basics)
+TEST_CASE("Basics", "[vertex-buffer]")
 {
   using namespace kr;
+
+  KR_TESTS_RAII_CORE_STARTUP;
 
   auto pWindow = Window::open();
 
   KR_TESTS_RAII_ENGINE_STARTUP;
 
-  EZ_TEST_BLOCK(ezTestBlock::Enabled, "Create")
+  SECTION("Create")
   {
     auto pVB = VertexBuffer::create(BufferUsage::StaticDraw, PrimitiveType::Triangles);
   }
 
-  EZ_TEST_BLOCK(ezTestBlock::Enabled, "Layout and Upload")
+  SECTION("Layout and Upload")
   {
     auto pVS = VertexShader::loadAndCompile("<shader>Valid.vs");
     auto pFS = FragmentShader::loadAndCompile("<shader>Valid.fs");
@@ -53,7 +54,7 @@ EZ_CREATE_SIMPLE_TEST(VertexBuffer, Basics)
     auto coord = glGetAttribLocation(h, "vs_texCoords");
 
     auto pVB = VertexBuffer::create(BufferUsage::StaticDraw, PrimitiveType::Triangles);
-    EZ_TEST_BOOL(setupLayout(pVB, pProgram, "TestLayout").Succeeded());
+    REQUIRE(setupLayout(pVB, pProgram, "TestLayout").Succeeded());
     TestLayout data[4];
     data[0].pos.Set(-1,  1);
     data[1].pos.Set( 1,  1);
@@ -61,6 +62,6 @@ EZ_CREATE_SIMPLE_TEST(VertexBuffer, Basics)
     data[3].pos.Set(-1, -1);
 
     uploadData(pVB, ezMakeArrayPtr(data));
-    EZ_TEST_BOOL(uploadData(pVB, ezMakeArrayPtr(data)).Succeeded());
+    REQUIRE(uploadData(pVB, ezMakeArrayPtr(data)).Succeeded());
   }
 }

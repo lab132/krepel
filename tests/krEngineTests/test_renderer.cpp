@@ -1,4 +1,5 @@
 #include <krEngineTests/pch.h>
+#include <catch.hpp>
 
 #include <krEngine/rendering.h>
 
@@ -23,18 +24,18 @@ EZ_BEGIN_STATIC_REFLECTED_TYPE(Vertex, ezNoBase, 1, ezRTTINoAllocator);
   EZ_END_PROPERTIES
 EZ_END_STATIC_REFLECTED_TYPE();
 
-EZ_CREATE_SIMPLE_TEST_GROUP(Renderer);
-
-EZ_CREATE_SIMPLE_TEST(Renderer, Experiments)
+TEST_CASE("Experiments", "[renderer]")
 {
   using namespace kr;
+
+  KR_TESTS_RAII_CORE_STARTUP;
 
   ezWindowCreationDesc desc;
   desc.m_ClientAreaSize.width = 600;
   desc.m_ClientAreaSize.height = 480;
   desc.m_Title = "Sprite Test";
   auto pWindow = Window::open(desc);
-  EZ_TEST_BOOL(isValid(pWindow));
+  REQUIRE(isValid(pWindow));
   pWindow->setClearColor(ezColor::CornflowerBlue);
 
   KR_TESTS_RAII_ENGINE_STARTUP;
@@ -45,7 +46,7 @@ EZ_CREATE_SIMPLE_TEST(Renderer, Experiments)
     auto vs = VertexShader::loadAndCompile("<shader>texturedQuad.vs");
     auto fs = FragmentShader::loadAndCompile("<shader>texturedQuad.fs");
     auto prg = ShaderProgram::link(vs, fs);
-    EZ_TEST_BOOL(isValid(prg));
+    REQUIRE(isValid(prg));
 
     KR_RAII_BIND_SHADER(prg);
 
@@ -94,14 +95,14 @@ EZ_CREATE_SIMPLE_TEST(Renderer, Experiments)
     // Vertex Buffer
     // =============
     auto vb = VertexBuffer::create(BufferUsage::StaticDraw, PrimitiveType::Triangles);
-    //EZ_TEST_BOOL(setupLayout(vb, prg, "Vertex").Succeeded());
+    //REQUIRE(setupLayout(vb, prg, "Vertex").Succeeded());
     setupLayout(vb, prg, "Vertex");
-    EZ_TEST_BOOL(uploadData(vb, ezMakeArrayPtr(vertices)).Succeeded());
+    REQUIRE(uploadData(vb, ezMakeArrayPtr(vertices)).Succeeded());
 
     // Texture
     // =======
     auto tex = Texture::load("<texture>kitten.dds");
-    EZ_TEST_BOOL(isValid(tex));
+    REQUIRE(isValid(tex));
 
     auto pSampler = Sampler::create();
     KR_RAII_BIND_SAMPLER(pSampler, TextureSlot(0));

@@ -1,18 +1,21 @@
 #include <krEngineTests/pch.h>
+#include <catch.hpp>
 
 #include <krEngine/transform2D.h>
 #include <krEngine/rendering.h>
 
 #include <CoreUtils/Graphics/Camera.h>
 
-EZ_CREATE_SIMPLE_TEST_GROUP(Sprite);
-
-EZ_CREATE_SIMPLE_TEST(Sprite, Workflow)
+TEST_CASE("Workflow", "[sprite]")
 {
   using namespace kr;
 
+  KR_TESTS_RAII_CORE_STARTUP;
+
   auto pWindow = Window::open();
   pWindow->setClearColor(ezColor::CornflowerBlue);
+
+  KR_TESTS_RAII_ENGINE_STARTUP;
 
   ezCamera cam;
   cam.SetCameraMode(ezCamera::OrthoFixedWidth,                 // Using an orthographic cam.
@@ -27,8 +30,6 @@ EZ_CREATE_SIMPLE_TEST(Sprite, Workflow)
   s.setLocalBounds(ezRectFloat(0, 0, 128, 128));
   initialize(s);
   s.getSampler()->setFiltering(TextureFiltering::Nearest);
-
-  KR_TESTS_RAII_ENGINE_STARTUP;
 
   // Handle the close-event of the window.
   bool run = true;
