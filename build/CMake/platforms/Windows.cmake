@@ -1,3 +1,4 @@
+# Windows specific settings.
 
 if(MSVC)
   # Enable multi-threaded compilation.
