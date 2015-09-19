@@ -1,10 +1,12 @@
 #include <krEngineTests/pch.h>
 
+#define CATCH_CONFIG_RUNNER
+#include <catch.hpp>
+
 #include <Foundation/Configuration/Startup.h>
 #include <Foundation/IO/OSFile.h>
 #include <Foundation/IO/FileSystem/FileSystem.h>
 #include <Foundation/IO/FileSystem/DataDirTypeFolder.h>
-#include <TestFramework/Utilities/TestSetup.h>
 #include <Foundation/Communication/GlobalEvent.h>
 
 #include <Foundation/Logging/VisualStudioWriter.h>
@@ -19,8 +21,8 @@ EZ_ON_GLOBAL_EVENT(ezStartup_StartupCore_End)
     return;
   EZ_LOG_BLOCK("Common Test Setup", "Per Test");
 
-  ezTestFramework::Output(ezTestOutput::Details,
-                          "Mounting test data directories.");
+  //ezTestFramework::Output(ezTestOutput::Details,
+  //                        "Mounting test data directories.");
 
   // Filesystem setup
   //////////////////////////////////////////////////////////////////////////
@@ -51,15 +53,15 @@ EZ_ON_GLOBAL_EVENT(ezStartup_ShutdownCore_Begin)
 
   EZ_LOG_BLOCK("Common Test Shutdown", "Per Test");
 
-  ezTestFramework::Output(ezTestOutput::Details,
-                          "Unmounting test data directories.");
+  //ezTestFramework::Output(ezTestOutput::Details,
+  //                        "Unmounting test data directories.");
 
   ezFileSystem::RemoveDataDirectoryGroup("TestData");
 
   g_initialized = false;
 }
 
-ezInt32 main(ezInt32 argc, const char** argv)
+int main(int argc, char* argv[])
 {
   // Determine root dir.
   ezStringBuilder rootDir = ezOSFile::GetApplicationDirectory();
@@ -81,14 +83,5 @@ ezInt32 main(ezInt32 argc, const char** argv)
     g_shadersDir = shadersDir;
   }
 
-  // Set up and run tests.
-  ezTestSetup::InitTestFramework("krEngineTests",
-                                 "Krepel Engine Tests",
-                                 argc,
-                                 argv);
-  while (ezTestSetup::RunTests() == ezTestAppRun::Continue){}
-  auto result = ezTestSetup::GetFailedTestCount();
-  ezTestSetup::DeInitTestFramework();
-
-  return result;
+  return Catch::Session().run(argc, argv);
 }

@@ -21,3 +21,7 @@ target_link_libraries(krEngineTests
                       glew
                       ezThirdParty ezFoundation ezCore ezCoreUtils ezSystem ezTestFramework
                       ${OPENGL_LIBRARIES})
+
+if(MSVC)
+  set_target_properties(krEngineTests PROPERTIES COMPILE_FLAGS "/GR")
+endif()
