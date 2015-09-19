@@ -1,6 +1,6 @@
 
 file(GLOB_RECURSE SOURCES *.h *.inl *.cpp)
-#kr_set_pch("pch.h" "pch.cpp" ${SOURCES})
+kr_set_pch("krEngine/pch.h" "pch.cpp" ${SOURCES})
 kr_mirror_source_tree("${CMAKE_CURRENT_LIST_DIR}" ${SOURCES})
 
 add_library(krEngine SHARED ${SOURCES})

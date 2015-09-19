@@ -33,7 +33,7 @@ function(kr_set_pch PCH_H PCH_CPP)
     return()
   endif()
 
-  get_filename_component(PCH_H "${PCH_H}" ABSOLUTE)
+  #get_filename_component(PCH_H "${PCH_H}" ABSOLUTE)
   get_filename_component(PCH_CPP "${PCH_CPP}" ABSOLUTE)
   get_filename_component(PCH_NAME "${PCH_CPP}" NAME_WE)
   set(PCH_PCH "${CMAKE_CURRENT_BINARY_DIR}/${PCH_NAME}.pch")
