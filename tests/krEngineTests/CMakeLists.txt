@@ -19,7 +19,7 @@ endif()
 target_link_libraries(krEngineTests
                       krEngine
                       glew
-                      ezThirdParty ezFoundation ezCore ezCoreUtils ezSystem ezTestFramework
+                      ezThirdParty ezFoundation ezCore ezCoreUtils ezSystem
                       ${OPENGL_LIBRARIES})
 
 if(MSVC)
