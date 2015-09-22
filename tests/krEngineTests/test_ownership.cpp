@@ -95,6 +95,11 @@ SCENARIO("taking ownership of some data.", "[ownership]")
       {
         o.assign(&data, [&deleteCount](int*){ ++deleteCount; });
 
+        THEN("Dereferncing it yields the data")
+        {
+          REQUIRE(*o == 42);
+        }
+
         THEN("the deleter was not invoked yet.")
         {
           REQUIRE(deleteCount == 0);
@@ -113,7 +118,25 @@ SCENARIO("taking ownership of some data.", "[ownership]")
         THEN("the deleter is invoked.")
         {
           REQUIRE(deleteCount == 1);
-          REQUIRE(o.data.ptr == 0);
+        }
+
+        AND_THEN("Owned is no longer valid")
+        {
+          REQUIRE_FALSE(o.isValid());
+        }
+      }
+
+      WHEN("nullptr is assigned")
+      {
+        o = nullptr;
+        THEN("the deleter is invoked.")
+        {
+          REQUIRE(deleteCount == 1);
+        }
+
+        AND_THEN("Owned is no longer valid")
+        {
+          REQUIRE_FALSE(o.isValid());
         }
       }
 
@@ -132,6 +155,19 @@ SCENARIO("taking ownership of some data.", "[ownership]")
         }
       }
     }
+  }
+
+  SECTION("Initialized with nullptr")
+  {
+    Owned<int> o{ nullptr };
+
+    REQUIRE_FALSE(o.isValid());
+  }
+
+  SECTION("Implicit conversion from nullptr to Owned")
+  {
+    auto func = []() -> Owned<int> { return nullptr; };
+    REQUIRE_FALSE(func().isValid());
   }
 }
 
@@ -171,7 +207,7 @@ TEST_CASE("kr::Owned", "[ownership]")
         Owned<int> o(&data, [&count](int*){ ++count; });
 
         // Proper initialization
-        REQUIRE(o.isValid());
+        REQUIRE(bool(o));
         REQUIRE(o.data.ptr == &data);
         REQUIRE(o.data.refCount == 0);
 
@@ -186,7 +222,7 @@ TEST_CASE("kr::Owned", "[ownership]")
 
 void blackHole(kr::Owned<int> o)
 {
-  REQUIRE(o.isValid());
+  REQUIRE(bool(o));
   REQUIRE(o.data.refCount == 0);
 }
 
@@ -213,21 +249,21 @@ TEST_CASE("Owned Move", "[ownership]")
   {
     auto o2 = move(o1);
 
-    REQUIRE_FALSE(o1.isValid());
-    REQUIRE(o2.isValid());
+    REQUIRE_FALSE(bool(o1));
+    REQUIRE(bool(o2));
     REQUIRE(deleteCount == 0);
 
     // Move ownership to blackHole.
     blackHole(move(o2));
 
-    REQUIRE_FALSE(o2.isValid());
+    REQUIRE_FALSE(bool(o2));
     REQUIRE(deleteCount == 1);
   }
 
   SECTION("Yield Ownership")
   {
     auto dataPtr = o1.yieldOwnership();
-    REQUIRE_FALSE(o1.isValid());
+    REQUIRE_FALSE(bool(o1));
     REQUIRE(o1.data.refCount == 0);
     REQUIRE(deleteCount == 0);
   }
@@ -246,13 +282,13 @@ TEST_CASE("Const Ownership", "[ownership]")
 
   SECTION("Must Not Compile")
   {
-    //co.ref() = 42;
+    //*co = 42;
     //borrow(co).ref() = 42;
   }
 
   SECTION("Data Access")
   {
-    REQUIRE(co.ref() == 1337);
+    REQUIRE(*co == 1337);
   }
 
   SECTION("Borrow")

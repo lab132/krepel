@@ -22,6 +22,7 @@ namespace kr
   template<typename T>
   struct Owned
   {
+  public: // *** Types
     using ElementType = NonRef<T>;
     using Data        = OwnershipData<T>;
     using Ptr         = ElementType*;
@@ -30,8 +31,14 @@ namespace kr
     using RefToConst  = const ElementType&;
     using CleanUp     = ezDelegate<void(Ptr)>;
 
+  public: // *** Data
+    Data data;
+    CleanUp cleanUp;
 
+  public: // *** Runtime
     Owned() = default;
+
+    Owned(std::nullptr_t) : Owned() {}
 
     /// Take ownership.
     Owned(Ptr p, CleanUp del) : cleanUp(move(del))
@@ -55,7 +62,7 @@ namespace kr
     /// Cannot copy an owned ptr.
     void operator =(Owned& other) = delete;
 
-    /// Assignment is disallowed. Use \a reset(ptr) to be explicit.
+    void operator =(std::nullptr_t) { this->reset(); }
 
     /// Free the internal object if any, and take ownership over \a newPtr.
     /// \param newPtr May not be a nullptr.
@@ -88,17 +95,29 @@ namespace kr
       return oldPtr;
     }
 
-    /// Get the actual object.
-    Ref ref()
+    Ref operator *()
     {
       this->validate();
       return *this->data.ptr;
     }
 
-    RefToConst ref() const
+    RefToConst operator *() const
     {
       this->validate();
       return *this->data.ptr;
+    }
+
+    /// Get the actual object.
+    Ptr operator ->()
+    {
+      this->validate();
+      return this->data.ptr;
+    }
+
+    PtrToConst operator ->() const
+    {
+      this->validate();
+      return this->data.ptr;
     }
 
     void swap(Owned& rhs)
@@ -109,16 +128,13 @@ namespace kr
 
     bool isValid() const { return this->data.ptr != nullptr; }
 
-    operator bool() const { return this->valid(); }
+    operator bool() const { return this->isValid(); }
 
-    /// \note Internal.
+  private: // *** Internal
     void validate() const
     {
       EZ_ASSERT_ALWAYS(this->isValid(), "Validation failed: we have a nullptr.");
     }
-
-    Data data;
-    CleanUp cleanUp;
   };
 
   /// Own a pointer.
