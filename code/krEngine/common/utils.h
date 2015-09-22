@@ -13,10 +13,12 @@ namespace kr
 
   /// \brief Used to provide function or constructor overloads to initialize
   ///        Something to zero.
+  /// \todo Remove this.
   enum ZeroInit { Zero };
 
   /// \brief Used to provide function or constructor overloads to initialize
   ///        Something to the identity form.
+  /// \todo Remove this.
   enum IdentityInit { Identity };
 }
 
