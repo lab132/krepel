@@ -8,10 +8,11 @@ TEST_CASE("Vertex Shader", "[shader]")
 {
   using namespace kr;
 
-  // Create window and rendering context
-  auto pWindow = Window::open();
-
   KR_TESTS_RAII_CORE_STARTUP;
+
+  // Create window and rendering context
+  auto pWindow = Window::createAndOpen();
+
   KR_TESTS_RAII_ENGINE_STARTUP;
 
   SECTION("Load and Compile")
@@ -33,7 +34,7 @@ TEST_CASE("Fragment Shader", "[shader]")
   KR_TESTS_RAII_CORE_STARTUP;
 
   // Create window and rendering context
-  auto pWindow = Window::open();
+  auto pWindow = Window::createAndOpen();
 
   KR_TESTS_RAII_ENGINE_STARTUP;
 
@@ -57,7 +58,7 @@ TEST_CASE("Shader Program", "[shader]")
   KR_TESTS_RAII_CORE_STARTUP;
 
   // Create window and rendering context
-  auto pWindow = Window::open();
+  auto pWindow = Window::createAndOpen();
 
   KR_TESTS_RAII_ENGINE_STARTUP;
 

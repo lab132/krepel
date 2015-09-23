@@ -33,7 +33,7 @@ TEST_CASE("Basics", "[vertex-buffer]")
 
   KR_TESTS_RAII_CORE_STARTUP;
 
-  auto pWindow = Window::open();
+  auto pWindow = Window::createAndOpen();
 
   KR_TESTS_RAII_ENGINE_STARTUP;
 

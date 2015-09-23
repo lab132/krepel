@@ -34,9 +34,9 @@ TEST_CASE("Experiments", "[renderer]")
   desc.m_ClientAreaSize.width = 600;
   desc.m_ClientAreaSize.height = 480;
   desc.m_Title = "Sprite Test";
-  auto pWindow = Window::open(desc);
-  REQUIRE(isValid(pWindow));
-  pWindow->setClearColor(ezColor::CornflowerBlue);
+  auto pWindow = Window::createAndOpen(desc);
+  REQUIRE(pWindow.isValid());
+  //pWindow->setClearColor(ezColor::CornflowerBlue);
 
   KR_TESTS_RAII_ENGINE_STARTUP;
 
@@ -127,9 +127,9 @@ TEST_CASE("Experiments", "[renderer]")
     {
       auto dt = ezTime::Now() - now;
 
-      processWindowMessages(pWindow);
+      processWindowMessages(borrow(pWindow));
       Renderer::extract();
-      Renderer::update(dt, pWindow);
+      Renderer::update(dt, borrow(pWindow));
 
       now += dt;
     }

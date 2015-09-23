@@ -10,7 +10,7 @@ TEST_CASE("Loading", "[texture]")
 
   KR_TESTS_RAII_CORE_STARTUP;
 
-  auto pWindow = Window::open();
+  auto pWindow = Window::createAndOpen();
 
   KR_TESTS_RAII_ENGINE_STARTUP;
 
@@ -44,7 +44,7 @@ TEST_CASE("Data Access", "[texture]")
 
   KR_TESTS_RAII_CORE_STARTUP;
 
-  auto pWindow = Window::open();
+  auto pWindow = Window::createAndOpen();
 
   KR_TESTS_RAII_ENGINE_STARTUP;
 

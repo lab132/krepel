@@ -12,8 +12,7 @@ TEST_CASE("Workflow", "[sprite]")
 
   KR_TESTS_RAII_CORE_STARTUP;
 
-  auto pWindow = Window::open();
-  pWindow->setClearColor(ezColor::CornflowerBlue);
+  auto pWindow = Window::createAndOpen();
 
   KR_TESTS_RAII_ENGINE_STARTUP;
 
@@ -53,8 +52,8 @@ TEST_CASE("Workflow", "[sprite]")
   ezTime dt;
   while(run)
   {
-    processWindowMessages(pWindow);
+    processWindowMessages(borrow(pWindow));
     Renderer::extract();
-    Renderer::update(dt, pWindow);
+    Renderer::update(dt, borrow(pWindow));
   }
 }

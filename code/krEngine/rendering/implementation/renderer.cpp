@@ -175,16 +175,17 @@ void kr::Renderer::extract()
   }
 }
 
-void kr::Renderer::update(ezTime dt, RefCountedPtr<Window> pTarget)
+void kr::Renderer::update(ezTime dt, Borrowed<Window> pTarget)
 {
-  if (isNull(pTarget))
+  if (!pTarget)
   {
     ezLog::Warning(g_pLog, "Invalid target window.");
     return;
   }
 
   auto& window = getImpl(pTarget);
-  /// \todo This is Window specific.
+
+  /// \todo This is Windows specific.
   glCheck(wglMakeCurrent(window.m_hDC, window.m_hRC));
 
   // Clear the Screen
