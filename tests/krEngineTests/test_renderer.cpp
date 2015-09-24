@@ -105,7 +105,7 @@ TEST_CASE("Experiments", "[renderer]")
     REQUIRE(tex != nullptr);
 
     auto pSampler = Sampler::create();
-    KR_RAII_BIND_SAMPLER(pSampler, TextureSlot(0));
+    KR_RAII_BIND_SAMPLER(borrow(pSampler), TextureSlot(0));
 
     uploadData(shaderUniformOf(prg, "u_texture"), TextureSlot(0));
 

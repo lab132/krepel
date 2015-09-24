@@ -297,5 +297,25 @@ TEST_CASE("Const Ownership", "[ownership]")
     REQUIRE(b.pData->refCount == 1);
     REQUIRE(*b == 1337);
   }
+
   REQUIRE(co.data.refCount == 0);
+}
+
+TEST_CASE("Borrowed Conversion")
+{
+  using namespace kr;
+
+  KR_TESTS_RAII_CORE_STARTUP;
+
+  int data = 123;
+  auto o = ownWithoutCleanUp(&data);
+
+  SECTION("Implicitly convert Borrowed<T> to Borrowed<const T>")
+  {
+    auto func = [](kr::Borrowed<const int> b) -> int { return *b + 1; };
+
+    auto b = borrow(o);
+    auto result = func(b);
+    REQUIRE(result == *b + 1);
+  }
 }

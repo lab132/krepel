@@ -24,8 +24,12 @@ TEST_CASE("Workflow", "[sprite]")
   cam.LookAt(ezVec3(0, 0, 0.5f), // Camera Position.
              ezVec3(0, 0, 0));   // Target Position.
 
+  auto tex = Texture::load("<texture>kitten.dds");
+  auto sampler = Sampler::create();
+
   Sprite s;
-  s.setTexture(Texture::load("<texture>kitten.dds"));
+  s.setTexture(borrow(tex));
+  s.setSampler(borrow(sampler));
   s.setLocalBounds(ezRectFloat(0, 0, 128, 128));
   initialize(s);
   s.getSampler()->setFiltering(TextureFiltering::Nearest);

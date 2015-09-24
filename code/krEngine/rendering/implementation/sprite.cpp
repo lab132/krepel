@@ -93,12 +93,12 @@ void kr::update(Sprite& sprite)
     return;
   }
 
-  // Create Sampler, If Needed
-  // =========================
+  // Terminate, If There Is No Sampler
+  // =================================
   if (sprite.m_pSampler == nullptr)
   {
-    sprite.m_pSampler = Sampler::create();
-    ezLog::Debug("Using default texture sampler for sprite.");
+    ezLog::Warning("Sprite has no sampler yet. Ignoring.");
+    return;
   }
 
   bool uploadVB = false;

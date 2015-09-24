@@ -16,14 +16,9 @@ namespace kr
 
 
     Borrowed() = default;
+    Borrowed(std::nullptr_t) {}
 
     Borrowed(const Borrowed& other) : pData(other.pData)
-    {
-      this->addRefIfNotNull();
-    }
-
-    template<typename U>
-    Borrowed(const Borrowed<U>& other) : pData(other.pData)
     {
       this->addRefIfNotNull();
     }
