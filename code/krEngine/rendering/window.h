@@ -23,7 +23,7 @@ namespace kr
 
   class KR_ENGINE_API Window
   {
-  public: // *** Initialization
+  public: // *** Static API
     static Owned<Window> create(ezWindowCreationDesc& desc = ezWindowCreationDesc());
 
     static Owned<Window> createAndOpen(ezWindowCreationDesc& desc = ezWindowCreationDesc())
@@ -36,6 +36,9 @@ namespace kr
       return move(w);
     }
 
+  public: // *** Initialization
+    virtual ~Window() {}
+
   public: // *** Runtime
 
     ezResult open();
@@ -47,7 +50,7 @@ namespace kr
 
     ezSizeU32 getClientAreaSize() const;
 
-  protected:
+  protected: // *** Internal
     Window() = default;
     Window(const Window&) = delete;          // No copying.
     void operator =(const Window&) = delete; // No copy assignment.
