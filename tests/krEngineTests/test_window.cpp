@@ -12,7 +12,7 @@ TEST_CASE("Window creation", "[window]")
   SECTION("create, no open or close")
   {
     auto window = Window::create();
-    REQUIRE(window.isValid());
+    REQUIRE(window != nullptr);
 
     KR_TESTS_RAII_ENGINE_STARTUP;
   }
@@ -20,7 +20,7 @@ TEST_CASE("Window creation", "[window]")
   SECTION("create, open, explicit close")
   {
     auto window = Window::create();
-    REQUIRE(window.isValid());
+    REQUIRE(window != nullptr);
     REQUIRE(window->open().Succeeded());
     REQUIRE(window->close().Succeeded());
 
@@ -30,7 +30,7 @@ TEST_CASE("Window creation", "[window]")
   SECTION("create, open, implicit close")
   {
     auto window = Window::create();
-    REQUIRE(window.isValid());
+    REQUIRE(window != nullptr);
     REQUIRE(window->open().Succeeded());
 
     KR_TESTS_RAII_ENGINE_STARTUP;
@@ -39,7 +39,7 @@ TEST_CASE("Window creation", "[window]")
   SECTION("createAndOpen, implicit close")
   {
     auto window = Window::createAndOpen();
-    REQUIRE(window.isValid());
+    REQUIRE(window != nullptr);
 
     KR_TESTS_RAII_ENGINE_STARTUP;
   }

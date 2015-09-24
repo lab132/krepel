@@ -35,7 +35,7 @@ TEST_CASE("Experiments", "[renderer]")
   desc.m_ClientAreaSize.height = 480;
   desc.m_Title = "Sprite Test";
   auto pWindow = Window::createAndOpen(desc);
-  REQUIRE(pWindow.isValid());
+  REQUIRE(pWindow != nullptr);
   //pWindow->setClearColor(ezColor::CornflowerBlue);
 
   KR_TESTS_RAII_ENGINE_STARTUP;
@@ -46,7 +46,7 @@ TEST_CASE("Experiments", "[renderer]")
     auto vs = VertexShader::loadAndCompile("<shader>texturedQuad.vs");
     auto fs = FragmentShader::loadAndCompile("<shader>texturedQuad.fs");
     auto prg = ShaderProgram::link(vs, fs);
-    REQUIRE(isValid(prg));
+    REQUIRE(prg != nullptr);
 
     KR_RAII_BIND_SHADER(prg);
 
@@ -96,13 +96,13 @@ TEST_CASE("Experiments", "[renderer]")
     // =============
     auto vb = VertexBuffer::create(BufferUsage::StaticDraw, PrimitiveType::Triangles);
     //REQUIRE(setupLayout(vb, prg, "Vertex").Succeeded());
-    setupLayout(vb, prg, "Vertex");
-    REQUIRE(uploadData(vb, ezMakeArrayPtr(vertices)).Succeeded());
+    setupLayout(borrow(vb), prg, "Vertex");
+    REQUIRE(uploadData(borrow(vb), ezMakeArrayPtr(vertices)).Succeeded());
 
     // Texture
     // =======
     auto tex = Texture::load("<texture>kitten.dds");
-    REQUIRE(isValid(tex));
+    REQUIRE(tex != nullptr);
 
     auto pSampler = Sampler::create();
     KR_RAII_BIND_SAMPLER(pSampler, TextureSlot(0));
@@ -111,7 +111,7 @@ TEST_CASE("Experiments", "[renderer]")
 
     glBindTexture(GL_TEXTURE_2D, tex->getGlHandle());
 
-    KR_RAII_BIND_VERTEX_BUFFER(vb, prg);
+    KR_RAII_BIND_VERTEX_BUFFER(borrow(vb), prg);
 
     bool run = true;
     pWindow->getEvent().AddEventHandler([&run](const WindowEventArgs& e)

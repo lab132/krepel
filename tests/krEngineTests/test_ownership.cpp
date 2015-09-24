@@ -122,7 +122,7 @@ SCENARIO("taking ownership of some data.", "[ownership]")
 
         AND_THEN("Owned is no longer valid")
         {
-          REQUIRE_FALSE(o.isValid());
+          REQUIRE_FALSE(o != nullptr);
         }
       }
 
@@ -136,7 +136,7 @@ SCENARIO("taking ownership of some data.", "[ownership]")
 
         AND_THEN("Owned is no longer valid")
         {
-          REQUIRE_FALSE(o.isValid());
+          REQUIRE_FALSE(o != nullptr);
         }
       }
 
@@ -161,13 +161,13 @@ SCENARIO("taking ownership of some data.", "[ownership]")
   {
     Owned<int> o{ nullptr };
 
-    REQUIRE_FALSE(o.isValid());
+    REQUIRE_FALSE(o != nullptr);
   }
 
   SECTION("Implicit conversion from nullptr to Owned")
   {
     auto func = []() -> Owned<int> { return nullptr; };
-    REQUIRE_FALSE(func().isValid());
+    REQUIRE_FALSE(func() != nullptr);
   }
 }
 
@@ -283,7 +283,7 @@ TEST_CASE("Const Ownership", "[ownership]")
   SECTION("Must Not Compile")
   {
     //*co = 42;
-    //borrow(co).ref() = 42;
+    //*borrow(co) = 42;
   }
 
   SECTION("Data Access")
@@ -293,10 +293,9 @@ TEST_CASE("Const Ownership", "[ownership]")
 
   SECTION("Borrow")
   {
-    // TODO Find a way to borrow from const Owned.
-    //auto b = borrow(co);
-    //REQUIRE(b.pData->refCount == 1);
-    //REQUIRE(b.ref() == 1337);
+    auto b = borrow(co);
+    REQUIRE(b.pData->refCount == 1);
+    REQUIRE(*b == 1337);
   }
   REQUIRE(co.data.refCount == 0);
 }

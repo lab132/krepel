@@ -113,7 +113,7 @@ kr::TextureImpl::~TextureImpl()
 // static
 void kr::Texture::release(Texture*& pTex)
 {
-  if (isNull(pTex))
+  if (pTex == nullptr)
     return;
 
   auto pImpl = getImpl(pTex);
@@ -131,7 +131,7 @@ kr::RefCountedPtr<kr::Texture> kr::Texture::load(const char* filename)
 
   // See if this texture is already loaded.
   auto pTex = findInstance(filename);
-  if (isValid(pTex))
+  if (pTex != nullptr)
   {
     ezLog::Dev("Re-using already loaded texture '%s'.", filename);
     return pTex;
@@ -146,7 +146,7 @@ kr::RefCountedPtr<kr::Texture> kr::Texture::load(const char* filename)
   }
 
   pTex = EZ_DEFAULT_NEW(TextureImpl);
-  EZ_ASSERT_RELEASE(isValid(pTex), "Out of memory?");
+  EZ_ASSERT_RELEASE(pTex != nullptr, "Out of memory?");
   pTex->m_name = filename;
   pTex->m_image = move(img);
   glCheck(glGenTextures(1, &pTex->m_glHandle));
@@ -197,7 +197,7 @@ ezUInt32 kr::Texture::getGlHandle() const
 
 ezResult kr::bind(TexturePtr pTexture, TextureSlot slot)
 {
-  if (isNull(pTexture))
+  if (pTexture == nullptr)
   {
     ezLog::Warning("Cannot bind nullptr as texture. Ignoring.");
     return EZ_FAILURE;
@@ -321,7 +321,7 @@ void kr::Sampler::setWrapping(TextureWrapping wrapping)
 
 ezResult kr::bind(SamplerPtr pSampler, TextureSlot slot)
 {
-  if (isNull(pSampler))
+  if (pSampler == nullptr)
   {
     ezLog::Warning("Cannot bind nullptr as sampler. Ignoring.");
     return EZ_FAILURE;

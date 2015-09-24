@@ -62,7 +62,7 @@ ezResult kr::Window::close()
 
 void kr::processWindowMessages(Borrowed<Window> window)
 {
-  if (!window.isValid())
+  if (window == nullptr)
   {
     ezLog::Warning("Processing of window messages on an invalid window pointer.");
     return;

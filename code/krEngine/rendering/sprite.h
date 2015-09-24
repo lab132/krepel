@@ -60,7 +60,7 @@ namespace kr
     ShaderUniform getViewMatrixUniform() const { return m_uViewMatrix; }
     ShaderUniform getProjectionMatrixUniform() const { return m_uProjectionMatrix; }
     ShaderProgramPtr getShader() const { return m_pShader; }
-    VertexBufferPtr getVertexBuffer() const { return m_pVertexBuffer; }
+    kr::Borrowed<const VertexBuffer> getVertexBuffer() const { return borrow(this->m_pVertexBuffer); }
     SamplerPtr getSampler() const { return m_pSampler; }
     ezArrayPtr<const krSpriteVertex> getVertices() const { return ezMakeArrayPtr(m_vertices); }
 
@@ -74,7 +74,7 @@ namespace kr
     /// \brief The quad the texture will be rendered to.
     krSpriteVertex m_vertices[4];
 
-    VertexBufferPtr m_pVertexBuffer;
+    kr::Owned<VertexBuffer> m_pVertexBuffer;
 
     SamplerPtr m_pSampler;
 

@@ -8,6 +8,7 @@ namespace kr
   {
     using ElementType = NonRef<T>;
     using Data        = OwnershipData<T>;
+    using DataToConst = OwnershipData<const T>;
     using Ptr         = ElementType*;
     using PtrToConst  = const ElementType*;
     using Ref         = ElementType&;
@@ -15,18 +16,33 @@ namespace kr
 
 
     Borrowed() = default;
-    Borrowed(Data&&) = delete;
-    void operator =(Data&&) = delete;
+
+    Borrowed(const Borrowed& other) : pData(other.pData)
+    {
+      this->addRefIfNotNull();
+    }
 
     template<typename U>
     Borrowed(const Borrowed<U>& other) : pData(other.pData)
     {
-      this->addRefIfValid();
+      this->addRefIfNotNull();
     }
 
-    Borrowed(const Data& newData) : pData(&newData)
+    Borrowed(const Data& data) : pData(&data)
     {
-      this->addRefIfValid();
+      this->validateData();
+      addRef(*this->pData);
+    }
+
+    ~Borrowed()
+    {
+      this->removeRefIfNotNull();
+      this->pData = nullptr;
+    }
+
+    void operator =(const Borrowed& other)
+    {
+      *this = *other.pData;
     }
 
     template<typename U>
@@ -35,30 +51,36 @@ namespace kr
       *this = *other.pData;
     }
 
-    ~Borrowed()
-    {
-      this->removeRefIfValid();
-      this->pData = nullptr;
-    }
-
     void operator =(const Data& newData)
     {
       addRef(newData);
-      this->removeRefIfValid();
+      this->removeRefIfNotNull();
       this->pData = &newData;
     }
 
-    /// Get the actual object.
-    Ref ref()
+    Ref operator *()
     {
       this->validate();
       return *this->pData->ptr;
     }
 
-    RefToConst ref() const
+    RefToConst operator *() const
     {
       this->validate();
       return *this->pData->ptr;
+    }
+
+    /// Get the actual object.
+    Ptr operator ->()
+    {
+      this->validate();
+      return this->pData->ptr;
+    }
+
+    PtrToConst operator ->() const
+    {
+      this->validate();
+      return this->pData->ptr;
     }
 
     operator Ptr()
@@ -73,51 +95,64 @@ namespace kr
       return this->pData->ptr;
     }
 
-    bool isValid() const
+    operator Borrowed<const ElementType>() const
     {
-      this->validateData();
-      return this->pData->ptr != nullptr;
+      auto& data = reinterpret_cast<const OwnershipData<const ElementType>&>(*this->pData);
+      return Borrowed<const ElementType>(data);
     }
 
-    operator bool() const { return this->valid(); }
+    bool operator ==(std::nullptr_t) const { return this->pData == nullptr || this->pData->ptr == nullptr; }
+    bool operator !=(std::nullptr_t) const { return !(*this == nullptr); }
+    operator bool() const { return *this != nullptr; }
 
-    /// \note Internal.
-    inline void validateData() const
+    void addRefIfNotNull()
     {
-      EZ_ASSERT_ALWAYS(this->pData != nullptr, "Invalid state: Internal data ptr is null.");
-    }
-
-    /// \note Internal.
-    inline void validate() const
-    {
-      this->validateData();
-      EZ_ASSERT_ALWAYS(this->pData->ptr != nullptr, "Validation failed: we have a nullptr.");
-    }
-
-    void addRefIfValid()
-    {
-      if (this->isValid())
+      if (*this != nullptr)
       {
         this->validateData();
         addRef(*this->pData);
       }
     }
 
-    void removeRefIfValid()
+    void removeRefIfNotNull()
     {
-      if (this->isValid())
+      if (*this != nullptr)
       {
         this->validateData();
         removeRef(*this->pData);
       }
     }
 
-    const Data* pData;
+  public: // *** Data
+    const Data* pData = nullptr;
+
+  private: // *** Internal
+    inline void validateData() const
+    {
+      EZ_ASSERT_ALWAYS(this->pData != nullptr, "Invalid state: Internal data ptr is null.");
+    }
+
+    inline void validate() const
+    {
+      this->validateData();
+      EZ_ASSERT_ALWAYS(this->pData->ptr != nullptr, "Validation failed: we have a nullptr.");
+    }
   };
 
   template<typename T>
   Borrowed<T> borrow(Owned<T>& owned)
   {
-    return Borrowed<T>(owned.data);
+    Borrowed<T> borrowed;
+    borrowed = owned.data;
+    return move(borrowed);
+  }
+
+  template<typename T>
+  Borrowed<const T> borrow(const Owned<T>& owned)
+  {
+    Borrowed<const T> borrowed;
+    // Add const to the ownership data.
+    borrowed = reinterpret_cast<const OwnershipData<const T>&>(owned.data);
+    return move(borrowed);
   }
 }

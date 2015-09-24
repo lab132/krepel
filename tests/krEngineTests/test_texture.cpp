@@ -17,21 +17,21 @@ TEST_CASE("Loading", "[texture]")
   SECTION("Non-existant Texture File")
   {
     auto pTex = Texture::load("<GetOuttaHere!>I do not exist.nope");
-    REQUIRE(isNull(pTex));
+    REQUIRE(pTex == nullptr);
   }
 
   SECTION("Load and Unload")
   {
     auto pTex = Texture::load("<texture>test_4x4.bmp");
-    REQUIRE(isValid(pTex));
+    REQUIRE(pTex != nullptr);
   }
 
   SECTION("Multiple Load/Unload Calls")
   {
     auto pTex1 = Texture::load("<texture>test_4x4.bmp");
-    REQUIRE(isValid(pTex1));
+    REQUIRE(pTex1 != nullptr);
     auto pTex2 = Texture::load("<texture>test_4x4.bmp");
-    REQUIRE(isValid(pTex1));
+    REQUIRE(pTex1 != nullptr);
 
     // Multiple Calls to Texture::load should result in the same handle!
     REQUIRE(pTex1 == pTex2);

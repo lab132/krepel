@@ -157,10 +157,10 @@ TEST_CASE("Utils", "[common]")
   int data = 42;
   auto pData = &data;
 
-  REQUIRE(isValid(pData));
-  REQUIRE_FALSE(isNull(pData));
+  REQUIRE(pData != nullptr);
+  REQUIRE_FALSE(pData == nullptr);
 
-  invalidate(pData);
-  REQUIRE_FALSE(isValid(pData));
-  REQUIRE(isNull(pData));
+  pData = nullptr;
+  REQUIRE_FALSE(pData != nullptr);
+  REQUIRE(pData == nullptr);
 }

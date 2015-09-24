@@ -19,11 +19,11 @@ TEST_CASE("Vertex Shader", "[shader]")
   {
     RefCountedPtr<VertexShader> pVS;
     pVS = VertexShader::loadAndCompile("<What The Hell>I don't exist.nopes");
-    REQUIRE_FALSE(isValid(pVS));
+    REQUIRE_FALSE(pVS != nullptr);
     pVS = VertexShader::loadAndCompile("<shader>Invalid.vs");
-    REQUIRE_FALSE(isValid(pVS));
+    REQUIRE_FALSE(pVS != nullptr);
     pVS = VertexShader::loadAndCompile("<shader>Valid.vs");
-    REQUIRE(isValid(pVS));
+    REQUIRE(pVS != nullptr);
   }
 }
 
@@ -41,13 +41,13 @@ TEST_CASE("Fragment Shader", "[shader]")
   SECTION("Load and Compile")
   {
     RefCountedPtr<FragmentShader> pFS;
-    REQUIRE_FALSE(isValid(pFS));
+    REQUIRE_FALSE(pFS != nullptr);
     pFS = FragmentShader::loadAndCompile("<What The Hell>I don't exist.nopes");
-    REQUIRE_FALSE(isValid(pFS));
+    REQUIRE_FALSE(pFS != nullptr);
     pFS = FragmentShader::loadAndCompile("<shader>Invalid.fs");
-    REQUIRE_FALSE(isValid(pFS));
+    REQUIRE_FALSE(pFS != nullptr);
     pFS = FragmentShader::loadAndCompile("<shader>Valid.fs");
-    REQUIRE(isValid(pFS));
+    REQUIRE(pFS != nullptr);
   }
 }
 
@@ -65,13 +65,13 @@ TEST_CASE("Shader Program", "[shader]")
   SECTION("Attach and Link")
   {
     auto pVS = VertexShader::loadAndCompile("<shader>Valid.vs");
-    REQUIRE(isValid(pVS));
+    REQUIRE(pVS != nullptr);
 
     auto pFS = FragmentShader::loadAndCompile("<shader>Valid.fs");
-    REQUIRE(isValid(pVS));
+    REQUIRE(pVS != nullptr);
 
     auto pProgram = ShaderProgram::link(pVS, pFS);
-    REQUIRE(isValid(pProgram));
+    REQUIRE(pProgram != nullptr);
   }
 
   SECTION("Attributes")

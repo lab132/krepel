@@ -9,7 +9,7 @@ void kr::draw(SpriteData& sprite,
   EZ_LOG_BLOCK("Drawing Sprite");
 
   // If there is no shader, we cannot draw.
-  if (isNull(sprite.pShader))
+  if (sprite.pShader == nullptr)
   {
     ezLog::Warning("No shader to draw with.");
     return;

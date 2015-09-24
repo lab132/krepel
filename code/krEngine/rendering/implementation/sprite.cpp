@@ -11,7 +11,7 @@ EZ_BEGIN_STATIC_REFLECTED_TYPE(krSpriteVertex, ezNoBase, 1, ezRTTINoAllocator);
   EZ_END_PROPERTIES
 EZ_END_STATIC_REFLECTED_TYPE();
 
-static kr::VertexBufferPtr createVertexBuffer(kr::ShaderProgramPtr pShader)
+static kr::Owned<kr::VertexBuffer> createVertexBuffer(kr::ShaderProgramPtr pShader)
 {
   using namespace kr;
 
@@ -20,9 +20,9 @@ static kr::VertexBufferPtr createVertexBuffer(kr::ShaderProgramPtr pShader)
   auto pVB = VertexBuffer::create(BufferUsage::StaticDraw,
                                   PrimitiveType::TriangleStrip);
 
-  setupLayout(pVB, pShader, "krSpriteVertex");
+  setupLayout(borrow(pVB), pShader, "krSpriteVertex");
 
-  return pVB;
+  return move(pVB);
 }
 
 static kr::ShaderProgramPtr createSpriteShader()
@@ -34,7 +34,7 @@ static kr::ShaderProgramPtr createSpriteShader()
   auto vsName = "<shader>sprite.vs";
   auto fsName = "<shader>sprite.fs";
   auto prg = ShaderProgram::loadAndLink(vsName, fsName);
-  if (isNull(prg))
+  if (prg == nullptr)
   {
     EZ_REPORT_FAILURE("Failed to link shaders to program: '%s' and '%s'", vsName, fsName);
     return nullptr;
@@ -67,9 +67,9 @@ void kr::update(Sprite& sprite)
 
   // Create Shader, If Needed
   // ========================
-  if (isNull(sprite.m_pShader))
+  if (sprite.m_pShader == nullptr)
   {
-    sprite.m_pShader = createSpriteShader();
+    sprite.m_pShader           = createSpriteShader();
     sprite.m_uOrigin           = shaderUniformOf(sprite.m_pShader, "u_origin");
     sprite.m_uRotation         = shaderUniformOf(sprite.m_pShader, "u_rotation");
     sprite.m_uViewMatrix       = shaderUniformOf(sprite.m_pShader, "u_view");
@@ -80,14 +80,14 @@ void kr::update(Sprite& sprite)
 
   // Create VertexBuffer, If Needed
   // ==============================
-  if (isNull(sprite.m_pVertexBuffer))
+  if (sprite.m_pVertexBuffer == nullptr)
   {
-    sprite.m_pVertexBuffer = createVertexBuffer(sprite.m_pShader);
+    sprite.m_pVertexBuffer = move(createVertexBuffer(sprite.m_pShader));
   }
 
   // Terminate, If There Is No Texture
   // =================================
-  if (isNull(sprite.m_pTexture))
+  if (sprite.m_pTexture == nullptr)
   {
     ezLog::Warning("Sprite has no texture yet. Ignoring.");
     return;
@@ -95,7 +95,7 @@ void kr::update(Sprite& sprite)
 
   // Create Sampler, If Needed
   // =========================
-  if (isNull(sprite.m_pSampler))
+  if (sprite.m_pSampler == nullptr)
   {
     sprite.m_pSampler = Sampler::create();
     ezLog::Debug("Using default texture sampler for sprite.");

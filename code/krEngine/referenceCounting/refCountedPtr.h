@@ -116,23 +116,21 @@ namespace kr
       return pRefCounted;
     }
 
-    /// \brief Validation check. Returns false if we hold a \a nullptr.
-    operator bool() const
-    {
-      return pRefCounted != nullptr;
-    }
-
     template<typename U>
-    bool operator ==(const RefCountedPtr<U>& other)
+    bool operator ==(const RefCountedPtr<U>& other) const
     {
       return pRefCounted == other.pRefCounted;
     }
 
     template<typename U>
-    bool operator !=(const RefCountedPtr<U>& other)
+    bool operator !=(const RefCountedPtr<U>& other) const
     {
       return !(*this == other);
     }
+
+    bool operator ==(std::nullptr_t) const { return this->get() == nullptr; }
+    bool operator !=(std::nullptr_t) const { return !(*this == nullptr); }
+    operator bool() const { return *this != nullptr; }
 
   public: // *** Accessors
     T* get() const { return pRefCounted; }
@@ -142,23 +140,5 @@ namespace kr
   inline RefCountedPtr<T> makeRefCountedPtr(T* arg)
   {
     return RefCountedPtr<T>(arg);
-  }
-
-  template<typename T>
-  inline bool isValid(const RefCountedPtr<T>& p)
-  {
-    return (bool)p;
-  }
-
-  template<typename T>
-  inline bool isNull(const RefCountedPtr<T>& p)
-  {
-    return p.get() == nullptr;
-  }
-
-  template<typename T>
-  inline void invalidate(RefCountedPtr<T>& p)
-  {
-    p = nullptr;
   }
 }

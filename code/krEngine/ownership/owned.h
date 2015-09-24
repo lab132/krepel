@@ -31,10 +31,6 @@ namespace kr
     using RefToConst  = const ElementType&;
     using CleanUp     = ezDelegate<void(Ptr)>;
 
-  public: // *** Data
-    Data data;
-    CleanUp cleanUp;
-
   public: // *** Runtime
     Owned() = default;
 
@@ -64,35 +60,46 @@ namespace kr
 
     void operator =(std::nullptr_t) { this->reset(); }
 
+    /// \pre Neither this nor \a other can be referenced (borrowed).
+    void operator =(Owned&& other)
+    {
+      other.ensureNotReferenced();
+      this->reset();
+      this->cleanUp = move(other.cleanUp);
+      this->data.ptr = other.yieldOwnership();
+    }
+
     /// Free the internal object if any, and take ownership over \a newPtr.
     /// \param newPtr May not be a nullptr.
     /// \param newCleanUp Takes care of deleting \a newPtr.
     /// \pre newPtr is a different ptr than we already have.
+    /// \pre This object is not referenced (borrowed).
     /// \sa reset()
     void assign(Ptr newPtr, CleanUp newCleanUp)
     {
       this->reset();
       this->data.ptr = newPtr;
-      this->cleanUp = newCleanUp;
+      this->cleanUp = move(newCleanUp);
     }
 
     void reset()
     {
-      if (this->isValid())
+      if (*this != nullptr)
       {
-        EZ_ASSERT_DEBUG(this->data.refCount <= 0, "Object is still referenced!");
+        this->ensureNotReferenced();
         this->cleanUp(this->yieldOwnership());
+        this->data = Data();
       }
     }
 
     /// Release ownership of the internal object and return the ptr to it.
-    /// \note Does not invoke the cleanUp on the ptr.
+    /// \note Does not invoke \c cleanUp() on the ptr.
     /// \return The ptr we owned.
     Ptr yieldOwnership()
     {
-      Ptr oldPtr = nullptr;
-      kr::swap(this->data.ptr, oldPtr);
-      return oldPtr;
+      auto ptr = this->data.ptr;
+      this->data = Data();
+      return ptr;
     }
 
     Ref operator *()
@@ -126,14 +133,25 @@ namespace kr
       swap(this->cleanUp, rhs.cleanUp);
     }
 
-    bool isValid() const { return this->data.ptr != nullptr; }
+    bool operator ==(std::nullptr_t) const { return this->data.ptr == nullptr; }
+    bool operator !=(std::nullptr_t) const { return !(*this == nullptr); }
+    operator bool() const { return *this != nullptr; }
 
-    operator bool() const { return this->isValid(); }
+  public: // *** Data
+    Data data;
+    CleanUp cleanUp;
 
   private: // *** Internal
+    void ensureNotReferenced() const
+    {
+      EZ_ASSERT_ALWAYS(this->data.refCount == 0,
+                       "Someone still has a reference to this object.");
+    }
+
     void validate() const
     {
-      EZ_ASSERT_ALWAYS(this->isValid(), "Validation failed: we have a nullptr.");
+      EZ_ASSERT_ALWAYS(*this != nullptr,
+                       "Validation failed: we have a nullptr.");
     }
   };
 
@@ -143,5 +161,12 @@ namespace kr
   {
     // Note: Checking ptr for validity is done in ctor of Owned<>.
     return Owned<T>(const_cast<kr::NonConst<T>*>(ptr), forward<CleanUp>(cleanUp));
+  }
+
+  /// Own a pointer.
+  template<typename T>
+  Owned<T> ownWithoutCleanUp(T* ptr)
+  {
+    return move(own(ptr, [](T*){}));
   }
 }

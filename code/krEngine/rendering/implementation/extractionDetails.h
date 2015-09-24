@@ -35,7 +35,7 @@ namespace kr
     enum { Type = ExtractionDataType::Sprite };
 
     ShaderProgramPtr pShader;
-    VertexBufferPtr pVertexBuffer;
+    kr::Borrowed<const VertexBuffer> pVertexBuffer;
     TexturePtr pTexture;
     SamplerPtr pSampler;
     ShaderUniform uTexture;

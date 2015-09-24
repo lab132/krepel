@@ -54,14 +54,14 @@ TEST_CASE("Basics", "[vertex-buffer]")
     auto coord = glGetAttribLocation(h, "vs_texCoords");
 
     auto pVB = VertexBuffer::create(BufferUsage::StaticDraw, PrimitiveType::Triangles);
-    REQUIRE(setupLayout(pVB, pProgram, "TestLayout").Succeeded());
+    REQUIRE(setupLayout(borrow(pVB), pProgram, "TestLayout").Succeeded());
     TestLayout data[4];
     data[0].pos.Set(-1,  1);
     data[1].pos.Set( 1,  1);
     data[2].pos.Set( 1, -1);
     data[3].pos.Set(-1, -1);
 
-    uploadData(pVB, ezMakeArrayPtr(data));
-    REQUIRE(uploadData(pVB, ezMakeArrayPtr(data)).Succeeded());
+    uploadData(borrow(pVB), ezMakeArrayPtr(data));
+    REQUIRE(uploadData(borrow(pVB), ezMakeArrayPtr(data)).Succeeded());
   }
 }

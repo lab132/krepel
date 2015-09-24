@@ -161,13 +161,13 @@ kr::FragmentShader::~FragmentShader()
 kr::RefCountedPtr<kr::ShaderProgram> kr::ShaderProgram::link(VertexShaderPtr pVS,
                                                              FragmentShaderPtr pFS)
 {
-  if (isNull(pVS))
+  if (pVS == nullptr)
   {
     EZ_REPORT_FAILURE("Invalid vertex shader pointer.");
     return nullptr;
   }
 
-  if (isNull(pFS))
+  if (pFS == nullptr)
   {
     EZ_REPORT_FAILURE("Invalid fragment shader pointer.");
     return nullptr;
@@ -228,16 +228,16 @@ kr::RefCountedPtr<kr::ShaderProgram> kr::ShaderProgram::link(VertexShaderPtr pVS
 
 kr::ShaderProgram::~ShaderProgram()
 {
-  invalidate(m_pFragmentShader);
-  invalidate(m_pVertexShader);
+  m_pFragmentShader = nullptr;
+  m_pVertexShader = nullptr;
   glCheck(glDeleteProgram(m_glHandle));
   m_glHandle = 0;
 }
 
 kr::ShaderUniform kr::shaderUniformOf(ShaderProgramPtr pShader, const char* uniformName)
 {
-  EZ_ASSERT_DEV(isValid(pShader), "Invalid shader program.");
-  if(isNull(pShader))
+  EZ_ASSERT_DEV(pShader != nullptr, "Invalid shader program.");
+  if(pShader == nullptr)
   {
     ezLog::Warning("Invalid shader program. Ignoring call.");
     return ShaderUniform();
@@ -262,7 +262,7 @@ kr::ShaderUniform kr::shaderUniformOf(ShaderProgramPtr pShader, const char* unif
 
 ezResult kr::bind(ShaderProgramPtr pShader)
 {
-  if (isNull(pShader))
+  if (pShader == nullptr)
   {
     ezLog::Warning("Cannot bind nullptr as shader program. Ignoring.");
     return EZ_FAILURE;
@@ -307,7 +307,7 @@ ezResult kr::restoreLastShaderProgram()
 
 static bool checkUniformUploadPreconditions(const kr::ShaderUniform& uniform)
 {
-  if (kr::isNull(uniform.pShader))
+  if (uniform.pShader == nullptr)
   {
     ezLog::Warning("Invalid shader object.");
     return false;
