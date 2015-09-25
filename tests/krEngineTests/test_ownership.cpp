@@ -312,9 +312,9 @@ TEST_CASE("Borrowed Conversion")
 
   SECTION("Implicitly convert Borrowed<T> to Borrowed<const T>")
   {
-    auto func = [](kr::Borrowed<const int> b) -> int { return *b + 1; };
+    auto func = [](Borrowed<const int> b) -> int { return *b + 1; };
 
-    auto b = borrow(o);
+    Borrowed<int> b = borrow(o);
     auto result = func(b);
     REQUIRE(result == *b + 1);
   }
