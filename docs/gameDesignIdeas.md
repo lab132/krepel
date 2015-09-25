@@ -1,7 +1,7 @@
 Game Design Ideas
 =================
 
-*NOTE*
+*NOTE: Game design ideas should go in the [general repo](/lab132/lab132). We will probably move the ideas below there at some point.*
 
 Generally wanted
 ================

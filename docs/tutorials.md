@@ -2,7 +2,7 @@ Tutorials
 =========
 
 SFML
-----
+====
 
 https://github.com/LaurentGomila/SFML/wiki/Tutorials
 
