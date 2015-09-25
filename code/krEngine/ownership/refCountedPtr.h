@@ -1,6 +1,6 @@
 #pragma once
 
-#include <krEngine/referenceCounting/refCounted.h>
+#include <krEngine/ownership/refCounted.h>
 
 #include <Foundation/Types/TypeTraits.h>
 

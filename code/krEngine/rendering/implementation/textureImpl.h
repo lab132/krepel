@@ -1,5 +1,5 @@
 #pragma once
-#include <krEngine/referenceCounting.h>
+#include <krEngine/ownership.h>
 #include <krEngine/rendering/texture.h>
 
 namespace kr

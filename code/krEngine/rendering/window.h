@@ -1,6 +1,5 @@
 #pragma once
-#include <krEngine/ownership/owned.h>
-#include <krEngine/ownership/borrowed.h>
+#include <krEngine/ownership.h>
 
 #include <System/Window/Window.h>
 #include <Foundation/Communication/Event.h>

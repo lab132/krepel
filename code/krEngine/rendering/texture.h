@@ -1,5 +1,5 @@
 #pragma once
-#include <krEngine/ownership/borrowed.h>
+#include <krEngine/ownership.h>
 
 #include <CoreUtils/Image/Image.h>
 

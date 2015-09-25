@@ -1,7 +1,7 @@
 #include <krEngineTests/pch.h>
 #include <catch.hpp>
 
-#include <krEngine/referenceCounting.h>
+#include <krEngine/ownership.h>
 
 // Helpers
 // =======
