@@ -25,8 +25,7 @@ namespace kr
 
     Borrowed(const Data& data) : pData(&data)
     {
-      this->validateData();
-      addRef(*this->pData);
+      this->addRefIfNotNull();
     }
 
     ~Borrowed()
@@ -133,6 +132,15 @@ namespace kr
       EZ_ASSERT_ALWAYS(this->pData->ptr != nullptr, "Validation failed: we have a nullptr.");
     }
   };
+
+  template<typename T, typename U>
+  bool operator ==(const Borrowed<T>& lhs, const Borrowed<U>& rhs)
+  {
+    return reinterpret_cast<const void*>(lhs.pData) == reinterpret_cast<const void*>(rhs.pData);
+  }
+
+  template<typename T, typename U>
+  bool operator !=(const Borrowed<T>& lhs, const Borrowed<U>& rhs) { return !(lhs == rhs); }
 
   template<typename T>
   Borrowed<T> borrow(Owned<T>& owned)

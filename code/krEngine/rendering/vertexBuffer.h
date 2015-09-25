@@ -53,7 +53,7 @@ namespace kr
     struct VertexArrayProgramPair
     {
       GLuint hVao = 0;
-      ShaderProgramPtr pShader;
+      Borrowed<ShaderProgram> pShader;
     };
 
   public: // *** Data
@@ -89,17 +89,17 @@ namespace kr
   /// \param layoutTypeName
   ///   The name of a reflectable (ezRTTI) type descibing the
   ///   vertex buffer layout. Yes, this is Black Magic™.
-  KR_ENGINE_API ezResult setupLayout(kr::Borrowed<VertexBuffer> pVertBuffer,
-                                     ShaderProgramPtr pShader,
+  KR_ENGINE_API ezResult setupLayout(Borrowed<VertexBuffer> pVertBuffer,
+                                     Borrowed<ShaderProgram> pShader,
                                      const char* layoutTypeName);
 
-  KR_ENGINE_API ezResult uploadData(kr::Borrowed<const VertexBuffer> pVertBuffer,
+  KR_ENGINE_API ezResult uploadData(Borrowed<const VertexBuffer> pVertBuffer,
                                     ezUInt32 byteCount,
                                     const void* bytes,
                                     ezUInt32 offet = 0);
 
   template<typename T>
-  ezResult uploadData(kr::Borrowed<const VertexBuffer> pVertBuffer,
+  ezResult uploadData(Borrowed<const VertexBuffer> pVertBuffer,
                       ezArrayPtr<T> data,
                       ezUInt32 offset = 0)
   {
@@ -109,9 +109,9 @@ namespace kr
                       offset);                     // offset
   }
 
-  KR_ENGINE_API ezResult bind(kr::Borrowed<const VertexBuffer> pVertBuffer, ShaderProgramPtr pProgram);
+  KR_ENGINE_API ezResult bind(Borrowed<const VertexBuffer> pVertBuffer, Borrowed<const ShaderProgram> pProgram);
 
-  KR_ENGINE_API ezResult restoreLastVertexBuffer(ShaderProgramPtr pProgram);
+  KR_ENGINE_API ezResult restoreLastVertexBuffer(Borrowed<const ShaderProgram> pProgram);
 }
 
 /// \brief Binds the given vertex buffer for the given shader program for the current scope.

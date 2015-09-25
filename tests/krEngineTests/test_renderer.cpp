@@ -24,7 +24,7 @@ EZ_BEGIN_STATIC_REFLECTED_TYPE(Vertex, ezNoBase, 1, ezRTTINoAllocator);
   EZ_END_PROPERTIES
 EZ_END_STATIC_REFLECTED_TYPE();
 
-TEST_CASE("Experiments", "[renderer]")
+TEST_CASE("Experiments", "[renderer][experiments]")
 {
   using namespace kr;
 
@@ -43,12 +43,10 @@ TEST_CASE("Experiments", "[renderer]")
   {
     // Shaders and Shader Program
     // ==========================
-    auto vs = VertexShader::loadAndCompile("<shader>texturedQuad.vs");
-    auto fs = FragmentShader::loadAndCompile("<shader>texturedQuad.fs");
-    auto prg = ShaderProgram::link(vs, fs);
-    REQUIRE(prg != nullptr);
+    auto shader = ShaderProgram::loadAndLink("<shader>texturedQuad.vs", "<shader>texturedQuad.fs");
+    REQUIRE(shader != nullptr);
 
-    KR_RAII_BIND_SHADER(prg);
+    KR_RAII_BIND_SHADER(borrow(shader));
 
     // Vertices
     // ========
@@ -96,7 +94,7 @@ TEST_CASE("Experiments", "[renderer]")
     // =============
     auto vb = VertexBuffer::create(BufferUsage::StaticDraw, PrimitiveType::Triangles);
     //REQUIRE(setupLayout(vb, prg, "Vertex").Succeeded());
-    setupLayout(borrow(vb), prg, "Vertex");
+    setupLayout(borrow(vb), borrow(shader), "Vertex");
     REQUIRE(uploadData(borrow(vb), ezMakeArrayPtr(vertices)).Succeeded());
 
     // Texture
@@ -107,11 +105,11 @@ TEST_CASE("Experiments", "[renderer]")
     auto pSampler = Sampler::create();
     KR_RAII_BIND_SAMPLER(borrow(pSampler), TextureSlot(0));
 
-    uploadData(shaderUniformOf(prg, "u_texture"), TextureSlot(0));
+    uploadData(shaderUniformOf(borrow(shader), "u_texture"), TextureSlot(0));
 
     glBindTexture(GL_TEXTURE_2D, tex->getGlHandle());
 
-    KR_RAII_BIND_VERTEX_BUFFER(borrow(vb), prg);
+    KR_RAII_BIND_VERTEX_BUFFER(borrow(vb), borrow(shader));
 
     bool run = true;
     pWindow->getEvent().AddEventHandler([&run](const WindowEventArgs& e)

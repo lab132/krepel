@@ -318,4 +318,21 @@ TEST_CASE("Borrowed Conversion")
     auto result = func(b);
     REQUIRE(result == *b + 1);
   }
+
+  SECTION("Compare Borrowed")
+  {
+    auto b1 = borrow(o);
+    auto b2 = borrow(o);
+    auto b3 = borrow(const_cast<const Owned<int>&>(o));
+
+    REQUIRE(b1 == b1);
+    REQUIRE(b1 == b2);
+    REQUIRE(b1 == b3);
+
+    int otherData = 1337;
+    auto o2 = ownWithoutCleanUp(&otherData);
+    auto b4 = borrow(o2);
+    REQUIRE(b1 != b4);
+    REQUIRE(b3 != b4);
+  }
 }

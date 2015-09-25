@@ -9,7 +9,7 @@ namespace
   struct VBShaderPair
   {
     kr::Borrowed<const kr::VertexBuffer> pVertexBuffer;
-    kr::ShaderProgramPtr pShader;
+    kr::Borrowed<const kr::ShaderProgram> pShader;
     GLuint glHandle_VAO = 0;
   };
 }
@@ -142,8 +142,8 @@ kr::VertexBuffer::~VertexBuffer()
   m_glHandle = 0;
 }
 
-ezResult kr::setupLayout(kr::Borrowed<VertexBuffer> pVertBuffer,
-                         ShaderProgramPtr pShader,
+ezResult kr::setupLayout(Borrowed<VertexBuffer> pVertBuffer,
+                         Borrowed<ShaderProgram> pShader,
                          const char* layoutTypeName)
 {
   EZ_LOG_BLOCK("Setup Vertex Buffer Layout");
@@ -306,7 +306,7 @@ ezResult kr::uploadData(kr::Borrowed<const VertexBuffer> pVertBuffer,
   return EZ_SUCCESS;
 }
 
-ezResult kr::bind(kr::Borrowed<const VertexBuffer> pVertBuffer, ShaderProgramPtr pShader)
+ezResult kr::bind(kr::Borrowed<const VertexBuffer> pVertBuffer, Borrowed<const ShaderProgram> pShader)
 {
   if (pVertBuffer == nullptr)
   {
@@ -349,7 +349,7 @@ ezResult kr::bind(kr::Borrowed<const VertexBuffer> pVertBuffer, ShaderProgramPtr
   return EZ_SUCCESS;
 }
 
-ezResult kr::restoreLastVertexBuffer(ShaderProgramPtr pShader)
+ezResult kr::restoreLastVertexBuffer(Borrowed<const ShaderProgram> pShader)
 {
   if (g_pVertexBufferBindings->IsEmpty())
   {
