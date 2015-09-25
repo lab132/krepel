@@ -12,17 +12,17 @@ Platforms
 
 Currently the project is 64 bit only. Support for 32 bit Architectures is not planned.
 
-| OS                          | Support         |
-| --------------------------- | --------------- |
-| Windows 10                  | *Main Platform* |
-| Windows 8.1                 | Planned         |
-| Windows 8                   | Planned         |
-| Windows 7                   | Planned         |
-| Windows Vista               | Planned         |
-| OSX                         | Planned         |
-| Several Linux Distributions | Planned         |
-| Android                     | No              |
-| iOS                         | No              |
+| OS                                    | Support         |
+| ------------------------------------- | --------------- |
+| :checkered_flag: Windows 10           | *Main Platform* |
+| :checkered_flag: Windows 8.1          | Planned         |
+| :checkered_flag: Windows 8            | Planned         |
+| :checkered_flag: Windows 7            | Planned         |
+| :checkered_flag: Windows Vista        | Planned         |
+| :apple: OSX                           | Planned         |
+| :penguin: Several Linux Distributions | Planned         |
+| Android                               | Not Planned     |
+| iOS                                   | Not Planned     |
 
 At first, we're going to target Windows 10 only. Windows Vista and later will probably just work.  Support for several Linux distributions as well as OSX is planned.
 
