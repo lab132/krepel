@@ -32,7 +32,7 @@ root = true
 
 # Use unix line endings for all files
 [*]
-# Unix style line endings (\n)
+# Unix style line endings (\\n)
 end_of_line = lf
 
 # Use 2 spaces for indentation
@@ -53,7 +53,7 @@ toplevelCMakeListsTemplate = """
 cmake_minimum_required(VERSION 3.2 FATAL_ERROR)
 
 # Name of the entire project.
-project("{name}")
+project("{friendly_name}")
 
 find_path(KREPEL_DIR lib/krEngine.lib
           PATHS "$ENV{{KREPEL_DIR}}" "C:/Program Files/krepel" "$ENV{{PATH}}"
@@ -74,7 +74,7 @@ include(targets/ezEngine)
 include(targets/krepel)
 
 
-set({cmake_name}_DIR "${{CMAKE_SOURCE_DIR}}" CACHE PATH "Root directory of {name}.")
+set({cmake_name}_DIR "${{CMAKE_SOURCE_DIR}}" CACHE PATH "Root directory of {friendly_name}.")
 mark_as_advanced({cmake_name}_DIR)
 
 
@@ -86,7 +86,7 @@ add_subdirectory("code")
 """
 
 codeCMakeListsTemplate = """
-add_subdirectory("{name}")
+add_subdirectory("{cmake_name}")
 """
 
 mainprojectCMakeListsTemplate = """
@@ -94,28 +94,28 @@ include(kr_set_pch)
 include(kr_mirror_source_tree)
 
 file(GLOB_RECURSE SOURCES *.h *.inl *.cpp)
-kr_set_pch("{name}/pch.h" "pch.cpp" ${{SOURCES}})
+kr_set_pch("{cmake_name}/pch.h" "pch.cpp" ${{SOURCES}})
 kr_mirror_source_tree("${{CMAKE_CURRENT_LIST_DIR}}" ${{SOURCES}})
 
-add_executable({name} ${{SOURCES}})
+add_executable({cmake_name} ${{SOURCES}})
 
 find_package(OpenGL REQUIRED)
 if(OPENGL_INCLUDE_DIR)
   # Needed on non-windows platforms (I think).
-  target_include_directories({name} PUBLIC ${{OPENGL_INCLUDE_DIR}})
+  target_include_directories({cmake_name} PUBLIC ${{OPENGL_INCLUDE_DIR}})
 endif()
 
-target_link_libraries({name}
+target_link_libraries({cmake_name}
                       krEngine
                       ${{OPENGL_LIBRARIES}})
 """
 
-mainStubCpp = """#include <{name}/pch.h>
+mainStubCpp = """#include <{cmake_name}/pch.h>
 #include <cstdio>
 
 int main(int argc, char* argv[])
 {{
-  std::printf("Hello {name}!\\n");
+  std::printf("Hello {friendly_name}!\\n");
   return 0;
 }}
 """
@@ -123,11 +123,10 @@ pchH = """#pragma once
 
 // krepel - krEngine
 #include <krEngine/pch.h>
-#include <krEngine/ownership.h>
 #include <krEngine/rendering.h>
 """
 
-pchCpp = "#include <{name}/pch.h>\n"
+pchCpp = "#include <{cmake_name}/pch.h>\n"
 
 def get_args():
   """Get arguments to this script."""
@@ -175,24 +174,24 @@ def create_editorconfig_file():
 def create_toplevel_cmakelists_file(friendly_name, cmake_name):
   """Create the top-level CMakeLists.txt file"""
   with Path("CMakeLists.txt").open("w") as outfile:
-    outfile.write(toplevelCMakeListsTemplate.format(name=friendly_name, cmake_name=cmake_name.upper()))
+    outfile.write(toplevelCMakeListsTemplate.format(friendly_name=friendly_name, cmake_name=cmake_name.upper()))
 
-def create_code_and_mainproject_cmakelists_file(cmake_name):
+def create_code_and_mainproject_cmakelists_file(friendly_name, cmake_name):
   """Create the CMakeLists.txt files in :/code and :/code/<cmake_name>"""
   code_dir = Path("code")
   code_dir.mkdir(parents=True)
   with (code_dir / "CMakeLists.txt").open("w") as outfile:
-    outfile.write(codeCMakeListsTemplate.format(name=cmake_name))
+    outfile.write(codeCMakeListsTemplate.format(cmake_name=cmake_name))
   project_dir = code_dir / cmake_name
   project_dir.mkdir(parents=True)
   with (project_dir / "CMakeLists.txt").open("w") as outfile:
-    outfile.write(mainprojectCMakeListsTemplate.format(name=cmake_name))
+    outfile.write(mainprojectCMakeListsTemplate.format(cmake_name=cmake_name))
   with (project_dir / "main.cpp").open("w") as outfile:
-    outfile.write(mainStubCpp.format(name=cmake_name))
+    outfile.write(mainStubCpp.format(friendly_name=friendly_name, cmake_name=cmake_name))
   with (project_dir / "pch.h").open("w") as outfile:
-    outfile.write(pchH.format(name=cmake_name))
+    outfile.write(pchH)
   with (project_dir / "pch.cpp").open("w") as outfile:
-    outfile.write(pchCpp.format(name=cmake_name))
+    outfile.write(pchCpp.format(cmake_name=cmake_name))
 
 def create_gitignore_file():
   """Create the .gitignore file"""
@@ -223,7 +222,7 @@ def main():
 
   # CMakeLists.txt
   create_toplevel_cmakelists_file(friendly_name, cmake_name)
-  create_code_and_mainproject_cmakelists_file(cmake_name)
+  create_code_and_mainproject_cmakelists_file(friendly_name, cmake_name)
 
   # .gitignore
   create_gitignore_file()
