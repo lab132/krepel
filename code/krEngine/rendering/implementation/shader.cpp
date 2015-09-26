@@ -1,4 +1,3 @@
-#include <krEngine/pch.h>
 #include <krEngine/rendering/shader.h>
 #include <krEngine/rendering/implementation/opelGlCheck.h>
 

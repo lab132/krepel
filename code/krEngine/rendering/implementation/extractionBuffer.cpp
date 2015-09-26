@@ -1,4 +1,3 @@
-#include <krEngine/pch.h>
 #include <krEngine/rendering/implementation/extractionBuffer.h>
 
 kr::ExtractionBuffer::ExtractionBuffer(ezAllocatorBase* pAllocator) :

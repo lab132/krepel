@@ -1,4 +1,3 @@
-#include <krEngine/pch.h>
 #include <krEngine/rendering/renderer.h>
 #include <krEngine/rendering/extraction.h>
 #include <krEngine/rendering/window.h>

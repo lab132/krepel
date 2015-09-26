@@ -1,4 +1,3 @@
-#include <krEngine/pch.h>
 #include <krEngine/rendering/window.h>
 #include <krEngine/ownership.h>
 
