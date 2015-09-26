@@ -2,6 +2,7 @@
 
 #include <krEngine/common/traits.h>
 #include <krEngine/ownership/ownershipData.h>
+#include <krEngine/ownership/borrowed.h>
 
 namespace kr
 {
@@ -114,6 +115,31 @@ namespace kr
       return this->data.ptr;
     }
 
+    operator Ptr()
+    {
+      return this->data.ptr;
+    }
+
+    operator PtrToConst() const
+    {
+      return this->data.ptr;
+    }
+
+    operator Borrowed<T>()
+    {
+      Borrowed<T> borrowed;
+      borrowed = this->data;
+      return move(borrowed);
+    }
+
+    operator Borrowed<const T>() const
+    {
+      Borrowed<const T> borrowed;
+      // Add const to the ownership data.
+      borrowed = reinterpret_cast<const OwnershipData<const T>&>(this->data);
+      return move(borrowed);
+    }
+
     void swap(Owned& rhs)
     {
       swap(this->data.ptr, rhs.data.ptr);
@@ -122,7 +148,6 @@ namespace kr
 
     bool operator ==(std::nullptr_t) const { return this->data.ptr == nullptr; }
     bool operator !=(std::nullptr_t) const { return !(*this == nullptr); }
-    operator bool() const { return *this != nullptr; }
 
   public: // *** Data
     Data data;
@@ -155,5 +180,17 @@ namespace kr
   Owned<T> ownWithoutCleanUp(T* ptr)
   {
     return move(own(ptr, [](T*){}));
+  }
+
+  template<typename T>
+  Borrowed<T> borrow(Owned<T>& owned)
+  {
+    return static_cast<Borrowed<T>>(owned);
+  }
+
+  template<typename T>
+  Borrowed<const T> borrow(const Owned<T>& owned)
+  {
+    return static_cast<Borrowed<const T>>(owned);
   }
 }

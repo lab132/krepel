@@ -31,10 +31,11 @@ TEST_CASE("Loading", "[texture]")
     auto pTex1 = Texture::load("<texture>test_4x4.bmp");
     REQUIRE(pTex1 != nullptr);
     auto pTex2 = Texture::load("<texture>test_4x4.bmp");
-    REQUIRE(pTex1 != nullptr);
+    REQUIRE(pTex2 != nullptr);
 
-    // Multiple Calls to Texture::load should result in the same handle!
-    REQUIRE(pTex1 == pTex2);
+    // Multiple Calls to Texture::load should not result in the same handle!
+    // This is be the job of a resource management system.
+    REQUIRE(pTex1 != pTex2);
   }
 }
 

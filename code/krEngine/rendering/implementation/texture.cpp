@@ -125,7 +125,7 @@ kr::Owned<kr::Texture> kr::Texture::load(ezStringView fileName)
   auto tex = own<Texture>(pTex, releaseTexture);
 
   // TODO Defer uploading pixel data?
-  uploadPixelData(borrow(tex));
+  uploadPixelData(tex);
 
   return move(tex);
 }

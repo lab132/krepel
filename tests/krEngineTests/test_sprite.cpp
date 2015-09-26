@@ -31,7 +31,7 @@ TEST_CASE("Workflow", "[sprite]")
   Sprite sprite;
   REQUIRE_FALSE(canRender(sprite));
   sprite.setLocalBounds(ezRectFloat(0, 0, 128, 128));
-  initialize(sprite, borrow(tex), borrow(sampler), borrow(shader));
+  initialize(sprite, tex, sampler, shader);
   sprite.getSampler()->setFiltering(TextureFiltering::Nearest);
 
   // Handle the close-event of the window.
@@ -60,8 +60,8 @@ TEST_CASE("Workflow", "[sprite]")
   ezTime dt;
   while(run)
   {
-    processWindowMessages(borrow(pWindow));
+    processWindowMessages(pWindow);
     Renderer::extract();
-    Renderer::update(dt, borrow(pWindow));
+    Renderer::update(dt, pWindow);
   }
 }

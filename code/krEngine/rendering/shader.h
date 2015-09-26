@@ -65,7 +65,7 @@ namespace kr
     {
       auto vs = VertexShader::loadAndCompile(vsFileName);
       auto fs = FragmentShader::loadAndCompile(fsFileName);
-      return link(borrow(vs), borrow(fs));
+      return link(vs, fs);
     }
 
   public: // *** Data

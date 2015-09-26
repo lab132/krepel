@@ -1,5 +1,5 @@
 #pragma once
-#include <krEngine/ownership/owned.h>
+#include <krEngine/ownership/ownershipData.h>
 
 namespace kr
 {
@@ -97,7 +97,6 @@ namespace kr
 
     bool operator ==(std::nullptr_t) const { return this->pData == nullptr || this->pData->ptr == nullptr; }
     bool operator !=(std::nullptr_t) const { return !(*this == nullptr); }
-    operator bool() const { return *this != nullptr; }
 
     void addRefIfNotNull()
     {
@@ -141,21 +140,4 @@ namespace kr
 
   template<typename T, typename U>
   bool operator !=(const Borrowed<T>& lhs, const Borrowed<U>& rhs) { return !(lhs == rhs); }
-
-  template<typename T>
-  Borrowed<T> borrow(Owned<T>& owned)
-  {
-    Borrowed<T> borrowed;
-    borrowed = owned.data;
-    return move(borrowed);
-  }
-
-  template<typename T>
-  Borrowed<const T> borrow(const Owned<T>& owned)
-  {
-    Borrowed<const T> borrowed;
-    // Add const to the ownership data.
-    borrowed = reinterpret_cast<const OwnershipData<const T>&>(owned.data);
-    return move(borrowed);
-  }
 }

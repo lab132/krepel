@@ -20,7 +20,7 @@ static kr::Owned<kr::VertexBuffer> createVertexBuffer(kr::Borrowed<kr::ShaderPro
   auto pVB = VertexBuffer::create(BufferUsage::StaticDraw,
                                   PrimitiveType::TriangleStrip);
 
-  setupLayout(borrow(pVB), pShader, "krSpriteVertex");
+  setupLayout(pVB, pShader, "krSpriteVertex");
 
   return move(pVB);
 }

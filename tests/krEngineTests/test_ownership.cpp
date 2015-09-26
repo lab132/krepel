@@ -142,7 +142,7 @@ SCENARIO("taking ownership of some data.", "[ownership]")
 
       WHEN("borrowing this data")
       {
-        Bar<int> bar{ borrow(o) };
+        Bar<int> bar{ o };
 
         THEN("the ref count must be one.")
         {
@@ -185,7 +185,7 @@ TEST_CASE("kr::Owned", "[ownership]")
 
   REQUIRE(process(borrow(foo)) == 42 * 42);
 
-  Bar<Foo> bar{ borrow(foo) };
+  Bar<Foo> bar{ foo };
 
   REQUIRE(process(bar.data) == 42 * 42);
 
@@ -207,7 +207,7 @@ TEST_CASE("kr::Owned", "[ownership]")
         Owned<int> o(&data, [&count](int*){ ++count; });
 
         // Proper initialization
-        REQUIRE(bool(o));
+        REQUIRE(o != nullptr);
         REQUIRE(o.data.ptr == &data);
         REQUIRE(o.data.refCount == 0);
 
@@ -222,7 +222,7 @@ TEST_CASE("kr::Owned", "[ownership]")
 
 void blackHole(kr::Owned<int> o)
 {
-  REQUIRE(bool(o));
+  REQUIRE(o != nullptr);
   REQUIRE(o.data.refCount == 0);
 }
 
@@ -249,21 +249,21 @@ TEST_CASE("Owned Move", "[ownership]")
   {
     auto o2 = move(o1);
 
-    REQUIRE_FALSE(bool(o1));
-    REQUIRE(bool(o2));
+    REQUIRE_FALSE(o1);
+    REQUIRE(o2);
     REQUIRE(deleteCount == 0);
 
     // Move ownership to blackHole.
     blackHole(move(o2));
 
-    REQUIRE_FALSE(bool(o2));
+    REQUIRE_FALSE(o2);
     REQUIRE(deleteCount == 1);
   }
 
   SECTION("Yield Ownership")
   {
     auto dataPtr = o1.yieldOwnership();
-    REQUIRE_FALSE(bool(o1));
+    REQUIRE_FALSE(o1);
     REQUIRE(o1.data.refCount == 0);
     REQUIRE(deleteCount == 0);
   }
@@ -283,7 +283,7 @@ TEST_CASE("Const Ownership", "[ownership]")
   SECTION("Must Not Compile")
   {
     //*co = 42;
-    //*borrow(co) = 42;
+    //*co = 42;
   }
 
   SECTION("Data Access")
@@ -314,7 +314,7 @@ TEST_CASE("Borrowed Conversion")
   {
     auto func = [](Borrowed<const int> b) -> int { return *b + 1; };
 
-    Borrowed<int> b = borrow(o);
+    Borrowed<int> b = o;
     auto result = func(b);
     REQUIRE(result == *b + 1);
   }

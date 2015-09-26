@@ -97,8 +97,8 @@ namespace kr
     ShaderUniform getViewMatrixUniform() const { return m_uViewMatrix; }
     ShaderUniform getProjectionMatrixUniform() const { return m_uProjectionMatrix; }
 
-    Borrowed<VertexBuffer> getVertexBuffer() { return borrow(this->m_pVertexBuffer); }
-    Borrowed<const VertexBuffer> getVertexBuffer() const { return borrow(this->m_pVertexBuffer); }
+    Borrowed<VertexBuffer> getVertexBuffer() { return this->m_pVertexBuffer; }
+    Borrowed<const VertexBuffer> getVertexBuffer() const { return this->m_pVertexBuffer; }
 
     ezArrayPtr<const krSpriteVertex> getVertices() const { return ezMakeArrayPtr(m_vertices); }
 

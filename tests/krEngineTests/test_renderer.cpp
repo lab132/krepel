@@ -46,7 +46,7 @@ TEST_CASE("Experiments", "[renderer][experiments]")
     auto shader = ShaderProgram::loadAndLink("<shader>texturedQuad.vs", "<shader>texturedQuad.fs");
     REQUIRE(shader != nullptr);
 
-    KR_RAII_BIND_SHADER(borrow(shader));
+    KR_RAII_BIND_SHADER(shader);
 
     // Vertices
     // ========
@@ -94,8 +94,8 @@ TEST_CASE("Experiments", "[renderer][experiments]")
     // =============
     auto vb = VertexBuffer::create(BufferUsage::StaticDraw, PrimitiveType::Triangles);
     //REQUIRE(setupLayout(vb, prg, "Vertex").Succeeded());
-    setupLayout(borrow(vb), borrow(shader), "Vertex");
-    REQUIRE(uploadData(borrow(vb), ezMakeArrayPtr(vertices)).Succeeded());
+    setupLayout(vb, shader, "Vertex");
+    REQUIRE(uploadData(vb, ezMakeArrayPtr(vertices)).Succeeded());
 
     // Texture
     // =======
@@ -103,13 +103,13 @@ TEST_CASE("Experiments", "[renderer][experiments]")
     REQUIRE(tex != nullptr);
 
     auto pSampler = Sampler::create();
-    KR_RAII_BIND_SAMPLER(borrow(pSampler), TextureSlot(0));
+    KR_RAII_BIND_SAMPLER(pSampler, TextureSlot(0));
 
-    uploadData(shaderUniformOf(borrow(shader), "u_texture"), TextureSlot(0));
+    uploadData(shaderUniformOf(shader, "u_texture"), TextureSlot(0));
 
     glBindTexture(GL_TEXTURE_2D, tex->getGlHandle());
 
-    KR_RAII_BIND_VERTEX_BUFFER(borrow(vb), borrow(shader));
+    KR_RAII_BIND_VERTEX_BUFFER(vb, shader);
 
     bool run = true;
     pWindow->getEvent().AddEventHandler([&run](const WindowEventArgs& e)
@@ -125,9 +125,9 @@ TEST_CASE("Experiments", "[renderer][experiments]")
     {
       auto dt = ezTime::Now() - now;
 
-      processWindowMessages(borrow(pWindow));
+      processWindowMessages(pWindow);
       Renderer::extract();
-      Renderer::update(dt, borrow(pWindow));
+      Renderer::update(dt, pWindow);
 
       now += dt;
     }

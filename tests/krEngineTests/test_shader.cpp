@@ -69,7 +69,7 @@ TEST_CASE("Shader Program", "[shader]")
     auto fs = FragmentShader::loadAndCompile("<shader>Valid.fs");
     REQUIRE(fs != nullptr);
 
-    auto shader = ShaderProgram::link(borrow(vs), borrow(fs));
+    auto shader = ShaderProgram::link(vs, fs);
     REQUIRE(shader != nullptr);
   }
 
@@ -83,7 +83,7 @@ TEST_CASE("Shader Program", "[shader]")
   {
     auto vs = VertexShader::loadAndCompile("<shader>Valid.vs");
     auto fs = FragmentShader::loadAndCompile("<shader>Valid.fs");
-    auto shader = ShaderProgram::link(borrow(vs), borrow(fs));
+    auto shader = ShaderProgram::link(vs, fs);
 
     // TODO Implement me.
   }
