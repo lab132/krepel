@@ -1,3 +1,5 @@
+include(kr_set_pch)
+include(kr_mirror_source_tree)
 
 file(GLOB_RECURSE SOURCES *.h *.inl *.cpp)
 kr_set_pch("krEngine/pch.h" "pch.cpp" ${SOURCES})
@@ -20,3 +22,6 @@ target_link_libraries(krEngine
                       glew
                       ezThirdParty ezFoundation ezCore ezCoreUtils ezSystem
                       ${OPENGL_LIBRARIES})
+
+include(kr_install_target)
+kr_install_target(krEngine)

@@ -1,3 +1,5 @@
+include(kr_set_pch)
+include(kr_mirror_source_tree)
 
 file(GLOB_RECURSE SOURCES *.h *.inl *.cpp)
 #kr_set_pch("pch.h" "pch.cpp" ${SOURCES})
