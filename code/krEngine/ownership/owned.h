@@ -177,7 +177,7 @@ namespace kr
 
   /// Own a pointer.
   template<typename T>
-  Owned<T> ownWithoutCleanUp(T* ptr)
+  Owned<T> own(T* ptr, std::nullptr_t)
   {
     return move(own(ptr, [](T*){}));
   }

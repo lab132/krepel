@@ -308,7 +308,7 @@ TEST_CASE("Borrowed Conversion")
   KR_TESTS_RAII_CORE_STARTUP;
 
   int data = 123;
-  auto o = ownWithoutCleanUp(&data);
+  auto o = own(&data, nullptr);
 
   SECTION("Implicitly convert Borrowed<T> to Borrowed<const T>")
   {
@@ -330,7 +330,7 @@ TEST_CASE("Borrowed Conversion")
     REQUIRE(b1 == b3);
 
     int otherData = 1337;
-    auto o2 = ownWithoutCleanUp(&otherData);
+    auto o2 = own(&otherData, nullptr);
     auto b4 = borrow(o2);
     REQUIRE(b1 != b4);
     REQUIRE(b3 != b4);
