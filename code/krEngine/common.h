@@ -24,3 +24,4 @@ namespace kr
 #include <krEngine/common/ezMakeArrayPtr.h>
 #include <krEngine/common/ezTypesExtension.h>
 #include <krEngine/common/utils.h>
+#include <krEngine/common/traits.h>

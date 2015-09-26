@@ -4,7 +4,7 @@
 
 #include <Foundation/IO/FileSystem/FileReader.h>
 
-using ShaderBindings = ezHybridArray<kr::ShaderProgramPtr, 8>;
+using ShaderBindings = ezHybridArray<kr::Borrowed<const kr::ShaderProgram>, 8>;
 
 static ShaderBindings* g_pShaderBindings;
 static bool g_initialized = false;
@@ -62,9 +62,11 @@ static void logCompileStatus(GLuint hShader)
   ezLog::Warning("%s", log.GetData());
 }
 
-static GLuint loadAndCompileShader(GLuint type, const char* filename)
+static GLuint loadAndCompileShader(GLuint type, ezStringView fileName)
 {
-  EZ_LOG_BLOCK("Loading and Compiling Shader From File", filename);
+  ezStringBuilder sbFileName(fileName);
+
+  EZ_LOG_BLOCK("Loading and Compiling Shader From File", sbFileName);
 
   // Read file content
   // =================
@@ -72,7 +74,7 @@ static GLuint loadAndCompileShader(GLuint type, const char* filename)
   ezStringBuilder code;
   {
     ezFileReader reader;
-    if(reader.Open(filename).Failed())
+    if(reader.Open(sbFileName).Failed())
       return 0;
 
     code.ReadAll(reader);
@@ -113,20 +115,20 @@ static GLuint loadAndCompileShader(GLuint type, const char* filename)
   return 0;
 }
 
-kr::RefCountedPtr<kr::VertexShader> kr::VertexShader::loadAndCompile(const char* filename)
+kr::Owned<kr::VertexShader> kr::VertexShader::loadAndCompile(ezStringView fileName)
 {
-  auto handle = loadAndCompileShader(GL_VERTEX_SHADER, filename);
+  auto handle = loadAndCompileShader(GL_VERTEX_SHADER, fileName);
 
   if (glIsShader(handle) != GL_TRUE)
   {
     return nullptr;
   }
 
-  auto pVS = EZ_DEFAULT_NEW(VertexShader);
-  pVS->m_glHandle = handle;
-  pVS->m_resourceId = filename;
+  auto vs = EZ_DEFAULT_NEW(VertexShader);
+  vs->m_glHandle = handle;
+  vs->m_resourceId = fileName;
 
-  return pVS;
+  return own(vs, [](VertexShader* vs) { EZ_DEFAULT_DELETE(vs); });
 }
 
 kr::VertexShader::~VertexShader()
@@ -135,9 +137,9 @@ kr::VertexShader::~VertexShader()
   m_glHandle = 0;
 }
 
-kr::RefCountedPtr<kr::FragmentShader> kr::FragmentShader::loadAndCompile(const char* filename)
+kr::Owned<kr::FragmentShader> kr::FragmentShader::loadAndCompile(ezStringView fileName)
 {
-  auto handle = loadAndCompileShader(GL_FRAGMENT_SHADER, filename);
+  auto handle = loadAndCompileShader(GL_FRAGMENT_SHADER, fileName);
 
   if (glIsShader(handle) != GL_TRUE)
   {
@@ -145,11 +147,11 @@ kr::RefCountedPtr<kr::FragmentShader> kr::FragmentShader::loadAndCompile(const c
   }
   glCheckLastError();
 
-  auto pFS = EZ_DEFAULT_NEW(FragmentShader);
-  pFS->m_glHandle = handle;
-  pFS->m_resourceId = filename;
+  auto fs = EZ_DEFAULT_NEW(FragmentShader);
+  fs->m_glHandle = handle;
+  fs->m_resourceId = fileName;
 
-  return pFS;
+  return own(fs, [](FragmentShader* fs) { EZ_DEFAULT_DELETE(fs); });
 }
 
 kr::FragmentShader::~FragmentShader()
@@ -158,16 +160,16 @@ kr::FragmentShader::~FragmentShader()
   m_glHandle = 0;
 }
 
-kr::RefCountedPtr<kr::ShaderProgram> kr::ShaderProgram::link(VertexShaderPtr pVS,
-                                                             FragmentShaderPtr pFS)
+kr::Owned<kr::ShaderProgram> kr::ShaderProgram::link(Borrowed<VertexShader> vs,
+                                                     Borrowed<FragmentShader> fs)
 {
-  if (isNull(pVS))
+  if (vs == nullptr)
   {
     EZ_REPORT_FAILURE("Invalid vertex shader pointer.");
     return nullptr;
   }
 
-  if (isNull(pFS))
+  if (fs == nullptr)
   {
     EZ_REPORT_FAILURE("Invalid fragment shader pointer.");
     return nullptr;
@@ -175,8 +177,8 @@ kr::RefCountedPtr<kr::ShaderProgram> kr::ShaderProgram::link(VertexShaderPtr pVS
 
   auto hProgram = glCreateProgram();
 
-  glCheck(glAttachShader(hProgram, pVS->m_glHandle));
-  glCheck(glAttachShader(hProgram, pFS->m_glHandle));
+  glCheck(glAttachShader(hProgram, vs->m_glHandle));
+  glCheck(glAttachShader(hProgram, fs->m_glHandle));
 
   // Link the program
   // ================
@@ -193,9 +195,7 @@ kr::RefCountedPtr<kr::ShaderProgram> kr::ShaderProgram::link(VertexShaderPtr pVS
   {
     auto pProgram = EZ_DEFAULT_NEW(ShaderProgram);
     pProgram->m_glHandle = hProgram;
-    pProgram->m_pVertexShader = pVS;
-    pProgram->m_pFragmentShader = pFS;
-    return pProgram;
+    return own(pProgram, [](ShaderProgram* p){ EZ_DEFAULT_DELETE(p); });
   }
 
   // Get log message length
@@ -228,27 +228,26 @@ kr::RefCountedPtr<kr::ShaderProgram> kr::ShaderProgram::link(VertexShaderPtr pVS
 
 kr::ShaderProgram::~ShaderProgram()
 {
-  invalidate(m_pFragmentShader);
-  invalidate(m_pVertexShader);
   glCheck(glDeleteProgram(m_glHandle));
   m_glHandle = 0;
 }
 
-kr::ShaderUniform kr::shaderUniformOf(ShaderProgramPtr pShader, const char* uniformName)
+kr::ShaderUniform kr::shaderUniformOf(Borrowed<ShaderProgram> pShader, ezStringView uniformName)
 {
-  EZ_ASSERT_DEV(isValid(pShader), "Invalid shader program.");
-  if(isNull(pShader))
+  EZ_ASSERT_DEV(pShader != nullptr, "Invalid shader program.");
+  if(pShader == nullptr)
   {
     ezLog::Warning("Invalid shader program. Ignoring call.");
     return ShaderUniform();
   }
 
-  auto location = glGetUniformLocation(pShader->m_glHandle, uniformName);
+  ezStringBuilder sbUniformName(uniformName);
+  auto location = glGetUniformLocation(pShader->m_glHandle, sbUniformName);
   glCheckLastError();
 
   if (location == -1)
   {
-    ezLog::Warning("Cannot find uniform location for name '%s'.", uniformName);
+    ezLog::Warning("Cannot find uniform location for name '%s'.", sbUniformName);
     return ShaderUniform();
   }
 
@@ -260,9 +259,9 @@ kr::ShaderUniform kr::shaderUniformOf(ShaderProgramPtr pShader, const char* unif
   return u;
 }
 
-ezResult kr::bind(ShaderProgramPtr pShader)
+ezResult kr::bind(Borrowed<const ShaderProgram> pShader)
 {
-  if (isNull(pShader))
+  if (pShader == nullptr)
   {
     ezLog::Warning("Cannot bind nullptr as shader program. Ignoring.");
     return EZ_FAILURE;
@@ -307,7 +306,7 @@ ezResult kr::restoreLastShaderProgram()
 
 static bool checkUniformUploadPreconditions(const kr::ShaderUniform& uniform)
 {
-  if (kr::isNull(uniform.pShader))
+  if (uniform.pShader == nullptr)
   {
     ezLog::Warning("Invalid shader object.");
     return false;

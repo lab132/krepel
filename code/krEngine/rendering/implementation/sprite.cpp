@@ -11,7 +11,7 @@ EZ_BEGIN_STATIC_REFLECTED_TYPE(krSpriteVertex, ezNoBase, 1, ezRTTINoAllocator);
   EZ_END_PROPERTIES
 EZ_END_STATIC_REFLECTED_TYPE();
 
-static kr::VertexBufferPtr createVertexBuffer(kr::ShaderProgramPtr pShader)
+static kr::Owned<kr::VertexBuffer> createVertexBuffer(kr::Borrowed<kr::ShaderProgram> pShader)
 {
   using namespace kr;
 
@@ -22,25 +22,23 @@ static kr::VertexBufferPtr createVertexBuffer(kr::ShaderProgramPtr pShader)
 
   setupLayout(pVB, pShader, "krSpriteVertex");
 
-  return pVB;
+  return move(pVB);
 }
 
-static kr::ShaderProgramPtr createSpriteShader()
+// static
+kr::Owned<kr::ShaderProgram> kr::Sprite::createDefaultShader()
 {
-  using namespace kr;
-
   EZ_LOG_BLOCK("Create Shader", "Sprite");
 
   auto vsName = "<shader>sprite.vs";
   auto fsName = "<shader>sprite.fs";
   auto prg = ShaderProgram::loadAndLink(vsName, fsName);
-  if (isNull(prg))
+  if (prg == nullptr)
   {
     EZ_REPORT_FAILURE("Failed to link shaders to program: '%s' and '%s'", vsName, fsName);
-    return nullptr;
   }
 
-  return prg;
+  return move(prg);
 }
 
 kr::Sprite::Sprite()
@@ -65,11 +63,34 @@ void kr::update(Sprite& sprite)
 {
   EZ_LOG_BLOCK("Updating Sprite");
 
+  // Terminate, If There Is No Texture
+  // =================================
+  if (sprite.m_pTexture == nullptr)
+  {
+    ezLog::Warning("Sprite has no texture yet. Cannot Update.");
+    return;
+  }
+
+  // Terminate, If There Is No Sampler
+  // =================================
+  if (sprite.m_pSampler == nullptr)
+  {
+    ezLog::Warning("Sprite has no sampler yet. Cannot Update.");
+    return;
+  }
+
+  // Terminate, If There Is No Sampler
+  // =================================
+  if(sprite.m_pShader == nullptr)
+  {
+    ezLog::Warning("Sprite has no shader yet. Cannot Update.");
+    return;
+  }
+
   // Create Shader, If Needed
   // ========================
-  if (isNull(sprite.m_pShader))
+  if(sprite.m_needUpdate.IsSet(SpriteComponents::ShaderUniforms))
   {
-    sprite.m_pShader = createSpriteShader();
     sprite.m_uOrigin           = shaderUniformOf(sprite.m_pShader, "u_origin");
     sprite.m_uRotation         = shaderUniformOf(sprite.m_pShader, "u_rotation");
     sprite.m_uViewMatrix       = shaderUniformOf(sprite.m_pShader, "u_view");
@@ -80,25 +101,9 @@ void kr::update(Sprite& sprite)
 
   // Create VertexBuffer, If Needed
   // ==============================
-  if (isNull(sprite.m_pVertexBuffer))
+  if(sprite.m_pVertexBuffer == nullptr)
   {
-    sprite.m_pVertexBuffer = createVertexBuffer(sprite.m_pShader);
-  }
-
-  // Terminate, If There Is No Texture
-  // =================================
-  if (isNull(sprite.m_pTexture))
-  {
-    ezLog::Warning("Sprite has no texture yet. Ignoring.");
-    return;
-  }
-
-  // Create Sampler, If Needed
-  // =========================
-  if (isNull(sprite.m_pSampler))
-  {
-    sprite.m_pSampler = Sampler::create();
-    ezLog::Debug("Using default texture sampler for sprite.");
+    sprite.m_pVertexBuffer = move(createVertexBuffer(sprite.m_pShader));
   }
 
   bool uploadVB = false;
@@ -172,4 +177,11 @@ void kr::update(Sprite& sprite)
   {
     uploadData(sprite.getVertexBuffer(), sprite.getVertices());
   }
+}
+
+bool kr::canRender(const Sprite& sprite)
+{
+  return sprite.getTexture() != nullptr
+      && sprite.getSampler() != nullptr
+      && sprite.getShader()  != nullptr;
 }

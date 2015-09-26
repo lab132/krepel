@@ -12,8 +12,7 @@ TEST_CASE("Workflow", "[sprite]")
 
   KR_TESTS_RAII_CORE_STARTUP;
 
-  auto pWindow = Window::open();
-  pWindow->setClearColor(ezColor::CornflowerBlue);
+  auto pWindow = Window::createAndOpen();
 
   KR_TESTS_RAII_ENGINE_STARTUP;
 
@@ -25,29 +24,37 @@ TEST_CASE("Workflow", "[sprite]")
   cam.LookAt(ezVec3(0, 0, 0.5f), // Camera Position.
              ezVec3(0, 0, 0));   // Target Position.
 
-  Sprite s;
-  s.setTexture(Texture::load("<texture>kitten.dds"));
-  s.setLocalBounds(ezRectFloat(0, 0, 128, 128));
-  initialize(s);
-  s.getSampler()->setFiltering(TextureFiltering::Nearest);
+  auto tex = Texture::load("<texture>kitten.dds");
+  auto sampler = Sampler::create();
+  auto shader = Sprite::createDefaultShader();
+
+  Sprite sprite;
+  REQUIRE_FALSE(canRender(sprite));
+  sprite.setLocalBounds(ezRectFloat(0, 0, 128, 128));
+  initialize(sprite, tex, sampler, shader);
+  sprite.getSampler()->setFiltering(TextureFiltering::Nearest);
 
   // Handle the close-event of the window.
   bool run = true;
   pWindow->getEvent().AddEventHandler([&run](const WindowEventArgs& e)
   {
     if (e.type == WindowEventArgs::ClickClose)
+    {
       run = false;
+    }
   });
 
-  Renderer::addExtractionListener([&s, &cam](Renderer::Extractor& e)
+  Renderer::addExtractionListener([&sprite, &cam](Renderer::Extractor& e)
   {
     auto aspectRatio = 16.0f/9.0f;
     extract(e, cam, aspectRatio);
 
+    REQUIRE(canRender(sprite));
+
     Transform2D t(Zero);
-    t.m_position.Set(-s.getLocalBounds().width / 2.0f);
+    t.m_position.Set(-sprite.getLocalBounds().width / 2.0f);
     t.m_rotation = ezAngle::Degree(30.0f);
-    extract(e, s, t);
+    extract(e, sprite, t);
   });
 
   ezTime dt;

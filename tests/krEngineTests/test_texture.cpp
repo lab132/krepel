@@ -10,31 +10,32 @@ TEST_CASE("Loading", "[texture]")
 
   KR_TESTS_RAII_CORE_STARTUP;
 
-  auto pWindow = Window::open();
+  auto pWindow = Window::createAndOpen();
 
   KR_TESTS_RAII_ENGINE_STARTUP;
 
   SECTION("Non-existant Texture File")
   {
     auto pTex = Texture::load("<GetOuttaHere!>I do not exist.nope");
-    REQUIRE(isNull(pTex));
+    REQUIRE(pTex == nullptr);
   }
 
   SECTION("Load and Unload")
   {
     auto pTex = Texture::load("<texture>test_4x4.bmp");
-    REQUIRE(isValid(pTex));
+    REQUIRE(pTex != nullptr);
   }
 
   SECTION("Multiple Load/Unload Calls")
   {
     auto pTex1 = Texture::load("<texture>test_4x4.bmp");
-    REQUIRE(isValid(pTex1));
+    REQUIRE(pTex1 != nullptr);
     auto pTex2 = Texture::load("<texture>test_4x4.bmp");
-    REQUIRE(isValid(pTex1));
+    REQUIRE(pTex2 != nullptr);
 
-    // Multiple Calls to Texture::load should result in the same handle!
-    REQUIRE(pTex1 == pTex2);
+    // Multiple Calls to Texture::load should not result in the same handle!
+    // This is be the job of a resource management system.
+    REQUIRE(pTex1 != pTex2);
   }
 }
 
@@ -44,7 +45,7 @@ TEST_CASE("Data Access", "[texture]")
 
   KR_TESTS_RAII_CORE_STARTUP;
 
-  auto pWindow = Window::open();
+  auto pWindow = Window::createAndOpen();
 
   KR_TESTS_RAII_ENGINE_STARTUP;
 

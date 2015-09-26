@@ -1,5 +1,5 @@
 #pragma once
-#include <krEngine/referenceCounting.h>
+#include <krEngine/ownership.h>
 #include <krEngine/rendering/shader.h>
 
 namespace kr
@@ -43,20 +43,17 @@ namespace kr
     Patches = GL_PATCHES
   };
 
-  class VertexBuffer : public RefCounted
+  class VertexBuffer
   {
   public: // *** Static API
-    using ReleasePolicy = RefCountedReleasePolicies::DefaultDelete;
-
-    KR_ENGINE_API
-    static RefCountedPtr<VertexBuffer> create(BufferUsage usage,
-                                              PrimitiveType primitive);
+    KR_ENGINE_API static Owned<VertexBuffer> create(BufferUsage usage,
+                                                    PrimitiveType primitive);
 
   public: // *** Types
     struct VertexArrayProgramPair
     {
       GLuint hVao = 0;
-      ShaderProgramPtr pShader;
+      Borrowed<ShaderProgram> pShader;
     };
 
   public: // *** Data
@@ -81,29 +78,28 @@ namespace kr
     KR_ENGINE_API ~VertexBuffer();
 
   private: // *** Private Construction
-    // Create these using a static factory function of this class.
+    /// Create these using a static factory function of this class.
     VertexBuffer() = default;
 
-    EZ_DISALLOW_COPY_AND_ASSIGN(VertexBuffer);
+    VertexBuffer(const VertexBuffer&) = delete;
+    void operator =(const VertexBuffer&) = delete;
   };
-
-  using VertexBufferPtr = RefCountedPtr<VertexBuffer>;
 
   /// \brief Sets the layout of this vertex buffer for the given \a pShader.
   /// \param layoutTypeName
   ///   The name of a reflectable (ezRTTI) type descibing the
   ///   vertex buffer layout. Yes, this is Black Magic™.
-  KR_ENGINE_API ezResult setupLayout(VertexBufferPtr pVertBuffer,
-                                     ShaderProgramPtr pShader,
+  KR_ENGINE_API ezResult setupLayout(Borrowed<VertexBuffer> pVertBuffer,
+                                     Borrowed<ShaderProgram> pShader,
                                      const char* layoutTypeName);
 
-  KR_ENGINE_API ezResult uploadData(VertexBufferPtr pVertBuffer,
+  KR_ENGINE_API ezResult uploadData(Borrowed<const VertexBuffer> pVertBuffer,
                                     ezUInt32 byteCount,
                                     const void* bytes,
                                     ezUInt32 offet = 0);
 
   template<typename T>
-  ezResult uploadData(VertexBufferPtr pVertBuffer,
+  ezResult uploadData(Borrowed<const VertexBuffer> pVertBuffer,
                       ezArrayPtr<T> data,
                       ezUInt32 offset = 0)
   {
@@ -113,9 +109,9 @@ namespace kr
                       offset);                     // offset
   }
 
-  KR_ENGINE_API ezResult bind(VertexBufferPtr pVertBuffer, ShaderProgramPtr pProgram);
+  KR_ENGINE_API ezResult bind(Borrowed<const VertexBuffer> pVertBuffer, Borrowed<const ShaderProgram> pProgram);
 
-  KR_ENGINE_API ezResult restoreLastVertexBuffer(ShaderProgramPtr pProgram);
+  KR_ENGINE_API ezResult restoreLastVertexBuffer(Borrowed<const ShaderProgram> pProgram);
 }
 
 /// \brief Binds the given vertex buffer for the given shader program for the current scope.

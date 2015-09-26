@@ -1,14 +1,11 @@
 #pragma once
-#include <krEngine/referenceCounting.h>
+#include <krEngine/ownership.h>
 #include <krEngine/rendering/texture.h>
 
 namespace kr
 {
   class TextureImpl : public Texture
   {
-  public: // *** Construction
-    ~TextureImpl();
-
   public: // *** Data
     GLuint m_glHandle = 0;
     TextureName m_name;
@@ -17,12 +14,4 @@ namespace kr
 
   TextureImpl* getImpl(Texture* pTex);
   const TextureImpl* getImpl(const Texture* pTex);
-
-  void addInstance(TextureImpl* pTex);
-
-  ezResult removeInstance(TextureImpl* pTex);
-
-  /// \return Pointer to a valid texture instance.
-  ///         If not found, will yield a \a nullptr.
-  TextureImpl* findInstance(const char* textureName);
 }

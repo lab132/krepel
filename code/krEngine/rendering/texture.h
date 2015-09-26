@@ -1,5 +1,5 @@
 #pragma once
-#include <krEngine/referenceCounting.h>
+#include <krEngine/ownership.h>
 
 #include <CoreUtils/Image/Image.h>
 
@@ -7,15 +7,11 @@ namespace kr
 {
   using TextureName = ezString128;
 
-  class Texture : public RefCounted
+  class Texture
   {
   public:
-    using ReleasePolicy = Texture;
-
-    KR_ENGINE_API static void release(Texture*& pTex);
-
     /// \brief Loads a texture from the filesystem with the given \a filename.
-    KR_ENGINE_API static RefCountedPtr<Texture> load(const char* filename);
+    KR_ENGINE_API static Owned<Texture> load(ezStringView fileName);
 
   public: // *** Accessors/Mutators
 
@@ -42,8 +38,6 @@ namespace kr
     void operator =(const Texture&) = delete; ///< No assignment.
   };
 
-  using TexturePtr = RefCountedPtr<Texture>;
-
   struct TextureSlot
   {
     ezInt32 value = -1;
@@ -52,7 +46,7 @@ namespace kr
     explicit TextureSlot(ezInt32 v) : value(v){}
   };
 
-  KR_ENGINE_API ezResult bind(TexturePtr pTexture, TextureSlot slot);
+  KR_ENGINE_API ezResult bind(Borrowed<const Texture> pTexture, TextureSlot slot);
   KR_ENGINE_API ezResult restoreLastTexture2D(TextureSlot slot);
 
   // Texture Sampling
@@ -76,12 +70,10 @@ namespace kr
     ClampToBorder,
   };
 
-  class Sampler : public RefCounted
+  class Sampler
   {
   public: // *** Static API
-    using ReleasePolicy = RefCountedReleasePolicies::DefaultDelete;
-
-    KR_ENGINE_API static RefCountedPtr<Sampler> create();
+    KR_ENGINE_API static Owned<Sampler> create();
 
   public: // *** Data
     ezUInt32 m_glHandle;
@@ -110,9 +102,7 @@ namespace kr
     void operator =(const Sampler&) = delete; ///< No assignment.
   };
 
-  using SamplerPtr = RefCountedPtr<Sampler>;
-
-  KR_ENGINE_API ezResult bind(SamplerPtr pSampler, TextureSlot slot);
+  KR_ENGINE_API ezResult bind(Borrowed<const Sampler> pSampler, TextureSlot slot);
 
   KR_ENGINE_API ezResult restoreLastSampler(TextureSlot slot);
 }
@@ -122,5 +112,5 @@ namespace kr
   KR_ON_SCOPE_EXIT { ::kr::restoreLastTexture2D(slot); }
 
 #define KR_RAII_BIND_SAMPLER(sampler, slot) \
-  ::kr::bind(sampler, slot);                   \
+  ::kr::bind(sampler, slot);                \
   KR_ON_SCOPE_EXIT { ::kr::restoreLastSampler(slot); }

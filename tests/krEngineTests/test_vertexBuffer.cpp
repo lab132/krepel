@@ -33,7 +33,7 @@ TEST_CASE("Basics", "[vertex-buffer]")
 
   KR_TESTS_RAII_CORE_STARTUP;
 
-  auto pWindow = Window::open();
+  auto pWindow = Window::createAndOpen();
 
   KR_TESTS_RAII_ENGINE_STARTUP;
 
@@ -44,24 +44,22 @@ TEST_CASE("Basics", "[vertex-buffer]")
 
   SECTION("Layout and Upload")
   {
-    auto pVS = VertexShader::loadAndCompile("<shader>Valid.vs");
-    auto pFS = FragmentShader::loadAndCompile("<shader>Valid.fs");
-    auto pProgram = ShaderProgram::link(pVS, pFS);
+    auto shader = ShaderProgram::loadAndLink("<shader>Valid.vs", "<shader>Valid.fs");
 
-    auto h = pProgram->m_glHandle;
+    auto h = shader->getGlHandle();
     auto pos = glGetAttribLocation(h, "vs_position");
     auto col = glGetAttribLocation(h, "vs_color");
     auto coord = glGetAttribLocation(h, "vs_texCoords");
 
-    auto pVB = VertexBuffer::create(BufferUsage::StaticDraw, PrimitiveType::Triangles);
-    REQUIRE(setupLayout(pVB, pProgram, "TestLayout").Succeeded());
+    auto vb = VertexBuffer::create(BufferUsage::StaticDraw, PrimitiveType::Triangles);
+    REQUIRE(setupLayout(vb, shader, "TestLayout").Succeeded());
     TestLayout data[4];
     data[0].pos.Set(-1,  1);
     data[1].pos.Set( 1,  1);
     data[2].pos.Set( 1, -1);
     data[3].pos.Set(-1, -1);
 
-    uploadData(pVB, ezMakeArrayPtr(data));
-    REQUIRE(uploadData(pVB, ezMakeArrayPtr(data)).Succeeded());
+    uploadData(vb, ezMakeArrayPtr(data));
+    REQUIRE(uploadData(vb, ezMakeArrayPtr(data)).Succeeded());
   }
 }
