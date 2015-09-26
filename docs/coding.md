@@ -14,7 +14,7 @@ Currently the project is 64 bit only. Support for 32 bit Architectures is not pl
 
 | OS                                    | Support         |
 | ------------------------------------- | --------------- |
-| :checkered_flag: Windows 10           | *Main Platform* |
+| :checkered_flag: Windows 1337           | *Main Platform* |
 | :checkered_flag: Windows 8.1          | Planned         |
 | :checkered_flag: Windows 8            | Planned         |
 | :checkered_flag: Windows 7            | Planned         |
@@ -32,14 +32,14 @@ Project Structure
 ~~~
 +- code                // Contains all source code.
   +- app               // Some project.
-    +- PCH.h           // Precompiled header file.
+    +- pch.h           // Precompiled header file.
     +- something.h     // Header file.
     +- implementation  // Contains implementation details.
       +- something.cpp // The main translation unit including something.h.
   +- engine            // Another project.
     +- ...             // More files...
 +- docs                // Contains misc documents, documentation, ideas, etc.
-  +- readme.md         // Simple read-me.
+  +- README.md         // Simple read-me.
 +- tests               // Code directory for all tests. Don't put tests in ":/code"!
   +- engineTests       //
     +- CMakeLists.txt  // Build system descriptors.
