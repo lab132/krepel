@@ -10,47 +10,15 @@ import os
 import stat
 
 gitignoreTemplate = """
-# Compiled Object files
-*.slo
-*.lo
-*.o
-*.obj
-
-# Precompiled Headers
-*.gch
-*.pch
-
-# Compiled Dynamic libraries
-*.so
-*.dylib
-*.dll
-
-# Compiled Static libraries
-*.lai
-*.la
-*.a
-*.lib
-
-# Executables
-*.exe
-*.out
-*.app
-
-# ide settings
-.idea
-
-# cmake temp files
-# CMakeCache.txt
-# CmakeFiles/
-
-[tT]humbs.[dD][bB]
-
 # Note: To check in binaries or libs, use `git add --force /bin/whatever.dll`.
 /bin/
 /lib/
 
 # This is the intended place to generate CMake stuff in, i.e. the CMake binary dir.
 /workspace/
+
+# Windows thumbnails.
+[tT]humbs.[dD][bB]
 """
 
 editorconfigTemplate = """
@@ -168,15 +136,6 @@ def get_args():
                       type=Path,
                       help=("The directory to create the project in. "
                             "Will prompt for confirmation if the directory already exists."))
-  parser.add_argument("--git",
-                      action="store_true",
-                      default=True,
-                      help="Whether to initialize a git repository.")
-  parser.add_argument("--no-git",
-                      dest="git",
-                      default=True,
-                      action="store_false",
-                      help="Do not initialize a git repository.")
   parser.add_argument("--name",
                       help="A friendly name for the project.")
   parser.add_argument("--force",
@@ -240,17 +199,6 @@ def create_gitignore_file():
   with Path(".gitignore").open("w") as outfile:
     outfile.write(gitignoreTemplate)
 
-def git_initial_commit():
-  """Create an initial commit with all files"""
-  def print_if_not_empty(some_bytes):
-    """Print some bytes if they're not empty"""
-    if some_bytes:
-      print(some_bytes.decode("UTF-8"), end="")
-  print_if_not_empty(subprocess.check_output(["git", "init"]))
-  print_if_not_empty(subprocess.check_output(["git", "add", "-A", ":/"]))
-  print_if_not_empty(subprocess.check_output(["git", "commit", "-mInitial commit."]))
-
-
 def main():
   """Entry point."""
   args = get_args()
@@ -277,10 +225,8 @@ def main():
   create_toplevel_cmakelists_file(friendly_name, cmake_name)
   create_code_and_mainproject_cmakelists_file(cmake_name)
 
-  # git
-  if args.git:
-    create_gitignore_file()
-    git_initial_commit()
+  # .gitignore
+  create_gitignore_file()
 
   print("Your project has been created.")
   print("Please use CMake to generate a build system for your new project.")
