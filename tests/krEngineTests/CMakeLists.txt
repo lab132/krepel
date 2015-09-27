@@ -1,16 +1,22 @@
 include(kr_set_pch)
 include(kr_mirror_source_tree)
 
+# Source Files
+# ============
 file(GLOB_RECURSE SOURCES *.h *.inl *.cpp)
-kr_set_pch("pch.h" "pch.cpp" ${SOURCES})
-kr_mirror_source_tree("${CMAKE_CURRENT_LIST_DIR}" ${SOURCES})
 
+# Target Setup
+# ============
 add_executable(krEngineTests ${SOURCES})
 set_target_properties(krEngineTests PROPERTIES
                       FOLDER tests)
-
 target_include_directories(krEngineTests PUBLIC ../../code)
 target_include_directories(krEngineTests PUBLIC ..)
+kr_set_pch(krEngineTests "pch.h")
+kr_mirror_source_tree("${CMAKE_CURRENT_LIST_DIR}" ${SOURCES})
+
+# Dependencies
+# ============
 
 find_package(OpenGL REQUIRED)
 if(OPENGL_INCLUDE_DIR)
@@ -20,10 +26,11 @@ endif()
 
 target_link_libraries(krEngineTests
                       krEngine
-                      glew
-                      ezThirdParty ezFoundation ezCore ezCoreUtils ezSystem
                       ${OPENGL_LIBRARIES})
 
+# Special Compile Options
+# =======================
 if(MSVC)
-  set_target_properties(krEngineTests PROPERTIES COMPILE_FLAGS "/GR")
+  # Enable RTTI for the tests since Catch requires it.
+  target_compile_options(krEngineTests PRIVATE /GR)
 endif()

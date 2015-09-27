@@ -89,16 +89,25 @@ codeCMakeListsTemplate = """
 add_subdirectory("{cmake_name}")
 """
 
-mainprojectCMakeListsTemplate = """
-include(kr_set_pch)
+mainprojectCMakeListsTemplate = """include(kr_set_pch)
 include(kr_mirror_source_tree)
 
+# Source Files
+# ============
 file(GLOB_RECURSE SOURCES *.h *.inl *.cpp)
-kr_set_pch("{cmake_name}/pch.h" "pch.cpp" ${{SOURCES}})
+
+# Target Setup
+# ============
+add_executable({cmake_name} ${{SOURCES}})
+set_target_properties({cmake_name} PROPERTIES
+                      FOLDER tests)
+target_include_directories({cmake_name} PUBLIC ../../code)
+target_include_directories({cmake_name} PUBLIC ..)
+kr_set_pch({cmake_name} "pch.h")
 kr_mirror_source_tree("${{CMAKE_CURRENT_LIST_DIR}}" ${{SOURCES}})
 
-add_executable({cmake_name} ${{SOURCES}})
-
+# Dependencies
+# ============
 find_package(OpenGL REQUIRED)
 if(OPENGL_INCLUDE_DIR)
   # Needed on non-windows platforms (I think).
@@ -125,8 +134,6 @@ pchH = """#pragma once
 #include <krEngine/pch.h>
 #include <krEngine/rendering.h>
 """
-
-pchCpp = "#include <{cmake_name}/pch.h>\n"
 
 def get_args():
   """Get arguments to this script."""
@@ -190,8 +197,6 @@ def create_code_and_mainproject_cmakelists_file(friendly_name, cmake_name):
     outfile.write(mainStubCpp.format(friendly_name=friendly_name, cmake_name=cmake_name))
   with (project_dir / "pch.h").open("w") as outfile:
     outfile.write(pchH)
-  with (project_dir / "pch.cpp").open("w") as outfile:
-    outfile.write(pchCpp.format(cmake_name=cmake_name))
 
 def create_gitignore_file():
   """Create the .gitignore file"""
