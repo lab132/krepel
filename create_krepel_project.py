@@ -99,8 +99,6 @@ file(GLOB_RECURSE SOURCES *.h *.inl *.cpp)
 # Target Setup
 # ============
 add_executable({cmake_name} ${{SOURCES}})
-set_target_properties({cmake_name} PROPERTIES
-                      FOLDER tests)
 target_include_directories({cmake_name} PUBLIC ../../code)
 target_include_directories({cmake_name} PUBLIC ..)
 kr_set_pch({cmake_name} "pch.h")
