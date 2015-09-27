@@ -56,6 +56,8 @@ EZ_ON_GLOBAL_EVENT(ezStartup_ShutdownCore_Begin)
   //ezTestFramework::Output(ezTestOutput::Details,
   //                        "Unmounting test data directories.");
 
+  ezGlobalLog::RemoveLogWriter(ezLogWriter::VisualStudio::LogMessageHandler);
+
   ezFileSystem::RemoveDataDirectoryGroup("TestData");
 
   g_initialized = false;
