@@ -32,6 +32,8 @@ namespace kr
 
   public: // *** Construction
     Sprite();
+    Sprite(const Sprite& other);
+    void operator=(const Sprite& other);
 
   public: // *** Accessors/Mutators
     bool needsUpdate() const { return m_needUpdate.GetValue() != 0; }
@@ -89,6 +91,7 @@ namespace kr
     ezRectFloat getLocalBounds() const { return m_localBounds; }
 
     void setCutout(ezRectU32 newCutout);
+    ezRectU32 getCutout() const { return this->m_cutout; }
 
     ShaderUniform getTextureUniform() const { return m_uTexture; }
     ShaderUniform getColorUniform() const { return m_uColor; }

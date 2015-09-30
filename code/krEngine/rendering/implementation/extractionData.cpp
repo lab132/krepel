@@ -27,8 +27,8 @@ void kr::draw(SpriteData& sprite,
   // ===============
   uploadData(sprite.uColor, sprite.color);
   uploadData(sprite.uTexture, textureSlot);
-  uploadData(sprite.uOrigin, sprite.transform.m_position);
-  uploadData(sprite.uRotation, sprite.transform.m_rotation);
+  uploadData(sprite.uOrigin, sprite.transform.position);
+  uploadData(sprite.uRotation, sprite.transform.rotation);
   uploadData(sprite.uViewMatrix, viewMatrix);
   uploadData(sprite.uProjectionMatrix, projectionMatrix);
 

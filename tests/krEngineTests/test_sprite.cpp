@@ -51,9 +51,9 @@ TEST_CASE("Workflow", "[sprite]")
 
     REQUIRE(canRender(sprite));
 
-    Transform2D t(Zero);
-    t.m_position.Set(-sprite.getLocalBounds().width / 2.0f);
-    t.m_rotation = ezAngle::Degree(30.0f);
+    auto t = Transform2D::zero();
+    t.position = ezVec2(-sprite.getLocalBounds().width / 2.0f);
+    t.rotation = ezAngle::Degree(30.0f);
     extract(e, sprite, t);
   });
 

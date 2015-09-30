@@ -46,6 +46,30 @@ kr::Sprite::Sprite()
   m_needUpdate.Add(SpriteComponents::Cutout);
 }
 
+void kr::Sprite::operator=(const Sprite& other)
+{
+  this->m_needUpdate = other.m_needUpdate;
+  ezMemoryUtils::Copy(this->m_vertices, other.m_vertices, 4);
+  this->m_pSampler = other.m_pSampler;
+  this->m_pTexture = other.m_pTexture;
+  this->m_localBounds = other.m_localBounds;
+  this->m_cutout = other.m_cutout;
+  this->m_color = other.m_color;
+  this->m_pShader = other.m_pShader;
+  this->m_uTexture = other.m_uTexture;
+  this->m_uColor = other.m_uColor;
+  this->m_uTransform = other.m_uTransform;
+  this->m_uOrigin = other.m_uOrigin;
+  this->m_uRotation = other.m_uRotation;
+  this->m_uViewMatrix = other.m_uViewMatrix;
+  this->m_uProjectionMatrix = other.m_uProjectionMatrix;
+}
+
+kr::Sprite::Sprite(const Sprite& other)
+{
+  *this = other;
+}
+
 void kr::Sprite::setLocalBounds(ezRectFloat newLocalBounds)
 {
   m_localBounds = move(newLocalBounds);
@@ -151,12 +175,10 @@ void kr::update(Sprite& sprite)
   {
     auto& bounds = sprite.m_localBounds;
 
-    // If no bounds were set, use the texture as bounds.
+    // If no bounds were set, use the texture dimensions.
     if (!bounds.HasNonZeroArea())
     {
       auto& cutout = sprite.m_cutout;
-      bounds.x      = float(cutout.x);
-      bounds.y      = float(cutout.x);
       bounds.width  = float(cutout.width);
       bounds.height = float(cutout.height);
     }

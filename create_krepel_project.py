@@ -117,8 +117,7 @@ target_link_libraries({cmake_name}
                       ${{OPENGL_LIBRARIES}})
 """
 
-mainStubCpp = """#include <{cmake_name}/pch.h>
-#include <cstdio>
+mainStubCpp = """#include <cstdio>
 
 int main(int argc, char* argv[])
 {{

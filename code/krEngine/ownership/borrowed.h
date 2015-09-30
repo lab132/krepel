@@ -47,7 +47,11 @@ namespace kr
 
     void operator =(const Data& newData)
     {
-      addRef(newData);
+      if(&newData != nullptr)
+      {
+        addRef(newData);
+      }
+
       this->removeRefIfNotNull();
       this->pData = &newData;
     }
