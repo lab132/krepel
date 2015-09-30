@@ -63,6 +63,8 @@ void kr::Sprite::operator=(const Sprite& other)
   this->m_uRotation = other.m_uRotation;
   this->m_uViewMatrix = other.m_uViewMatrix;
   this->m_uProjectionMatrix = other.m_uProjectionMatrix;
+
+  update(*this);
 }
 
 kr::Sprite::Sprite(const Sprite& other)

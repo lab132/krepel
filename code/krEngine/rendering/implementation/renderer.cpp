@@ -196,6 +196,10 @@ void kr::Renderer::update(ezTime dt, Borrowed<Window> pTarget)
 
   glCheck(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
 
+  glCheck(glEnable(GL_MULTISAMPLE));
+  glCheck(glEnable(GL_BLEND));
+  glCheck(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
+
   // Render the Data
   // ===============
   {

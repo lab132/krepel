@@ -81,16 +81,46 @@ static void uploadPixelData(kr::Borrowed<kr::Texture> texture)
   auto pixels = pTex->m_image.GetSubImagePointer<void>();
 
   glCheck(glBindTexture(GL_TEXTURE_2D, pTex->m_glHandle));
-  // TODO Check if GetNumMipLevels() - 1 is ok here.
-  glCheck(glTexImage2D(GL_TEXTURE_2D,                       // Target
-                       pTex->m_image.GetNumMipLevels() - 1, // (Mip) Level
-                       GL_RGBA,                             // Format used by OpenGL (not our pixels).
-                       pTex->m_image.GetWidth(),            // Texture width
-                       pTex->m_image.GetHeight(),           // Texture height
-                       0,                                   // Must be 0, as per the specification.
-                       GL_BGRA,                             // Format of the pixels (see last argument).
-                       GL_UNSIGNED_BYTE,                    // Size per pixel.
-                       pixels));                            // The actual pixel data.
+
+  auto texFormatType = ezImageFormat::GetType(pTex->m_image.GetImageFormat());
+  if (texFormatType == ezImageFormatType::LINEAR)
+  {
+    glCheck(glTexImage2D(GL_TEXTURE_2D,              // Target
+                         0,                          // (Mip) Level
+                         GL_RGBA,                    // Format used by OpenGL (not our pixels).
+                         pTex->m_image.GetWidth(),   // Texture width
+                         pTex->m_image.GetHeight(),  // Texture height
+                         0,                          // Must be 0, as per the specification.
+                         GL_BGRA,                    // Format of the pixels (see last argument).
+                         GL_UNSIGNED_BYTE,           // Size per pixel.
+                         pixels));                   // The actual pixel data.
+  }
+  else if(texFormatType == ezImageFormatType::BLOCK_COMPRESSED)
+  {
+    GLenum glFormat;
+
+    auto texImageFormat = pTex->m_image.GetImageFormat();
+    switch(texImageFormat)
+    {
+    case ezImageFormat::BC3_UNORM:
+      glFormat = GL_COMPRESSED_RGBA_S3TC_DXT5_EXT;
+      break;
+      // TODO Support more types.
+    default:
+      ezLog::Warning("Image format \"%s\" not supported at this time. Please export your image as BC3/DXT5",
+                     ezImageFormat::GetName(texImageFormat));
+      return;
+    }
+
+    glCheck(glCompressedTexImage2D(GL_TEXTURE_2D,                // Target
+                                   0,                            // (Mip) Level
+                                   glFormat,                     // Format used by OpenGL (not our pixels).
+                                   pTex->m_image.GetWidth(),     // Texture width
+                                   pTex->m_image.GetHeight(),    // Texture height
+                                   0,                            // Must be 0, as per the specification.
+                                   pTex->m_image.GetDataSize(),  // Number of bytes of the pixel data.
+                                   pixels));                     // The actual pixel data.
+  }
 
   // Set Default Sampling Options
   // ============================
