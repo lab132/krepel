@@ -3,10 +3,11 @@ set(KREPEL_INSTALL_TARGETS_FILE "${KREPEL_DIR}/build/CMake/targets/krepel.cmake"
     CACHE PATH "The filepath of the krepel install targets script")
 mark_as_advanced(KREPEL_INSTALL_TARGETS_FILE)
 
-# Clear the file.
-file(WRITE "${KREPEL_INSTALL_TARGETS_FILE}"
-     "# This file was generated during config-time of krepel.\n"
-     "# Needs a valid KREPEL_DIR CMake variable.\n")
+function(kr_prepare_install_target_file)
+  file(WRITE "${KREPEL_INSTALL_TARGETS_FILE}"
+       "# This file was generated during config-time of krepel.\n"
+       "# Needs a valid KREPEL_DIR CMake variable.\n")
+endfunction()
 
 function(kr_install_target TARGET_NAME)
   get_target_property(LIBS ${TARGET_NAME} LINK_LIBRARIES)

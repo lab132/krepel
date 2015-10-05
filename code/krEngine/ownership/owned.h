@@ -179,7 +179,7 @@ namespace kr
   template<typename T>
   Owned<T> own(T* ptr, std::nullptr_t)
   {
-    return move(own(ptr, [](T*){}));
+    return own(ptr, [](T*){});
   }
 
   template<typename T>

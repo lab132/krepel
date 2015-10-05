@@ -2,6 +2,9 @@
 
 namespace kr
 {
+  // Types
+  // =====
+
   template<typename T>
   using NonConst = typename std::remove_const<T>::type;
 

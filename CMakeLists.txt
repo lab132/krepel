@@ -24,6 +24,10 @@ kr_setup()
 # Platform specific setup.
 include(platforms/${CMAKE_SYSTEM_NAME})
 
+# Prepare for installing targets
+include(kr_install_target)
+kr_prepare_install_target_file()
+
 # Imported targets
 include(targets/glew)
 include(targets/ezEngine)
