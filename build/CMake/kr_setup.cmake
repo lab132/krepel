@@ -31,8 +31,8 @@ macro(kr_setup)
     unset(KREPEL_VERSION_CATCH CACHE)
   endif()
 
-  add_custom_target(pullBinaries ALL
-                    COMMAND ${CMAKE_COMMAND} -P "${CMAKE_BINARY_DIR}/pullBinaries.cmake"
+  add_custom_target(pullRuntimeBinaries ALL
+                    COMMAND ${CMAKE_COMMAND} -P "${CMAKE_BINARY_DIR}/pullRuntimeBinaries.cmake"
                     COMMENT "Pulling external binaries (.dll, .pdb, ...) from the toolbox.")
 
   # Use at least C++11
