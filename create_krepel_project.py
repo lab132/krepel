@@ -78,11 +78,10 @@ set({cmake_name}_DIR "${{CMAKE_SOURCE_DIR}}" CACHE PATH "Root directory of {frie
 mark_as_advanced({cmake_name}_DIR)
 
 
-include(kr_client_copy_dlls)
-kr_client_copy_dlls("${{{cmake_name}_DIR}}/bin")
-
 include_directories("code")
 add_subdirectory("code")
+
+kr_post_config()
 """
 
 codeCMakeListsTemplate = """

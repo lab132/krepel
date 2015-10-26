@@ -9,17 +9,12 @@ macro(kr_setup)
     message("Need a valid path for the variable LAB132_TOOLBOX_DIR (either in cmake or as environment variable).")
   endif()
 
-  #find_program(PYTHON NAMES py python3 python DOC "The python launcher/interpreters py, python3, or python are supported.")
-  #if(PYTHON MATCHES ".*/py\.exe")
-  #  set(PYTHON "${PYTHON} -3")
-  #endif()
-
-  set(KREPEL_VERSION_EZ    "rev858"            CACHE STRING "The version of ezEngine to be used. Must match the folder names in the toolbox.")
+  set(KREPEL_VERSION_EZ "rev858" CACHE STRING "The version of ezEngine to be used. Must match the folder names in the toolbox.")
   set(EZ_DIR "${LAB132_TOOLBOX_DIR}/ezEngine-${KREPEL_VERSION_EZ}")
   list(APPEND CMAKE_MODULE_PATH "${EZ_DIR}/lib/CMake/")
   list(APPEND KREPEL_BINARY_PULL_PATH "${EZ_DIR}/bin/")
 
-  set(KREPEL_VERSION_GLEW  "1.12.0"            CACHE STRING "The version of glew to be used. Must match the folder names in the toolbox.")
+  set(KREPEL_VERSION_GLEW "1.12.0" CACHE STRING "The version of glew to be used. Must match the folder names in the toolbox.")
   set(GLEW_DIR "${LAB132_TOOLBOX_DIR}/glew-${KREPEL_VERSION_GLEW}")
   list(APPEND CMAKE_MODULE_PATH "${GLEW_DIR}/lib/CMake/")
   list(APPEND KREPEL_BINARY_PULL_PATH "${GLEW_DIR}/bin/")
@@ -56,3 +51,11 @@ macro(kr_setup)
     set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_${CONFIG} "${CMAKE_SOURCE_DIR}/lib")
   endforeach()
 endmacro()
+
+function(kr_post_config)
+  # Set up the "pull binaries" script
+  set(PULL_PATH ${KREPEL_BINARY_PULL_PATH})
+  set(PULL_DESTINATION "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}")
+  configure_file("${KREPEL_DIR}/build/CMake/pullRuntimeBinaries.cmake.in" "${CMAKE_BINARY_DIR}/pullRuntimeBinaries.cmake" @ONLY)
+endfunction()
+

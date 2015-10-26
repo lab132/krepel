@@ -35,11 +35,6 @@ if(KREPEL_TESTS)
   add_subdirectory("tests")
 endif()
 
-# Set up the "pull binaries" script
-set(PULL_PATH ${KREPEL_BINARY_PULL_PATH})
-set(PULL_DESTINATION "${KREPEL_DIR}/bin")
-configure_file("${KREPEL_DIR}/build/CMake/pullRuntimeBinaries.cmake.in" "${CMAKE_BINARY_DIR}/pullRuntimeBinaries.cmake" @ONLY)
-
 # Create 'install' rules.
 install(DIRECTORY build bin lib code
         DESTINATION .
@@ -50,3 +45,5 @@ if(KREPEL_INSTALL_TARGETS_FILE)
           DESTINATION "build/CMake/targets"
           RENAME "krepel.cmake")
 endif()
+
+kr_post_config()
