@@ -42,7 +42,7 @@ SCENARIO("OwnershipData Initialization", "[ownership]")
 
     WHEN("initialization finished") {
       THEN("the internal pointer must be null and the reference count zero.") {
-        REQUIRE(data.ptr == 0);
+        REQUIRE(data.ptr == nullptr);
         REQUIRE(data.refCount == 0);
       }
     }
@@ -177,7 +177,7 @@ TEST_CASE("kr::Owned", "[ownership]")
 
   KR_TESTS_RAII_CORE_STARTUP;
 
-  auto rawFooPtr = EZ_DEFAULT_NEW(Foo);
+  Foo* rawFooPtr = EZ_DEFAULT_NEW(Foo);
   auto foo = own(rawFooPtr, [](decltype(rawFooPtr) ptr){ EZ_DEFAULT_DELETE(ptr); });
 
   REQUIRE(foo.data.refCount == 0);
@@ -194,7 +194,7 @@ TEST_CASE("kr::Owned", "[ownership]")
     SECTION("Default")
     {
       Owned<char> o;
-      REQUIRE(o.data.ptr == 0);
+      REQUIRE(o.data.ptr == nullptr);
       REQUIRE(o.data.refCount == 0);
     }
 

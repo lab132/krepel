@@ -46,7 +46,7 @@ EZ_BEGIN_SUBSYSTEM_DECLARATION(krEngine, VertexBuffers)
   }
 
 private:
-  ezUByte m_mem_vbBindings[sizeof(VertexBufferBindings)];
+  ezUInt8 m_mem_vbBindings[sizeof(VertexBufferBindings)];
 EZ_END_SUBSYSTEM_DECLARATION
 
 /// \note Not all types are supported.
@@ -128,7 +128,7 @@ kr::Owned<kr::VertexBuffer> kr::VertexBuffer::create(BufferUsage usage,
   // Success
   // =======
 
-  auto pVertexBuffer = EZ_DEFAULT_NEW(VertexBuffer);
+  VertexBuffer* pVertexBuffer = EZ_DEFAULT_NEW(VertexBuffer);
   pVertexBuffer->m_glHandle = handle;
   pVertexBuffer->m_usage = usage;
   pVertexBuffer->m_primitive = primitive;
@@ -224,14 +224,14 @@ ezResult kr::setupLayout(Borrowed<VertexBuffer> pVertBuffer,
     auto pProp = props[i];
 
     // We only need the members, such as ezColor::r.
-    if (pProp->GetCategory() != ezAbstractProperty::Member)
+    if (pProp->GetCategory() != ezPropertyCategory::Member)
       continue;
 
     // The name of the attribute in the layout struct.
     auto attributeName = static_cast<ezAbstractMemberProperty*>(pProp)->GetPropertyName();
 
     // The reflectable member attribute.
-    auto pAttribute = static_cast<ezAbstractMemberProperty*>(pProp)->GetPropertyType();
+    auto pAttribute = static_cast<ezAbstractMemberProperty*>(pProp)->GetSpecificType();
 
     // Size of the attribute (in bytes).
     auto attributeSize = pAttribute->GetTypeSize();

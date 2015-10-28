@@ -21,8 +21,9 @@ TEST_CASE("Workflow", "[sprite]")
                     (float)pWindow->getClientAreaSize().width, // Width of the orthographic cam.
                     0.1f,                                      // Near plane.
                     1.0f);                                     // Far plane.
-  cam.LookAt(ezVec3(0, 0, 0.5f), // Camera Position.
-             ezVec3(0, 0, 0));   // Target Position.
+  cam.LookAt(ezVec3(0, 0, 0.5f),  // Camera Position.
+             ezVec3(0, 0, 0),     // Target Position.
+             ezVec3(0, 0, 1.0f)); // Up Vector.
 
   auto tex = Texture::load("<texture>kitten.dds");
   auto sampler = Sampler::create();

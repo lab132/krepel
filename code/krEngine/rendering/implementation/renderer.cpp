@@ -56,8 +56,8 @@ namespace kr
 
     ExtractionAllocator m_extractionAllocator;
 
-    ezByte m_mem_readBuffer[sizeof(ExtractionBuffer)];
-    ezByte m_mem_writeBuffer[sizeof(ExtractionBuffer)];
+    ezUInt8 m_mem_readBuffer[sizeof(ExtractionBuffer)];
+    ezUInt8 m_mem_writeBuffer[sizeof(ExtractionBuffer)];
 
     ON_CORE_STARTUP
     {
@@ -117,7 +117,7 @@ namespace kr
   }
 }
 
-static void renderExtractionData(ezUByte* current, ezUByte* max)
+static void renderExtractionData(ezUInt8* current, ezUInt8* max)
 {
   using namespace kr;
 
@@ -203,8 +203,8 @@ void kr::Renderer::update(ezTime dt, Borrowed<Window> pTarget)
   // Render the Data
   // ===============
   {
-    ezUByte* current = begin(*g_pReadBuffer);
-    ezUByte* max = end(*g_pReadBuffer);
+    ezUInt8* current = begin(*g_pReadBuffer);
+    ezUInt8* max = end(*g_pReadBuffer);
     renderExtractionData(current, max);
   }
 

@@ -3,23 +3,6 @@
 
 TEST_CASE("ezArrayPtr Extension", "[common]")
 {
-  SECTION("Make From Plain Array")
-  {
-    int data[3] = { 3, 5, 7 };
-
-    auto arrayPtr = ezMakeArrayPtr(data);
-
-    ezStaticArray<int, 3> result;
-    for (auto i : arrayPtr)
-    {
-      result.PushBack(i);
-    }
-
-    REQUIRE(result[0] == 3);
-    REQUIRE(result[1] == 5);
-    REQUIRE(result[2] == 7);
-  }
-
   SECTION("Make From ezStaticArray")
   {
     ezStaticArray<int, 3> data;

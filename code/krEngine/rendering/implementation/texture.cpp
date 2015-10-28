@@ -53,8 +53,8 @@ EZ_BEGIN_SUBSYSTEM_DECLARATION(krEngine, Textures)
   }
 
 private:
-  ezUByte m_mem_textureBindings[sizeof(TextureBindings)];
-  ezUByte m_mem_samplerBindings[sizeof(SamplerBindings)];
+  ezUInt8 m_mem_textureBindings[sizeof(TextureBindings)];
+  ezUInt8 m_mem_samplerBindings[sizeof(SamplerBindings)];
 EZ_END_SUBSYSTEM_DECLARATION
 
 kr::TextureImpl* kr::getImpl(Texture* pTex)
@@ -146,7 +146,7 @@ kr::Owned<kr::Texture> kr::Texture::load(ezStringView fileName)
     return nullptr;
   }
 
-  auto pTex = EZ_DEFAULT_NEW(TextureImpl);
+  TextureImpl* pTex = EZ_DEFAULT_NEW(TextureImpl);
   pTex->m_name = sbFileName;
   pTex->m_image = move(img);
   glCheck(glGenTextures(1, &pTex->m_glHandle));
@@ -235,7 +235,7 @@ kr::Owned<kr::Sampler> kr::Sampler::create()
     return nullptr;
   }
 
-  auto pSampler = EZ_DEFAULT_NEW(Sampler);
+  Sampler* pSampler = EZ_DEFAULT_NEW(Sampler);
   pSampler->m_glHandle = h;
   pSampler->setFiltering(pSampler->m_filtering);
   pSampler->setWrapping(pSampler->m_wrapping);

@@ -44,8 +44,8 @@ void kr::ExtractionBuffer::grow(size_t newCapacity)
   EZ_ASSERT_RELEASE(m_growthAllowed && m_mode == Mode::WriteOnly,
                     "Invalid operation: Growing is not allowed.");
 
-  auto newMem = (ezUByte*)m_pAllocator->Allocate(newCapacity,
-                                                EZ_ALIGNMENT_OF(ezUByte));
+  auto newMem = (ezUInt8*)m_pAllocator->Allocate(newCapacity,
+                                                EZ_ALIGNMENT_OF(ezUInt8));
   auto currentlyAllocatedBytes = getNumAllocatedBytes();
   if (currentlyAllocatedBytes > 0)
   {

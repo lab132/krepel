@@ -9,7 +9,7 @@ macro(kr_setup)
     message("Need a valid path for the variable LAB132_TOOLBOX_DIR (either in cmake or as environment variable).")
   endif()
 
-  set(KREPEL_VERSION_EZ "rev858" CACHE STRING "The version of ezEngine to be used. Must match the folder names in the toolbox.")
+  set(KREPEL_VERSION_EZ "rev1196" CACHE STRING "The version of ezEngine to be used. Must match the folder names in the toolbox.")
   set(EZ_DIR "${LAB132_TOOLBOX_DIR}/ezEngine-${KREPEL_VERSION_EZ}")
   list(APPEND CMAKE_MODULE_PATH "${EZ_DIR}/lib/CMake/")
   list(APPEND KREPEL_BINARY_PULL_PATH "${EZ_DIR}/bin/")

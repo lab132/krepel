@@ -42,7 +42,7 @@ ezResult kr::Window::open()
 
 kr::Owned<kr::Window> kr::Window::create(ezWindowCreationDesc& desc)
 {
-  auto pImpl = EZ_DEFAULT_NEW(WindowImpl);
+  WindowImpl* pImpl = EZ_DEFAULT_NEW(WindowImpl);
 
   // Try to actually open the winow.
   if (pImpl->m_handler.Initialize(desc).Failed())

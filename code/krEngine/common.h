@@ -21,7 +21,6 @@ namespace kr
 
 #define KR_NOT_IMPLEMENTED EZ_ASSERT_NOT_IMPLEMENTED
 
-#include <krEngine/common/ezMakeArrayPtr.h>
-#include <krEngine/common/ezTypesExtension.h>
+#include <krEngine/common/ezExtensions.h>
 #include <krEngine/common/utils.h>
 #include <krEngine/common/traits.h>

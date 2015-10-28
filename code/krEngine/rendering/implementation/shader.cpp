@@ -36,7 +36,7 @@ EZ_BEGIN_SUBSYSTEM_DECLARATION(krEngine, Shaders)
   }
 
 private:
-  ezUByte m_mem_shaderBindings[sizeof(ShaderBindings)];
+  ezUInt8 m_mem_shaderBindings[sizeof(ShaderBindings)];
 EZ_END_SUBSYSTEM_DECLARATION
 
 static void logCompileStatus(GLuint hShader)
@@ -123,7 +123,7 @@ kr::Owned<kr::VertexShader> kr::VertexShader::loadAndCompile(ezStringView fileNa
     return nullptr;
   }
 
-  auto vs = EZ_DEFAULT_NEW(VertexShader);
+  VertexShader* vs = EZ_DEFAULT_NEW(VertexShader);
   vs->m_glHandle = handle;
   vs->m_resourceId = fileName;
 
@@ -146,7 +146,7 @@ kr::Owned<kr::FragmentShader> kr::FragmentShader::loadAndCompile(ezStringView fi
   }
   glCheckLastError();
 
-  auto fs = EZ_DEFAULT_NEW(FragmentShader);
+  FragmentShader* fs = EZ_DEFAULT_NEW(FragmentShader);
   fs->m_glHandle = handle;
   fs->m_resourceId = fileName;
 
@@ -192,7 +192,7 @@ kr::Owned<kr::ShaderProgram> kr::ShaderProgram::link(Borrowed<VertexShader> vs,
   // If linking succeeded, return success.
   if (status == GL_TRUE)
   {
-    auto pProgram = EZ_DEFAULT_NEW(ShaderProgram);
+    ShaderProgram* pProgram = EZ_DEFAULT_NEW(ShaderProgram);
     pProgram->m_glHandle = hProgram;
     return own(pProgram, [](ShaderProgram* p){ EZ_DEFAULT_DELETE(p); });
   }
