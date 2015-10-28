@@ -1,3 +1,6 @@
+#include <krEngineTests/pch.h>
+#include <catch.hpp>
+
 #include <krEngine/rendering.h>
 
 namespace
@@ -21,31 +24,29 @@ EZ_BEGIN_STATIC_REFLECTED_TYPE(Vertex, ezNoBase, 1, ezRTTINoAllocator);
   EZ_END_PROPERTIES
 EZ_END_STATIC_REFLECTED_TYPE();
 
-EZ_CREATE_SIMPLE_TEST_GROUP(Renderer);
-
-EZ_CREATE_SIMPLE_TEST(Renderer, Experiments)
+TEST_CASE("Experiments", "[renderer][experiments]")
 {
   using namespace kr;
+
+  KR_TESTS_RAII_CORE_STARTUP;
 
   ezWindowCreationDesc desc;
   desc.m_ClientAreaSize.width = 600;
   desc.m_ClientAreaSize.height = 480;
   desc.m_Title = "Sprite Test";
-  auto pWindow = Window::open(desc);
-  EZ_TEST_BOOL(isValid(pWindow));
-  pWindow->setClearColor(ezColor::CornflowerBlue);
+  auto pWindow = Window::createAndOpen(desc);
+  REQUIRE(pWindow != nullptr);
+  //pWindow->setClearColor(ezColor::CornflowerBlue);
 
   KR_TESTS_RAII_ENGINE_STARTUP;
 
   {
     // Shaders and Shader Program
     // ==========================
-    auto vs = VertexShader::loadAndCompile("<shader>texturedQuad.vs");
-    auto fs = FragmentShader::loadAndCompile("<shader>texturedQuad.fs");
-    auto prg = ShaderProgram::link(vs, fs);
-    EZ_TEST_BOOL(isValid(prg));
+    auto shader = ShaderProgram::loadAndLink("<shader>texturedQuad.vs", "<shader>texturedQuad.fs");
+    REQUIRE(shader != nullptr);
 
-    KR_RAII_BIND_SHADER(prg);
+    KR_RAII_BIND_SHADER(shader);
 
     // Vertices
     // ========
@@ -92,23 +93,23 @@ EZ_CREATE_SIMPLE_TEST(Renderer, Experiments)
     // Vertex Buffer
     // =============
     auto vb = VertexBuffer::create(BufferUsage::StaticDraw, PrimitiveType::Triangles);
-    //EZ_TEST_BOOL(setupLayout(vb, prg, "Vertex").Succeeded());
-    setupLayout(vb, prg, "Vertex");
-    EZ_TEST_BOOL(uploadData(vb, ezMakeArrayPtr(vertices)).Succeeded());
+    //REQUIRE(setupLayout(vb, prg, "Vertex").Succeeded());
+    setupLayout(vb, shader, "Vertex");
+    REQUIRE(uploadData(vb, ezMakeArrayPtr(vertices)).Succeeded());
 
     // Texture
     // =======
     auto tex = Texture::load("<texture>kitten.dds");
-    EZ_TEST_BOOL(isValid(tex));
+    REQUIRE(tex != nullptr);
 
     auto pSampler = Sampler::create();
     KR_RAII_BIND_SAMPLER(pSampler, TextureSlot(0));
 
-    uploadData(shaderUniformOf(prg, "u_texture"), TextureSlot(0));
+    uploadData(shaderUniformOf(shader, "u_texture"), TextureSlot(0));
 
     glBindTexture(GL_TEXTURE_2D, tex->getGlHandle());
 
-    KR_RAII_BIND_VERTEX_BUFFER(vb, prg);
+    KR_RAII_BIND_VERTEX_BUFFER(vb, shader);
 
     bool run = true;
     pWindow->getEvent().AddEventHandler([&run](const WindowEventArgs& e)

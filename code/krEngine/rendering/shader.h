@@ -1,10 +1,10 @@
 #pragma once
-#include <krEngine/referenceCounting.h>
+#include <krEngine/ownership.h>
 #include <krEngine/rendering/texture.h>
 
 namespace kr
 {
-  class VertexShader : public RefCounted
+  class VertexShader
   {
   public: // *** Data
     /// \note You should not fiddle around with this directly.
@@ -12,10 +12,8 @@ namespace kr
     ezString128 m_resourceId;
 
   public: // *** Static API
-    using ReleasePolicy = RefCountedReleasePolicies::DefaultDelete;
-
     /// \brief Loads and compiles a vertex shader from the source code located in \a filename.
-    KR_ENGINE_API static RefCountedPtr<VertexShader> loadAndCompile(const char* filename);
+    KR_ENGINE_API static Owned<VertexShader> loadAndCompile(ezStringView filename);
 
   public: // *** Construction
     KR_ENGINE_API ~VertexShader();
@@ -26,13 +24,12 @@ namespace kr
   private: // *** Private Construction
     /// \brief Can only be constructed by loadAndCompile.
     VertexShader() = default;
-
-    EZ_DISALLOW_COPY_AND_ASSIGN(VertexShader);
+    VertexShader(const VertexShader&) = delete;
+    void operator =(const VertexShader&) = delete;
   };
 
-  using VertexShaderPtr = RefCountedPtr<VertexShader>;
 
-  class FragmentShader : public RefCounted
+  class FragmentShader
   {
   public: // *** Data
     /// \note You should not fiddle around with this directly.
@@ -40,10 +37,8 @@ namespace kr
     ezString128 m_resourceId;
 
   public: // *** Static API
-    using ReleasePolicy = RefCountedReleasePolicies::DefaultDelete;
-
     /// \brief Loads and compiles a vertex shader from the source code located in \a filename.
-    KR_ENGINE_API static RefCountedPtr<FragmentShader> loadAndCompile(const char* filename);
+    KR_ENGINE_API static Owned<FragmentShader> loadAndCompile(ezStringView filename);
 
   public: // *** Construction
     KR_ENGINE_API ~FragmentShader();
@@ -54,32 +49,28 @@ namespace kr
   private: // *** Private Construction
     /// \brief Can only be constructed by loadAndCompile.
     FragmentShader() = default;
-
-    EZ_DISALLOW_COPY_AND_ASSIGN(FragmentShader);
+    FragmentShader(const FragmentShader&) = delete;
+    void operator =(const FragmentShader&) = delete;
   };
 
-  using FragmentShaderPtr = RefCountedPtr<FragmentShader>;
 
-  class ShaderProgram : public RefCounted
+  class ShaderProgram
   {
   public: // *** Static API
-    using ReleasePolicy = RefCountedReleasePolicies::DefaultDelete;
-
     /// \brief Links the given vertex and fragment shaders \a pVS and \a pFS to a program.
-    KR_ENGINE_API static RefCountedPtr<ShaderProgram> link(VertexShaderPtr pVS,
-                                                           FragmentShaderPtr pFS);
-    static RefCountedPtr<ShaderProgram> loadAndLink(const char* vertexShaderFilename,
-                                                    const char* fragmentShaderFilename)
+    KR_ENGINE_API static Owned<ShaderProgram> link(Borrowed<VertexShader> vs,
+                                                   Borrowed<FragmentShader> fs);
+    static Owned<ShaderProgram> loadAndLink(ezStringView vsFileName,
+                                                    ezStringView fsFileName)
     {
-      return link(VertexShader::loadAndCompile(vertexShaderFilename),
-                  FragmentShader::loadAndCompile(fragmentShaderFilename));
+      auto vs = VertexShader::loadAndCompile(vsFileName);
+      auto fs = FragmentShader::loadAndCompile(fsFileName);
+      return link(vs, fs);
     }
 
   public: // *** Data
     /// \note You should not fiddle around with this directly.
     ezUInt32 m_glHandle = 0;
-    VertexShaderPtr m_pVertexShader;
-    FragmentShaderPtr m_pFragmentShader;
 
   public: // *** Construction
     KR_ENGINE_API ~ShaderProgram();
@@ -94,16 +85,15 @@ namespace kr
     EZ_DISALLOW_COPY_AND_ASSIGN(ShaderProgram);
   };
 
-  using ShaderProgramPtr = RefCountedPtr<ShaderProgram>;
 
   struct ShaderUniform
   {
     GLuint glLocation = -1;
-    ShaderProgramPtr pShader;
+    Borrowed<ShaderProgram> pShader;
   };
 
-  KR_ENGINE_API ShaderUniform shaderUniformOf(ShaderProgramPtr pShader,
-                                              const char* uniformName);
+  KR_ENGINE_API ShaderUniform shaderUniformOf(Borrowed<ShaderProgram> pShader,
+                                              ezStringView uniformName);
 
   /// \brief Uploads an \a ezColor value.
   KR_ENGINE_API ezResult uploadData(const ShaderUniform& uniform,
@@ -122,7 +112,7 @@ namespace kr
   KR_ENGINE_API ezResult uploadData(const ShaderUniform& uniform,
                                     const ezAngle& matrix);
 
-  KR_ENGINE_API ezResult bind(ShaderProgramPtr pShader);
+  KR_ENGINE_API ezResult bind(Borrowed<const ShaderProgram> pShader);
 
   /// \see KR_RAII_BIND_SHADER
   KR_ENGINE_API ezResult restoreLastShaderProgram();

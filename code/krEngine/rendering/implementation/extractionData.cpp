@@ -1,4 +1,4 @@
-#include <krEngine/rendering/implementation/extractionData.h>
+#include <krEngine/rendering/implementation/extractionDetails.h>
 #include <krEngine/rendering/implementation/opelGlCheck.h>
 
 void kr::draw(SpriteData& sprite,
@@ -8,7 +8,7 @@ void kr::draw(SpriteData& sprite,
   EZ_LOG_BLOCK("Drawing Sprite");
 
   // If there is no shader, we cannot draw.
-  if (isNull(sprite.pShader))
+  if (sprite.pShader == nullptr)
   {
     ezLog::Warning("No shader to draw with.");
     return;
@@ -27,8 +27,8 @@ void kr::draw(SpriteData& sprite,
   // ===============
   uploadData(sprite.uColor, sprite.color);
   uploadData(sprite.uTexture, textureSlot);
-  uploadData(sprite.uOrigin, sprite.transform.m_position);
-  uploadData(sprite.uRotation, sprite.transform.m_rotation);
+  uploadData(sprite.uOrigin, sprite.transform.position);
+  uploadData(sprite.uRotation, sprite.transform.rotation);
   uploadData(sprite.uViewMatrix, viewMatrix);
   uploadData(sprite.uProjectionMatrix, projectionMatrix);
 

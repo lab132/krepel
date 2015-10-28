@@ -1,6 +1,5 @@
-#include <krEngine/pch.h>
 #include <krEngine/rendering/window.h>
-#include <krEngine/referenceCounting.h>
+#include <krEngine/ownership.h>
 
 #include "windowImpl.h"
 
@@ -36,19 +35,14 @@ ezSizeU32 kr::Window::getClientAreaSize() const
   return getImpl(this).m_handler.GetClientAreaSize();
 }
 
-void kr::Window::setClearColor(const ezColor& color)
+ezResult kr::Window::open()
 {
-  getImpl(this).m_clearColor = color;
+  return createOpenGLContext(getImpl(this));
 }
 
-ezColor kr::Window::getClearColor() const
+kr::Owned<kr::Window> kr::Window::create(ezWindowCreationDesc& desc)
 {
-  return getImpl(this).m_clearColor;
-}
-
-kr::RefCountedPtr<kr::Window> kr::Window::open(ezWindowCreationDesc& desc)
-{
-  auto pImpl = EZ_DEFAULT_NEW(WindowImpl);
+  WindowImpl* pImpl = EZ_DEFAULT_NEW(WindowImpl);
 
   // Try to actually open the winow.
   if (pImpl->m_handler.Initialize(desc).Failed())
@@ -57,39 +51,21 @@ kr::RefCountedPtr<kr::Window> kr::Window::open(ezWindowCreationDesc& desc)
     return nullptr;
   }
 
-  // Try to create a rendering context.
-  if (createOpenGLContext(*pImpl).Failed())
+  return own<Window>(pImpl, [](Window* ptr) { EZ_DEFAULT_DELETE(ptr); });
+}
+
+ezResult kr::Window::close()
+{
+  return internalClose(getImpl(this));
+}
+
+void kr::processWindowMessages(Borrowed<Window> window)
+{
+  if (window == nullptr)
   {
-    EZ_DEFAULT_DELETE(pImpl);
-    return nullptr;
-  }
-
-  // At this point, everything succeeded.
-  return pImpl;
-}
-
-void kr::Window::release(Window*& pWindow)
-{
-  auto pImpl = &getImpl(pWindow);
-  pWindow = nullptr;
-  EZ_DEFAULT_DELETE(pImpl);
-}
-
-ezResult kr::close(RefCountedPtr<Window> pWindow)
-{
-  // Closing a window that does not exist is a success.
-  if (isNull(pWindow))
-    return EZ_SUCCESS;
-  return internalClose(getImpl(pWindow));
-}
-
-void kr::processWindowMessages(RefCountedPtr<Window> pWindow)
-{
-  if (isNull(pWindow))
-  {
-    ezLog::Warning("Requesting processing of window messages on an invalid window pointer.");
+    ezLog::Warning("Processing of window messages on an invalid window pointer.");
     return;
   }
 
-  getImpl(pWindow).m_handler.ProcessWindowMessages();
+  getImpl(window).m_handler.ProcessWindowMessages();
 }

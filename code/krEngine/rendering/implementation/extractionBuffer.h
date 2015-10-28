@@ -60,8 +60,8 @@ namespace kr
       writeOnly->m_mode = Mode::WriteOnly;
     }
 
-    friend ezUByte* begin(ExtractionBuffer& e) { return e.m_data; }
-    friend ezUByte* end(ExtractionBuffer& e) { return e.m_current; }
+    friend ezUInt8* begin(ExtractionBuffer& e) { return e.m_data; }
+    friend ezUInt8* end(ExtractionBuffer& e) { return e.m_current; }
 
   private: // *** Internal Functions
     void* allocate(size_t alignedSize);
@@ -69,9 +69,9 @@ namespace kr
 
   private: // *** Internal Data
     ezAllocatorBase* m_pAllocator;
-    ezUByte* m_data = nullptr;
-    ezUByte* m_current = nullptr;
-    ezUByte* m_max = nullptr;
+    ezUInt8* m_data = nullptr;
+    ezUInt8* m_current = nullptr;
+    ezUInt8* m_max = nullptr;
     Mode::Enum m_mode = Mode::WriteOnly;
     bool m_growthAllowed = true;
 

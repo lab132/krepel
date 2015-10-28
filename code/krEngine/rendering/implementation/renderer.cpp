@@ -1,4 +1,3 @@
-#include <krEngine/pch.h>
 #include <krEngine/rendering/renderer.h>
 #include <krEngine/rendering/extraction.h>
 #include <krEngine/rendering/window.h>
@@ -57,8 +56,8 @@ namespace kr
 
     ExtractionAllocator m_extractionAllocator;
 
-    ezByte m_mem_readBuffer[sizeof(ExtractionBuffer)];
-    ezByte m_mem_writeBuffer[sizeof(ExtractionBuffer)];
+    ezUInt8 m_mem_readBuffer[sizeof(ExtractionBuffer)];
+    ezUInt8 m_mem_writeBuffer[sizeof(ExtractionBuffer)];
 
     ON_CORE_STARTUP
     {
@@ -118,7 +117,7 @@ namespace kr
   }
 }
 
-static void renderExtractionData(ezUByte* current, ezUByte* max)
+static void renderExtractionData(ezUInt8* current, ezUInt8* max)
 {
   using namespace kr;
 
@@ -175,16 +174,17 @@ void kr::Renderer::extract()
   }
 }
 
-void kr::Renderer::update(ezTime dt, RefCountedPtr<Window> pTarget)
+void kr::Renderer::update(ezTime dt, Borrowed<Window> pTarget)
 {
-  if (isNull(pTarget))
+  if (!pTarget)
   {
     ezLog::Warning(g_pLog, "Invalid target window.");
     return;
   }
 
   auto& window = getImpl(pTarget);
-  /// \todo This is Window specific.
+
+  /// \todo This is Windows specific.
   glCheck(wglMakeCurrent(window.m_hDC, window.m_hRC));
 
   // Clear the Screen
@@ -196,11 +196,15 @@ void kr::Renderer::update(ezTime dt, RefCountedPtr<Window> pTarget)
 
   glCheck(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
 
+  glCheck(glEnable(GL_MULTISAMPLE));
+  glCheck(glEnable(GL_BLEND));
+  glCheck(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
+
   // Render the Data
   // ===============
   {
-    ezUByte* current = begin(*g_pReadBuffer);
-    ezUByte* max = end(*g_pReadBuffer);
+    ezUInt8* current = begin(*g_pReadBuffer);
+    ezUInt8* max = end(*g_pReadBuffer);
     renderExtractionData(current, max);
   }
 
@@ -254,41 +258,3 @@ void kr::extract(Renderer::Extractor& e,
   pData->transform = move(transform);
   pData->color = sprite.getColor();
 }
-
-// Drawing
-// =======
-
-void kr::draw(SpriteData& sprite,
-              const ezMat4& viewMatrix,
-              const ezMat4& projectionMatrix)
-{
-  EZ_LOG_BLOCK("Drawing Sprite");
-
-  // If there is no shader, we cannot draw.
-  if (isNull(sprite.pShader))
-  {
-    ezLog::Warning("No shader to draw with.");
-    return;
-  }
-
-  TextureSlot textureSlot(0);
-
-  // Set Active Shader
-  // =================
-  KR_RAII_BIND_SHADER(sprite.pShader);
-  KR_RAII_BIND_VERTEX_BUFFER(sprite.pVertexBuffer, sprite.pShader);
-  KR_RAII_BIND_SAMPLER(sprite.pSampler, textureSlot);
-  KR_RAII_BIND_TEXTURE_2D(sprite.pTexture, textureSlot);
-
-  // Update Uniforms
-  // ===============
-  uploadData(sprite.uColor, sprite.color);
-  uploadData(sprite.uTexture, textureSlot);
-  uploadData(sprite.uOrigin, sprite.transform.m_position);
-  uploadData(sprite.uRotation, sprite.transform.m_rotation);
-  uploadData(sprite.uViewMatrix, viewMatrix);
-  uploadData(sprite.uProjectionMatrix, projectionMatrix);
-
-  glCheck(glDrawArrays((GLenum)sprite.pVertexBuffer->getPrimitive(), 0, 4));
-}
-

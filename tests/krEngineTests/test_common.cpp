@@ -1,45 +1,9 @@
+#include <krEngineTests/pch.h>
+#include <catch.hpp>
 
-EZ_CREATE_SIMPLE_TEST_GROUP(Common);
-
-EZ_CREATE_SIMPLE_TEST(Common, ezArrayPtrExtension)
+TEST_CASE("ezArrayPtr Extension", "[common]")
 {
-  EZ_TEST_BLOCK(ezTestBlock::Enabled, "Make From Ptr + Size")
-  {
-    int data[3] = { 3, 5, 7 };
-    int* pData = data;
-    int count = 3;
-
-    auto arrayPtr = ezMakeArrayPtr(pData, count);
-
-    ezStaticArray<int, 3> result;
-    for (auto i : arrayPtr)
-    {
-      result.PushBack(i);
-    }
-
-    EZ_TEST_INT(result[0], 3);
-    EZ_TEST_INT(result[1], 5);
-    EZ_TEST_INT(result[2], 7);
-  }
-
-  EZ_TEST_BLOCK(ezTestBlock::Enabled, "Make From Plain Array")
-  {
-    int data[3] = { 3, 5, 7 };
-
-    auto arrayPtr = ezMakeArrayPtr(data);
-
-    ezStaticArray<int, 3> result;
-    for (auto i : arrayPtr)
-    {
-      result.PushBack(i);
-    }
-
-    EZ_TEST_INT(result[0], 3);
-    EZ_TEST_INT(result[1], 5);
-    EZ_TEST_INT(result[2], 7);
-  }
-
-  EZ_TEST_BLOCK(ezTestBlock::Enabled, "Make From ezStaticArray")
+  SECTION("Make From ezStaticArray")
   {
     ezStaticArray<int, 3> data;
     data.ExpandAndGetRef() = 3;
@@ -54,12 +18,12 @@ EZ_CREATE_SIMPLE_TEST(Common, ezArrayPtrExtension)
       result.PushBack(i);
     }
 
-    EZ_TEST_INT(result[0], 3);
-    EZ_TEST_INT(result[1], 5);
-    EZ_TEST_INT(result[2], 7);
+    REQUIRE(result[0] == 3);
+    REQUIRE(result[1] == 5);
+    REQUIRE(result[2] == 7);
   }
 
-  EZ_TEST_BLOCK(ezTestBlock::Enabled, "Make From ezHybridArray")
+  SECTION("Make From ezHybridArray")
   {
     ezHybridArray<int, 2> data;
     data.ExpandAndGetRef() = 3;
@@ -74,12 +38,12 @@ EZ_CREATE_SIMPLE_TEST(Common, ezArrayPtrExtension)
       result.PushBack(i);
     }
 
-    EZ_TEST_INT(result[0], 3);
-    EZ_TEST_INT(result[1], 5);
-    EZ_TEST_INT(result[2], 7);
+    REQUIRE(result[0] == 3);
+    REQUIRE(result[1] == 5);
+    REQUIRE(result[2] == 7);
   }
 
-  EZ_TEST_BLOCK(ezTestBlock::Enabled, "Make From ezDynamicArray")
+  SECTION("Make From ezDynamicArray")
   {
     ezDynamicArray<int> data;
     data.ExpandAndGetRef() = 3;
@@ -94,15 +58,15 @@ EZ_CREATE_SIMPLE_TEST(Common, ezArrayPtrExtension)
       result.PushBack(i);
     }
 
-    EZ_TEST_INT(result[0], 3);
-    EZ_TEST_INT(result[1], 5);
-    EZ_TEST_INT(result[2], 7);
+    REQUIRE(result[0] == 3);
+    REQUIRE(result[1] == 5);
+    REQUIRE(result[2] == 7);
   }
 }
 
-EZ_CREATE_SIMPLE_TEST(Common, ezContainerExtension)
+TEST_CASE("ezContainer Extension", "[common]")
 {
-  EZ_TEST_BLOCK(ezTestBlock::Enabled, "ezStaticArray")
+  SECTION("ezStaticArray")
   {
     ezStaticArray<int, 3> data;
     data.ExpandAndGetRef() = 3;
@@ -115,12 +79,12 @@ EZ_CREATE_SIMPLE_TEST(Common, ezContainerExtension)
       result.PushBack(i);
     }
 
-    EZ_TEST_INT(result[0], 3);
-    EZ_TEST_INT(result[1], 5);
-    EZ_TEST_INT(result[2], 7);
+    REQUIRE(result[0] == 3);
+    REQUIRE(result[1] == 5);
+    REQUIRE(result[2] == 7);
   }
 
-  EZ_TEST_BLOCK(ezTestBlock::Enabled, "ezDynamicArray")
+  SECTION("ezDynamicArray")
   {
     ezDynamicArray<int> data;
     data.ExpandAndGetRef() = 3;
@@ -133,12 +97,12 @@ EZ_CREATE_SIMPLE_TEST(Common, ezContainerExtension)
       result.PushBack(i);
     }
 
-    EZ_TEST_INT(result[0], 3);
-    EZ_TEST_INT(result[1], 5);
-    EZ_TEST_INT(result[2], 7);
+    REQUIRE(result[0] == 3);
+    REQUIRE(result[1] == 5);
+    REQUIRE(result[2] == 7);
   }
 
-  EZ_TEST_BLOCK(ezTestBlock::Enabled, "ezHybridArray")
+  SECTION("ezHybridArray")
   {
     ezHybridArray<int, 2> data;
     data.ExpandAndGetRef() = 3;
@@ -151,33 +115,35 @@ EZ_CREATE_SIMPLE_TEST(Common, ezContainerExtension)
       result.PushBack(i);
     }
 
-    EZ_TEST_INT(result[0], 3);
-    EZ_TEST_INT(result[1], 5);
-    EZ_TEST_INT(result[2], 7);
+    REQUIRE(result[0] == 3);
+    REQUIRE(result[1] == 5);
+    REQUIRE(result[2] == 7);
   }
 
-  EZ_TEST_BLOCK(ezTestBlock::Disabled, "ezMap")
+  /*
+  SECTION("ezMap")
   {
     KR_NOT_IMPLEMENTED;
   }
 
-  EZ_TEST_BLOCK(ezTestBlock::Disabled, "ezHashTable")
+  SECTION("ezHashTable")
   {
     KR_NOT_IMPLEMENTED;
   }
+  */
 }
 
-EZ_CREATE_SIMPLE_TEST(Common, Utils)
+TEST_CASE("Utils", "[common]")
 {
   using namespace kr;
 
   int data = 42;
   auto pData = &data;
 
-  EZ_TEST_BOOL(isValid(pData));
-  EZ_TEST_BOOL(!isNull(pData));
+  REQUIRE(pData != nullptr);
+  REQUIRE_FALSE(pData == nullptr);
 
-  invalidate(pData);
-  EZ_TEST_BOOL(!isValid(pData));
-  EZ_TEST_BOOL(isNull(pData));
+  pData = nullptr;
+  REQUIRE_FALSE(pData != nullptr);
+  REQUIRE(pData == nullptr);
 }

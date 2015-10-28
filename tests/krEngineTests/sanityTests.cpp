@@ -4,6 +4,7 @@
 
 // Check static 'inheritance' of type information
 // ==============================================
+#include <krEngineTests/pch.h>
 
 namespace
 {

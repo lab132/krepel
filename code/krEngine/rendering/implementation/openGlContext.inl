@@ -37,9 +37,9 @@ static ezResult createOpenGLContext(kr::WindowImpl& window)
 
   auto hWnd = window.m_handler.GetNativeWindowHandle();
 
-  int iColorBits = 24;
-  int iDepthBits = 24;
-  int iBPC = 8;
+  BYTE iColorBits = 24;
+  BYTE iDepthBits = 24;
+  BYTE iBPC = 8;
 
   DWORD flags = PFD_DRAW_TO_WINDOW
     | PFD_SUPPORT_OPENGL

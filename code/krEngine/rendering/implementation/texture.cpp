@@ -1,15 +1,12 @@
-#include <krEngine/pch.h>
 #include <krEngine/rendering/texture.h>
 #include <krEngine/rendering/implementation/textureImpl.h>
 #include <krEngine/rendering/implementation/opelGlCheck.h>
 
 #include <Foundation/IO/FileSystem/FileSystem.h>
 
-using TextureContainer = ezDynamicArray<kr::TextureImpl*>;
-using TextureBindings = ezHybridArray<kr::TexturePtr, 8>;
-using SamplerBindings = ezHybridArray<kr::SamplerPtr, 8>;
+using TextureBindings = ezHybridArray<kr::Borrowed<const kr::Texture>, 8>;
+using SamplerBindings = ezHybridArray<kr::Borrowed<const kr::Sampler>, 8>;
 
-static TextureContainer* g_pTextures;
 static TextureBindings* g_pTextureBindings;
 static SamplerBindings* g_pSamplerBindings;
 static bool g_initialized = false;
@@ -22,7 +19,6 @@ EZ_BEGIN_SUBSYSTEM_DECLARATION(krEngine, Textures)
 
   ON_CORE_STARTUP
   {
-    g_pTextures = new (m_mem_textures) TextureContainer();
     g_pTextureBindings = new (m_mem_textureBindings) TextureBindings();
     g_pSamplerBindings = new (m_mem_samplerBindings) SamplerBindings();
 
@@ -53,24 +49,12 @@ EZ_BEGIN_SUBSYSTEM_DECLARATION(krEngine, Textures)
     g_pTextureBindings->~TextureBindings();
     g_pTextureBindings = nullptr;
 
-    // Texture Instances
-    // =================
-    if (g_pTextures->GetCount() > 0)
-    {
-      ezLog::Error("%u Texture(s) were not properly released yet!",
-                    g_pTextures->GetCount());
-    }
-
-    g_pTextures->~TextureContainer();
-    g_pTextures = nullptr;
-
     g_initialized = false;
   }
 
 private:
-  ezUByte m_mem_textures[sizeof(TextureContainer)];
-  ezUByte m_mem_textureBindings[sizeof(TextureBindings)];
-  ezUByte m_mem_samplerBindings[sizeof(SamplerBindings)];
+  ezUInt8 m_mem_textureBindings[sizeof(TextureBindings)];
+  ezUInt8 m_mem_samplerBindings[sizeof(SamplerBindings)];
 EZ_END_SUBSYSTEM_DECLARATION
 
 kr::TextureImpl* kr::getImpl(Texture* pTex)
@@ -83,91 +67,60 @@ const kr::TextureImpl* kr::getImpl(const Texture* pTex)
   return static_cast<const TextureImpl*>(pTex);
 }
 
-void kr::addInstance(TextureImpl* pTex)
+static void releaseTexture(kr::Texture* pTex)
 {
-  g_pTextures->PushBack(pTex);
-}
-
-ezResult kr::removeInstance(TextureImpl* pTex)
-{
-  return g_pTextures->RemoveSwap(pTex) ? EZ_SUCCESS : EZ_FAILURE;
-}
-
-kr::TextureImpl* kr::findInstance(const char* textureName)
-{
-  for (auto pTex : *g_pTextures)
-  {
-    EZ_ASSERT_DEV(pTex, "TextureContainer should not contain any nullptrs!");
-    if (pTex->m_name == textureName)
-      return pTex;
-  }
-
-  return nullptr;
-}
-
-kr::TextureImpl::~TextureImpl()
-{
-  removeInstance(this);
-}
-
-// static
-void kr::Texture::release(Texture*& pTex)
-{
-  if (isNull(pTex))
-    return;
-
   auto pImpl = getImpl(pTex);
   EZ_DEFAULT_DELETE(pImpl);
-  pTex = nullptr;
 }
 
-// static
-kr::RefCountedPtr<kr::Texture> kr::Texture::load(const char* filename)
+static void uploadPixelData(kr::Borrowed<kr::Texture> texture)
 {
-  EZ_LOG_BLOCK("Loading Texture", filename);
+  KR_RAII_BIND_TEXTURE_2D(texture, kr::TextureSlot(0));
 
-  EZ_ASSERT_DEV(g_initialized, "Textures subsystem not initialized. "
-                               "Did you forget to start the ezEngine?");
-
-  // See if this texture is already loaded.
-  auto pTex = findInstance(filename);
-  if (isValid(pTex))
-  {
-    ezLog::Dev("Re-using already loaded texture '%s'.", filename);
-    return pTex;
-  }
-
-  // At this point, we know the texture is not loaded, so we load it now.
-  ezImage img;
-  if (img.LoadFrom(filename).Failed())
-  {
-    // Loading failed.
-    return nullptr;
-  }
-
-  pTex = EZ_DEFAULT_NEW(TextureImpl);
-  EZ_ASSERT_RELEASE(isValid(pTex), "Out of memory?");
-  pTex->m_name = filename;
-  pTex->m_image = move(img);
-  glCheck(glGenTextures(1, &pTex->m_glHandle));
-
-  // Upload Pixel Data
-  // =================
+  auto pTex = getImpl(texture);
   auto pixels = pTex->m_image.GetSubImagePointer<void>();
 
-  KR_RAII_BIND_TEXTURE_2D(pTex, TextureSlot(0));
-
   glCheck(glBindTexture(GL_TEXTURE_2D, pTex->m_glHandle));
-  /// \todo Check if GetNumMipLevels() - 1 is ok here.
-  glCheck(glTexImage2D(GL_TEXTURE_2D,                       // Target
-                       pTex->m_image.GetNumMipLevels() - 1, // (Mip) Level
-                       GL_RGBA,                             // Format used by OpenGL (not our pixels).
-                       pTex->m_image.GetWidth(),            // Texture width
-                       pTex->m_image.GetHeight(),           // Texture height
-                       0,                                   // Must be 0, as per the specification.
-                       GL_BGRA,                             // Format of the pixels (see last argument).
-                       GL_UNSIGNED_BYTE,                    // Size per pixel.
-                       pixels));                            // The actual pixel data.
+
+  auto texFormatType = ezImageFormat::GetType(pTex->m_image.GetImageFormat());
+  if (texFormatType == ezImageFormatType::LINEAR)
+  {
+    glCheck(glTexImage2D(GL_TEXTURE_2D,              // Target
+                         0,                          // (Mip) Level
+                         GL_RGBA,                    // Format used by OpenGL (not our pixels).
+                         pTex->m_image.GetWidth(),   // Texture width
+                         pTex->m_image.GetHeight(),  // Texture height
+                         0,                          // Must be 0, as per the specification.
+                         GL_BGRA,                    // Format of the pixels (see last argument).
+                         GL_UNSIGNED_BYTE,           // Size per pixel.
+                         pixels));                   // The actual pixel data.
+  }
+  else if(texFormatType == ezImageFormatType::BLOCK_COMPRESSED)
+  {
+    GLenum glFormat;
+
+    auto texImageFormat = pTex->m_image.GetImageFormat();
+    switch(texImageFormat)
+    {
+    case ezImageFormat::BC3_UNORM:
+      glFormat = GL_COMPRESSED_RGBA_S3TC_DXT5_EXT;
+      break;
+      // TODO Support more types.
+    default:
+      ezLog::Warning("Image format \"%s\" not supported at this time. Please export your image as BC3/DXT5",
+                     ezImageFormat::GetName(texImageFormat));
+      return;
+    }
+
+    glCheck(glCompressedTexImage2D(GL_TEXTURE_2D,                // Target
+                                   0,                            // (Mip) Level
+                                   glFormat,                     // Format used by OpenGL (not our pixels).
+                                   pTex->m_image.GetWidth(),     // Texture width
+                                   pTex->m_image.GetHeight(),    // Texture height
+                                   0,                            // Must be 0, as per the specification.
+                                   pTex->m_image.GetDataSize(),  // Number of bytes of the pixel data.
+                                   pixels));                     // The actual pixel data.
+  }
 
   // Set Default Sampling Options
   // ============================
@@ -175,10 +128,35 @@ kr::RefCountedPtr<kr::Texture> kr::Texture::load(const char* filename)
   glCheck(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT));
   glCheck(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
   glCheck(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
+}
 
-  addInstance(pTex);
+// static
+kr::Owned<kr::Texture> kr::Texture::load(ezStringView fileName)
+{
+  ezStringBuilder sbFileName(fileName);
+  EZ_LOG_BLOCK("Loading Texture", sbFileName);
 
-  return pTex;
+  EZ_ASSERT_DEV(g_initialized, "Textures subsystem not initialized. "
+                               "Did you forget to start the ezEngine?");
+
+  ezImage img;
+  if (img.LoadFrom(sbFileName).Failed())
+  {
+    // Loading failed.
+    return nullptr;
+  }
+
+  TextureImpl* pTex = EZ_DEFAULT_NEW(TextureImpl);
+  pTex->m_name = sbFileName;
+  pTex->m_image = move(img);
+  glCheck(glGenTextures(1, &pTex->m_glHandle));
+
+  auto tex = own<Texture>(pTex, releaseTexture);
+
+  // TODO Defer uploading pixel data?
+  uploadPixelData(tex);
+
+  return move(tex);
 }
 
 const ezImage& kr::Texture::getImage() const
@@ -195,9 +173,9 @@ ezUInt32 kr::Texture::getGlHandle() const
   return static_cast<ezUInt32>(getImpl(this)->m_glHandle);
 }
 
-ezResult kr::bind(TexturePtr pTexture, TextureSlot slot)
+ezResult kr::bind(Borrowed<const Texture> pTexture, TextureSlot slot)
 {
-  if (isNull(pTexture))
+  if (pTexture == nullptr)
   {
     ezLog::Warning("Cannot bind nullptr as texture. Ignoring.");
     return EZ_FAILURE;
@@ -247,7 +225,7 @@ ezResult kr::restoreLastTexture2D(TextureSlot slot)
 }
 
 // static
-kr::RefCountedPtr<kr::Sampler> kr::Sampler::create()
+kr::Owned<kr::Sampler> kr::Sampler::create()
 {
   GLuint h;
   glCheck(glGenSamplers(1, &h));
@@ -257,11 +235,11 @@ kr::RefCountedPtr<kr::Sampler> kr::Sampler::create()
     return nullptr;
   }
 
-  auto pSampler = EZ_DEFAULT_NEW(Sampler);
+  Sampler* pSampler = EZ_DEFAULT_NEW(Sampler);
   pSampler->m_glHandle = h;
   pSampler->setFiltering(pSampler->m_filtering);
   pSampler->setWrapping(pSampler->m_wrapping);
-  return pSampler;
+  return own(pSampler, [](Sampler* s){ EZ_DEFAULT_DELETE(s); });
 }
 
 kr::Sampler::~Sampler()
@@ -319,9 +297,9 @@ void kr::Sampler::setWrapping(TextureWrapping wrapping)
   glCheck(glSamplerParameteri(m_glHandle, GL_TEXTURE_WRAP_T, value));
 }
 
-ezResult kr::bind(SamplerPtr pSampler, TextureSlot slot)
+ezResult kr::bind(Borrowed<const Sampler> pSampler, TextureSlot slot)
 {
-  if (isNull(pSampler))
+  if (pSampler == nullptr)
   {
     ezLog::Warning("Cannot bind nullptr as sampler. Ignoring.");
     return EZ_FAILURE;

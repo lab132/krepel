@@ -1,23 +1,49 @@
-#cmake
+#!cmake
 
-# our dependency 'cotire' needs at least this version
-cmake_minimum_required(VERSION 2.8.12 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.2 FATAL_ERROR)
 
-# name of the entire project
+# Name of the entire project.
 project("krepel")
 
-set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/buildSystem/CMake")
+set(KREPEL_DIR "${CMAKE_SOURCE_DIR}" CACHE PATH "Krepel directory.")
+mark_as_advanced(KREPEL_DIR)
 
-# Set the default output dirs.
-set(BIELD_OUTPUT_DIR "${CMAKE_SOURCE_DIR}/output")
-set(BIELD_OUTPUT_DIR_BIN "${BIELD_OUTPUT_DIR}/bin")
-set(BIELD_OUTPUT_DIR_LIB "${BIELD_OUTPUT_DIR}/lib")
+set(KREPEL_INSTALL_CONFIGURATIONS "${CMAKE_CONFIGURATION_TYPES}" CACHE STRING "The configurations to install or package.")
+set(KREPEL_TESTS ON CACHE BOOL "Whether to include tests in the build.")
 
-# Include the Bield master script.
-include(bield)
+set(CMAKE_MODULE_PATH "${KREPEL_DIR}/build/CMake/")
 
-# The sub-directory 'code' contains all source code.
-add_subdirectory("code") # execute CMake code in code/CMakeLists.txt
+# General setup
+include(kr_setup)
+kr_setup()
 
-# The sub-directory 'tests' contains all test code.
-add_subdirectory("tests")
+# Platform specific setup.
+include(platforms/${CMAKE_SYSTEM_NAME})
+
+# Prepare for installing targets
+include(kr_install_target)
+kr_prepare_install_target_file()
+
+# Imported targets
+include(targets/glew)
+include(targets/ezEngine)
+
+# Include sub-projects.
+add_subdirectory("code")
+
+if(KREPEL_TESTS)
+  add_subdirectory("tests")
+endif()
+
+# Create 'install' rules.
+install(DIRECTORY build bin lib code
+        DESTINATION .
+        PATTERN "CMakeLists.txt" EXCLUDE
+        PATTERN "*.ilk" EXCLUDE)
+if(KREPEL_INSTALL_TARGETS_FILE)
+  install(FILES "${KREPEL_INSTALL_TARGETS_FILE}"
+          DESTINATION "build/CMake/targets"
+          RENAME "krepel.cmake")
+endif()
+
+kr_post_config()

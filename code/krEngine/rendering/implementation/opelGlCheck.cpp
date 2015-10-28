@@ -1,4 +1,3 @@
-#include <krEngine/pch.h>
 #include <krEngine/rendering/implementation/opelGlCheck.h>
 
 // Note: This is taken and modified from the SFML project.

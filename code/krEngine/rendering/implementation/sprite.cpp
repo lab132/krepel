@@ -1,4 +1,3 @@
-#include <krEngine/pch.h>
 #include <krEngine/rendering/sprite.h>
 #include <krEngine/rendering/shader.h>
 #include <krEngine/rendering/implementation/opelGlCheck.h>
@@ -11,7 +10,7 @@ EZ_BEGIN_STATIC_REFLECTED_TYPE(krSpriteVertex, ezNoBase, 1, ezRTTINoAllocator);
   EZ_END_PROPERTIES
 EZ_END_STATIC_REFLECTED_TYPE();
 
-static kr::VertexBufferPtr createVertexBuffer(kr::ShaderProgramPtr pShader)
+static kr::Owned<kr::VertexBuffer> createVertexBuffer(kr::Borrowed<kr::ShaderProgram> pShader)
 {
   using namespace kr;
 
@@ -22,31 +21,55 @@ static kr::VertexBufferPtr createVertexBuffer(kr::ShaderProgramPtr pShader)
 
   setupLayout(pVB, pShader, "krSpriteVertex");
 
-  return pVB;
+  return move(pVB);
 }
 
-static kr::ShaderProgramPtr createSpriteShader()
+// static
+kr::Owned<kr::ShaderProgram> kr::Sprite::createDefaultShader()
 {
-  using namespace kr;
-
   EZ_LOG_BLOCK("Create Shader", "Sprite");
 
   auto vsName = "<shader>sprite.vs";
   auto fsName = "<shader>sprite.fs";
   auto prg = ShaderProgram::loadAndLink(vsName, fsName);
-  if (isNull(prg))
+  if (prg == nullptr)
   {
     EZ_REPORT_FAILURE("Failed to link shaders to program: '%s' and '%s'", vsName, fsName);
-    return nullptr;
   }
 
-  return prg;
+  return move(prg);
 }
 
 kr::Sprite::Sprite()
 {
   m_needUpdate.Add(SpriteComponents::LocalBounds);
   m_needUpdate.Add(SpriteComponents::Cutout);
+}
+
+void kr::Sprite::operator=(const Sprite& other)
+{
+  this->m_needUpdate = other.m_needUpdate;
+  ezMemoryUtils::Copy(this->m_vertices, other.m_vertices, 4);
+  this->m_pSampler = other.m_pSampler;
+  this->m_pTexture = other.m_pTexture;
+  this->m_localBounds = other.m_localBounds;
+  this->m_cutout = other.m_cutout;
+  this->m_color = other.m_color;
+  this->m_pShader = other.m_pShader;
+  this->m_uTexture = other.m_uTexture;
+  this->m_uColor = other.m_uColor;
+  this->m_uTransform = other.m_uTransform;
+  this->m_uOrigin = other.m_uOrigin;
+  this->m_uRotation = other.m_uRotation;
+  this->m_uViewMatrix = other.m_uViewMatrix;
+  this->m_uProjectionMatrix = other.m_uProjectionMatrix;
+
+  update(*this);
+}
+
+kr::Sprite::Sprite(const Sprite& other)
+{
+  *this = other;
 }
 
 void kr::Sprite::setLocalBounds(ezRectFloat newLocalBounds)
@@ -65,11 +88,34 @@ void kr::update(Sprite& sprite)
 {
   EZ_LOG_BLOCK("Updating Sprite");
 
+  // Terminate, If There Is No Texture
+  // =================================
+  if (sprite.m_pTexture == nullptr)
+  {
+    ezLog::Warning("Sprite has no texture yet. Cannot Update.");
+    return;
+  }
+
+  // Terminate, If There Is No Sampler
+  // =================================
+  if (sprite.m_pSampler == nullptr)
+  {
+    ezLog::Warning("Sprite has no sampler yet. Cannot Update.");
+    return;
+  }
+
+  // Terminate, If There Is No Sampler
+  // =================================
+  if(sprite.m_pShader == nullptr)
+  {
+    ezLog::Warning("Sprite has no shader yet. Cannot Update.");
+    return;
+  }
+
   // Create Shader, If Needed
   // ========================
-  if (isNull(sprite.m_pShader))
+  if(sprite.m_needUpdate.IsSet(SpriteComponents::ShaderUniforms))
   {
-    sprite.m_pShader = createSpriteShader();
     sprite.m_uOrigin           = shaderUniformOf(sprite.m_pShader, "u_origin");
     sprite.m_uRotation         = shaderUniformOf(sprite.m_pShader, "u_rotation");
     sprite.m_uViewMatrix       = shaderUniformOf(sprite.m_pShader, "u_view");
@@ -80,25 +126,9 @@ void kr::update(Sprite& sprite)
 
   // Create VertexBuffer, If Needed
   // ==============================
-  if (isNull(sprite.m_pVertexBuffer))
+  if(sprite.m_pVertexBuffer == nullptr)
   {
-    sprite.m_pVertexBuffer = createVertexBuffer(sprite.m_pShader);
-  }
-
-  // Terminate, If There Is No Texture
-  // =================================
-  if (isNull(sprite.m_pTexture))
-  {
-    ezLog::Warning("Sprite has no texture yet. Ignoring.");
-    return;
-  }
-
-  // Create Sampler, If Needed
-  // =========================
-  if (isNull(sprite.m_pSampler))
-  {
-    sprite.m_pSampler = Sampler::create();
-    ezLog::Debug("Using default texture sampler for sprite.");
+    sprite.m_pVertexBuffer = move(createVertexBuffer(sprite.m_pShader));
   }
 
   bool uploadVB = false;
@@ -147,12 +177,10 @@ void kr::update(Sprite& sprite)
   {
     auto& bounds = sprite.m_localBounds;
 
-    // If no bounds were set, use the texture as bounds.
+    // If no bounds were set, use the texture dimensions.
     if (!bounds.HasNonZeroArea())
     {
       auto& cutout = sprite.m_cutout;
-      bounds.x      = float(cutout.x);
-      bounds.y      = float(cutout.x);
       bounds.width  = float(cutout.width);
       bounds.height = float(cutout.height);
     }
@@ -172,4 +200,11 @@ void kr::update(Sprite& sprite)
   {
     uploadData(sprite.getVertexBuffer(), sprite.getVertices());
   }
+}
+
+bool kr::canRender(const Sprite& sprite)
+{
+  return sprite.getTexture() != nullptr
+      && sprite.getSampler() != nullptr
+      && sprite.getShader()  != nullptr;
 }

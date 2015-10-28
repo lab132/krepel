@@ -34,10 +34,10 @@ namespace kr
     /// \note This is required.
     enum { Type = ExtractionDataType::Sprite };
 
-    ShaderProgramPtr pShader;
-    VertexBufferPtr pVertexBuffer;
-    TexturePtr pTexture;
-    SamplerPtr pSampler;
+    Borrowed<const ShaderProgram> pShader;
+    Borrowed<const VertexBuffer> pVertexBuffer;
+    Borrowed<const Texture> pTexture;
+    Borrowed<const Sampler> pSampler;
     ShaderUniform uTexture;
     ShaderUniform uColor;
     ShaderUniform uOrigin;

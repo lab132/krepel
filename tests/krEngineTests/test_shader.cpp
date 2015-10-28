@@ -1,77 +1,89 @@
+#include <krEngineTests/pch.h>
+#include <catch.hpp>
+
 #include <krEngine/rendering/window.h>
 #include <krEngine/rendering/shader.h>
 
-EZ_CREATE_SIMPLE_TEST_GROUP(Shader);
-
-EZ_CREATE_SIMPLE_TEST(Shader, VertexShader)
+TEST_CASE("Vertex Shader", "[shader]")
 {
   using namespace kr;
 
+  KR_TESTS_RAII_CORE_STARTUP;
+
   // Create window and rendering context
-  auto pWindow = Window::open();
+  auto pWindow = Window::createAndOpen();
 
   KR_TESTS_RAII_ENGINE_STARTUP;
 
-  EZ_TEST_BLOCK(ezTestBlock::Enabled, "Load and Compile")
+  SECTION("Load and Compile")
   {
-    RefCountedPtr<VertexShader> pVS;
-    pVS = VertexShader::loadAndCompile("<What The Hell>I don't exist.nopes");
-    EZ_TEST_BOOL(!isValid(pVS));
-    pVS = VertexShader::loadAndCompile("<shader>Invalid.vs");
-    EZ_TEST_BOOL(!isValid(pVS));
-    pVS = VertexShader::loadAndCompile("<shader>Valid.vs");
-    EZ_TEST_BOOL(isValid(pVS));
+    Owned<VertexShader> vs;
+    vs = VertexShader::loadAndCompile("<What The Hell>I don't exist.nopes");
+    REQUIRE(vs == nullptr);
+    vs = VertexShader::loadAndCompile("<shader>Invalid.vs");
+    REQUIRE(vs == nullptr);
+    vs = VertexShader::loadAndCompile("<shader>Valid.vs");
+    REQUIRE(vs != nullptr);
   }
 }
 
-EZ_CREATE_SIMPLE_TEST(Shader, FragmentShader)
+TEST_CASE("Fragment Shader", "[shader]")
 {
   using namespace kr;
 
+  KR_TESTS_RAII_CORE_STARTUP;
+
   // Create window and rendering context
-  auto pWindow = Window::open();
+  auto pWindow = Window::createAndOpen();
 
   KR_TESTS_RAII_ENGINE_STARTUP;
 
-  EZ_TEST_BLOCK(ezTestBlock::Enabled, "Load and Compile")
+  SECTION("Load and Compile")
   {
-    RefCountedPtr<FragmentShader> pFS;
-    EZ_TEST_BOOL(!isValid(pFS));
-    pFS = FragmentShader::loadAndCompile("<What The Hell>I don't exist.nopes");
-    EZ_TEST_BOOL(!isValid(pFS));
-    pFS = FragmentShader::loadAndCompile("<shader>Invalid.fs");
-    EZ_TEST_BOOL(!isValid(pFS));
-    pFS = FragmentShader::loadAndCompile("<shader>Valid.fs");
-    EZ_TEST_BOOL(isValid(pFS));
+    Owned<FragmentShader> fs;
+    fs = FragmentShader::loadAndCompile("<What The Hell>I don't exist.nopes");
+    REQUIRE(fs == nullptr);
+    fs = FragmentShader::loadAndCompile("<shader>Invalid.fs");
+    REQUIRE(fs == nullptr);
+    fs = FragmentShader::loadAndCompile("<shader>Valid.fs");
+    REQUIRE(fs != nullptr);
   }
 }
 
-EZ_CREATE_SIMPLE_TEST(Shader, ShaderProgram)
+TEST_CASE("Shader Program", "[shader]")
 {
   using namespace kr;
 
+  KR_TESTS_RAII_CORE_STARTUP;
+
   // Create window and rendering context
-  auto pWindow = Window::open();
+  auto window = Window::createAndOpen();
 
   KR_TESTS_RAII_ENGINE_STARTUP;
 
-  EZ_TEST_BLOCK(ezTestBlock::Enabled, "Attach and Link")
+  SECTION("Link")
   {
-    auto pVS = VertexShader::loadAndCompile("<shader>Valid.vs");
-    EZ_TEST_BOOL(isValid(pVS));
+    auto vs = VertexShader::loadAndCompile("<shader>Valid.vs");
+    REQUIRE(vs != nullptr);
 
-    auto pFS = FragmentShader::loadAndCompile("<shader>Valid.fs");
-    EZ_TEST_BOOL(isValid(pVS));
+    auto fs = FragmentShader::loadAndCompile("<shader>Valid.fs");
+    REQUIRE(fs != nullptr);
 
-    auto pProgram = ShaderProgram::link(pVS, pFS);
-    EZ_TEST_BOOL(isValid(pProgram));
+    auto shader = ShaderProgram::link(vs, fs);
+    REQUIRE(shader != nullptr);
   }
 
-  EZ_TEST_BLOCK(ezTestBlock::Enabled, "Attributes")
+  SECTION("Load and Link")
   {
-    auto pVS = VertexShader::loadAndCompile("<shader>Valid.vs");
-    auto pFS = FragmentShader::loadAndCompile("<shader>Valid.fs");
-    auto pProgram = ShaderProgram::link(pVS, pFS);
+    auto shader = ShaderProgram::loadAndLink("<shader>Valid.vs", "<shader>Valid.fs");
+    REQUIRE(shader != nullptr);
+  }
+
+  SECTION("Attributes")
+  {
+    auto vs = VertexShader::loadAndCompile("<shader>Valid.vs");
+    auto fs = FragmentShader::loadAndCompile("<shader>Valid.fs");
+    auto shader = ShaderProgram::link(vs, fs);
 
     // TODO Implement me.
   }

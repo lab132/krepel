@@ -1,4 +1,7 @@
-#include <krEngine/referenceCounting.h>
+#include <krEngineTests/pch.h>
+#include <catch.hpp>
+
+#include <krEngine/ownership.h>
 
 // Helpers
 // =======
@@ -13,7 +16,7 @@ namespace
     /// \brief Will be called if a state object is no longer referenced.
     static void release(State*& pState)
     {
-      EZ_TEST_BOOL(pState != nullptr);
+      REQUIRE(pState != nullptr);
       ++pState->numRelease;
       // Call the default release policy
       kr::RefCounted::ReleasePolicy::release(pState);
@@ -26,14 +29,14 @@ namespace
   public:
     void addRef()
     {
-      EZ_TEST_BOOL(this != nullptr);
+      REQUIRE(this != nullptr);
       ++numAddRef;
       RefCounted::addRef();
     }
 
     void releaseRef()
     {
-      EZ_TEST_BOOL(this != nullptr);
+      REQUIRE(this != nullptr);
       ++numReleaseRef;
       RefCounted::releaseRef();
     }
@@ -64,54 +67,53 @@ static bool operator !=(const State& lhs, const State& rhs)
 
 //////////////////////////////////////////////////////////////////////////
 
-EZ_CREATE_SIMPLE_TEST_GROUP(ReferenceCounting);
 
-EZ_CREATE_SIMPLE_TEST(ReferenceCounting, FreeFunctions)
+TEST_CASE("Free Functions", "[ref-counting]")
 {
   using namespace kr;
 
-  EZ_TEST_BLOCK(ezTestBlock::Enabled, "xyzIfValid Functions")
+  SECTION("xyzIfValid Functions")
   {
     State* p = nullptr;
-    EZ_TEST_BOOL(addRefIfValid(p).Failed());
-    EZ_TEST_BOOL(releaseRefIfValid(p).Failed());
+    REQUIRE(addRefIfValid(p).Failed());
+    REQUIRE(releaseRefIfValid(p).Failed());
   }
 
-  EZ_TEST_BLOCK(ezTestBlock::Enabled, "Standard Usage")
+  SECTION("Standard Usage")
   {
     State s;
     auto S = &s;
 
-    EZ_TEST_BOOL(!isReferenced(&s));
+    REQUIRE_FALSE(isReferenced(&s));
 
     addRef(S);
-    EZ_TEST_BOOL(S != nullptr);
-    EZ_TEST_INT(s.numAddRef, 1);
-    EZ_TEST_INT(s.numReleaseRef, 0);
-    EZ_TEST_INT(s.numRelease, 0);
-    EZ_TEST_BOOL(isReferenced(&s));
+    REQUIRE(S != nullptr);
+    REQUIRE(s.numAddRef == s.numAddRef);
+    REQUIRE(s.numReleaseRef == s.numReleaseRef);
+    REQUIRE(s.numRelease == s.numRelease);
+    REQUIRE(isReferenced(&s));
 
     addRef(S);
-    EZ_TEST_BOOL(S != nullptr);
-    EZ_TEST_INT(s.numAddRef, 2);
-    EZ_TEST_INT(s.numReleaseRef, 0);
-    EZ_TEST_INT(s.numRelease, 0);
-    EZ_TEST_BOOL(isReferenced(&s));
+    REQUIRE(S != nullptr);
+    REQUIRE(s.numAddRef == s.numAddRef);
+    REQUIRE(s.numReleaseRef == s.numReleaseRef);
+    REQUIRE(s.numRelease == s.numRelease);
+    REQUIRE(isReferenced(&s));
 
     releaseRef(S);
-    EZ_TEST_BOOL(S == nullptr);
-    EZ_TEST_INT(s.numAddRef, 2);
-    EZ_TEST_INT(s.numReleaseRef, 1);
-    EZ_TEST_INT(s.numRelease, 0);
-    EZ_TEST_BOOL(isReferenced(&s));
+    REQUIRE(S == nullptr);
+    REQUIRE(s.numAddRef == s.numAddRef);
+    REQUIRE(s.numReleaseRef == s.numReleaseRef);
+    REQUIRE(s.numRelease == s.numRelease);
+    REQUIRE(isReferenced(&s));
 
     S = &s;
     releaseRef(S);
-    EZ_TEST_BOOL(S == nullptr);
-    EZ_TEST_INT(s.numAddRef, 2);
-    EZ_TEST_INT(s.numReleaseRef, 2);
-    EZ_TEST_INT(s.numRelease, 1);
-    EZ_TEST_BOOL(!isReferenced(&s));
+    REQUIRE(S == nullptr);
+    REQUIRE(s.numAddRef == s.numAddRef);
+    REQUIRE(s.numReleaseRef == s.numReleaseRef);
+    REQUIRE(s.numRelease == s.numRelease);
+    REQUIRE_FALSE(isReferenced(&s));
   }
 }
 
@@ -124,194 +126,194 @@ static void takeByValue(kr::RefCountedPtr<T>){}
 template<typename T>
 static void takeByRef(kr::RefCountedPtr<T>&){}
 
-EZ_CREATE_SIMPLE_TEST(ReferenceCounting, RefCountedPtr)
+TEST_CASE("RefCountedPtr", "[ref-counting]")
 {
   using namespace kr;
 
-  EZ_TEST_BLOCK(ezTestBlock::Enabled, "Construction")
+  SECTION("Construction")
   {
     State s;
 
     // Default construction.
     RefCountedPtr<State> p1;
-    EZ_TEST_BOOL(p1.pRefCounted == nullptr);
+    REQUIRE(p1.pRefCounted == nullptr);
 
     // Construct from pointer.
     RefCountedPtr<State> p2(&s);
-    EZ_TEST_BOOL(p1.pRefCounted == nullptr);
-    EZ_TEST_BOOL(p2.pRefCounted == &s);
-    EZ_TEST_INT(s.numAddRef, 1);
-    EZ_TEST_INT(s.numReleaseRef, 0);
-    EZ_TEST_INT(s.numRelease, 0);
+    REQUIRE(p1.pRefCounted == nullptr);
+    REQUIRE(p2.pRefCounted == &s);
+    REQUIRE(s.numAddRef == s.numAddRef);
+    REQUIRE(s.numReleaseRef == s.numReleaseRef);
+    REQUIRE(s.numRelease == s.numRelease);
 
     // Pointer assignment.
     p1 = &s;
-    EZ_TEST_BOOL(p1.pRefCounted == &s);
-    EZ_TEST_BOOL(p2.pRefCounted == &s);
-    EZ_TEST_INT(s.numAddRef, 2);
-    EZ_TEST_INT(s.numReleaseRef, 0);
-    EZ_TEST_INT(s.numRelease, 0);
+    REQUIRE(p1.pRefCounted == &s);
+    REQUIRE(p2.pRefCounted == &s);
+    REQUIRE(s.numAddRef == s.numAddRef);
+    REQUIRE(s.numReleaseRef == s.numReleaseRef);
+    REQUIRE(s.numRelease == s.numRelease);
 
     // Assigning the same pointer multiple times should not have any effect.
     for (int i = 0; i < 10; ++i)
     {
       p1 = &s;
     }
-    EZ_TEST_BOOL(p1.pRefCounted == &s);
-    EZ_TEST_BOOL(p2.pRefCounted == &s);
-    EZ_TEST_INT(s.numAddRef, 2);
-    EZ_TEST_INT(s.numReleaseRef, 0);
-    EZ_TEST_INT(s.numRelease, 0);
+    REQUIRE(p1.pRefCounted == &s);
+    REQUIRE(p2.pRefCounted == &s);
+    REQUIRE(s.numAddRef == s.numAddRef);
+    REQUIRE(s.numReleaseRef == s.numReleaseRef);
+    REQUIRE(s.numRelease == s.numRelease);
 
     // Copy construction.
     RefCountedPtr<State> p3(p2);
-    EZ_TEST_BOOL(p1.pRefCounted == &s);
-    EZ_TEST_BOOL(p2.pRefCounted == &s);
-    EZ_TEST_BOOL(p3.pRefCounted == &s);
-    EZ_TEST_INT(s.numAddRef, 3);
-    EZ_TEST_INT(s.numReleaseRef, 0);
-    EZ_TEST_INT(s.numRelease, 0);
+    REQUIRE(p1.pRefCounted == &s);
+    REQUIRE(p2.pRefCounted == &s);
+    REQUIRE(p3.pRefCounted == &s);
+    REQUIRE(s.numAddRef == s.numAddRef);
+    REQUIRE(s.numReleaseRef == s.numReleaseRef);
+    REQUIRE(s.numRelease == s.numRelease);
 
     // Copy assignment.
     p3 = p3; // Self assignment.
     p3 = nullptr; // Clear p3.
     p3 = p2;
-    EZ_TEST_BOOL(p1.pRefCounted == &s);
-    EZ_TEST_BOOL(p2.pRefCounted == &s);
-    EZ_TEST_BOOL(p3.pRefCounted == &s);
-    EZ_TEST_INT(s.numAddRef, 4);
-    EZ_TEST_INT(s.numReleaseRef, 1);
-    EZ_TEST_INT(s.numRelease, 0);
+    REQUIRE(p1.pRefCounted == &s);
+    REQUIRE(p2.pRefCounted == &s);
+    REQUIRE(p3.pRefCounted == &s);
+    REQUIRE(s.numAddRef == s.numAddRef);
+    REQUIRE(s.numReleaseRef == s.numReleaseRef);
+    REQUIRE(s.numRelease == s.numRelease);
 
     // Nullptr assignment.
     p3 = nullptr;
-    EZ_TEST_BOOL(p1.pRefCounted == &s);
-    EZ_TEST_BOOL(p2.pRefCounted == &s);
-    EZ_TEST_BOOL(p3.pRefCounted == nullptr);
-    EZ_TEST_INT(s.numAddRef, 4);
-    EZ_TEST_INT(s.numReleaseRef, 2);
-    EZ_TEST_INT(s.numRelease, 0);
+    REQUIRE(p1.pRefCounted == &s);
+    REQUIRE(p2.pRefCounted == &s);
+    REQUIRE(p3.pRefCounted == nullptr);
+    REQUIRE(s.numAddRef == s.numAddRef);
+    REQUIRE(s.numReleaseRef == s.numReleaseRef);
+    REQUIRE(s.numRelease == s.numRelease);
 
     // Move construction.
     RefCountedPtr<State> p4(move(p2));
-    EZ_TEST_BOOL(p1.pRefCounted == &s);
-    EZ_TEST_BOOL(p2.pRefCounted == nullptr);
-    EZ_TEST_BOOL(p3.pRefCounted == nullptr);
-    EZ_TEST_BOOL(p4.pRefCounted == &s);
-    EZ_TEST_INT(s.numAddRef, 4);
-    EZ_TEST_INT(s.numReleaseRef, 2);
-    EZ_TEST_INT(s.numRelease, 0);
+    REQUIRE(p1.pRefCounted == &s);
+    REQUIRE(p2.pRefCounted == nullptr);
+    REQUIRE(p3.pRefCounted == nullptr);
+    REQUIRE(p4.pRefCounted == &s);
+    REQUIRE(s.numAddRef == s.numAddRef);
+    REQUIRE(s.numReleaseRef == s.numReleaseRef);
+    REQUIRE(s.numRelease == s.numRelease);
 
     // Move assignment.
     p4 = move(p4); // Self assignment.
     p4 = move(p1);
-    EZ_TEST_BOOL(p1.pRefCounted == nullptr);
-    EZ_TEST_BOOL(p2.pRefCounted == nullptr);
-    EZ_TEST_BOOL(p3.pRefCounted == nullptr);
-    EZ_TEST_BOOL(p4.pRefCounted == &s);
-    EZ_TEST_INT(s.numAddRef, 4);
-    EZ_TEST_INT(s.numReleaseRef, 3);
-    EZ_TEST_INT(s.numRelease, 0);
+    REQUIRE(p1.pRefCounted == nullptr);
+    REQUIRE(p2.pRefCounted == nullptr);
+    REQUIRE(p3.pRefCounted == nullptr);
+    REQUIRE(p4.pRefCounted == &s);
+    REQUIRE(s.numAddRef == s.numAddRef);
+    REQUIRE(s.numReleaseRef == s.numReleaseRef);
+    REQUIRE(s.numRelease == s.numRelease);
 
     // Test scope behavior
     {
       RefCountedPtr<State> killEmAll(move(p4));
-      EZ_TEST_BOOL(p1.pRefCounted == nullptr);
-      EZ_TEST_BOOL(p2.pRefCounted == nullptr);
-      EZ_TEST_BOOL(p3.pRefCounted == nullptr);
-      EZ_TEST_BOOL(p4.pRefCounted == nullptr);
-      EZ_TEST_BOOL(killEmAll.pRefCounted == &s);
-      EZ_TEST_INT(s.numAddRef, 4);
-      EZ_TEST_INT(s.numReleaseRef, 3);
-      EZ_TEST_INT(s.numRelease, 0);
+      REQUIRE(p1.pRefCounted == nullptr);
+      REQUIRE(p2.pRefCounted == nullptr);
+      REQUIRE(p3.pRefCounted == nullptr);
+      REQUIRE(p4.pRefCounted == nullptr);
+      REQUIRE(killEmAll.pRefCounted == &s);
+      REQUIRE(s.numAddRef == s.numAddRef);
+      REQUIRE(s.numReleaseRef == s.numReleaseRef);
+      REQUIRE(s.numRelease == s.numRelease);
     }
 
-    EZ_TEST_BOOL(p1.pRefCounted == nullptr);
-    EZ_TEST_BOOL(p2.pRefCounted == nullptr);
-    EZ_TEST_BOOL(p3.pRefCounted == nullptr);
-    EZ_TEST_BOOL(p4.pRefCounted == nullptr);
-    EZ_TEST_INT(s.numAddRef, 4);
-    EZ_TEST_INT(s.numReleaseRef, 4);
-    EZ_TEST_INT(s.numRelease, 1);
-    EZ_TEST_BOOL(!isReferenced(&s));
+    REQUIRE(p1.pRefCounted == nullptr);
+    REQUIRE(p2.pRefCounted == nullptr);
+    REQUIRE(p3.pRefCounted == nullptr);
+    REQUIRE(p4.pRefCounted == nullptr);
+    REQUIRE(s.numAddRef == s.numAddRef);
+    REQUIRE(s.numReleaseRef == s.numReleaseRef);
+    REQUIRE(s.numRelease == s.numRelease);
+    REQUIRE_FALSE(isReferenced(&s));
   }
 
-  EZ_TEST_BLOCK(ezTestBlock::Enabled, "Correctness of makeRefCountedPtr")
+  SECTION("Correctness of makeRefCountedPtr")
   {
     State s;
 
     {
       auto p = makeRefCountedPtr(&s);
 
-      EZ_TEST_BOOL(s.numAddRef == 1);
-      EZ_TEST_BOOL(s.numReleaseRef == 0);
-      EZ_TEST_BOOL(s.numRelease == 0);
+      REQUIRE(s.numAddRef == 1);
+      REQUIRE(s.numReleaseRef == 0);
+      REQUIRE(s.numRelease == 0);
     }
 
-    EZ_TEST_BOOL(s.numAddRef == 1);
-    EZ_TEST_BOOL(s.numReleaseRef == 1);
-    EZ_TEST_BOOL(s.numRelease == 1);
+    REQUIRE(s.numAddRef == 1);
+    REQUIRE(s.numReleaseRef == 1);
+    REQUIRE(s.numRelease == 1);
   }
 
-  EZ_TEST_BLOCK(ezTestBlock::Enabled, "Ownership")
+  SECTION("Ownership")
   {
     State s;
 
     auto p = makeRefCountedPtr(&s);
     StateOwner o(move(p));
 
-    EZ_TEST_BOOL(p.pRefCounted == nullptr);
-    EZ_TEST_BOOL(o.pState.pRefCounted == &s);
-    EZ_TEST_BOOL(s.numAddRef == 1);
-    EZ_TEST_BOOL(s.numReleaseRef == 0);
-    EZ_TEST_BOOL(s.numRelease == 0);
+    REQUIRE(p.pRefCounted == nullptr);
+    REQUIRE(o.pState.pRefCounted == &s);
+    REQUIRE(s.numAddRef == 1);
+    REQUIRE(s.numReleaseRef == 0);
+    REQUIRE(s.numRelease == 0);
   }
 
-  EZ_TEST_BLOCK(ezTestBlock::Enabled, "Passing as Argument")
+  SECTION("Passing as Argument")
   {
     State s;
     auto p = makeRefCountedPtr(&s);
 
     takeByConstRef(p);
-    EZ_TEST_BOOL(p.pRefCounted == &s);
-    EZ_TEST_BOOL(s.numAddRef == 1);
-    EZ_TEST_BOOL(s.numReleaseRef == 0);
-    EZ_TEST_BOOL(s.numRelease == 0);
+    REQUIRE(p.pRefCounted == &s);
+    REQUIRE(s.numAddRef == 1);
+    REQUIRE(s.numReleaseRef == 0);
+    REQUIRE(s.numRelease == 0);
 
     // Since `move` is just a cast, moving into a const-ref receiver
     // should not do anything.
     takeByConstRef(move(p));
-    EZ_TEST_BOOL(p.pRefCounted == &s);
-    EZ_TEST_BOOL(s.numAddRef == 1);
-    EZ_TEST_BOOL(s.numReleaseRef == 0);
-    EZ_TEST_BOOL(s.numRelease == 0);
+    REQUIRE(p.pRefCounted == &s);
+    REQUIRE(s.numAddRef == 1);
+    REQUIRE(s.numReleaseRef == 0);
+    REQUIRE(s.numRelease == 0);
 
     takeByRef(p);
-    EZ_TEST_BOOL(p.pRefCounted == &s);
-    EZ_TEST_BOOL(s.numAddRef == 1);
-    EZ_TEST_BOOL(s.numReleaseRef == 0);
-    EZ_TEST_BOOL(s.numRelease == 0);
+    REQUIRE(p.pRefCounted == &s);
+    REQUIRE(s.numAddRef == 1);
+    REQUIRE(s.numReleaseRef == 0);
+    REQUIRE(s.numRelease == 0);
 
     // Same as with const-ref
     takeByRef(move(p));
-    EZ_TEST_BOOL(p.pRefCounted == &s);
-    EZ_TEST_BOOL(s.numAddRef == 1);
-    EZ_TEST_BOOL(s.numReleaseRef == 0);
-    EZ_TEST_BOOL(s.numRelease == 0);
+    REQUIRE(p.pRefCounted == &s);
+    REQUIRE(s.numAddRef == 1);
+    REQUIRE(s.numReleaseRef == 0);
+    REQUIRE(s.numRelease == 0);
 
     // Should make a copy and release it again.
     takeByValue(p);
-    EZ_TEST_BOOL(p.pRefCounted == &s);
-    EZ_TEST_BOOL(s.numAddRef == 2);
-    EZ_TEST_BOOL(s.numReleaseRef == 1);
-    EZ_TEST_BOOL(s.numRelease == 0);
+    REQUIRE(p.pRefCounted == &s);
+    REQUIRE(s.numAddRef == 2);
+    REQUIRE(s.numReleaseRef == 1);
+    REQUIRE(s.numRelease == 0);
 
     // Should move 'ownership' to the function, which releases its reference,
     // releasing all existing references in our case.
     takeByValue(move(p));
-    EZ_TEST_BOOL(p.pRefCounted == nullptr);
-    EZ_TEST_BOOL(s.numAddRef == 2);
-    EZ_TEST_BOOL(s.numReleaseRef == 2);
-    EZ_TEST_BOOL(s.numRelease == 1);
+    REQUIRE(p.pRefCounted == nullptr);
+    REQUIRE(s.numAddRef == 2);
+    REQUIRE(s.numReleaseRef == 2);
+    REQUIRE(s.numRelease == 1);
   }
 }

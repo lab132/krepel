@@ -1,4 +1,3 @@
-#include <krEngine/pch.h>
 #include <krEngine/rendering/vertexBuffer.h>
 #include <krEngine/rendering/implementation/opelGlCheck.h>
 
@@ -8,8 +7,8 @@ namespace
 {
   struct VBShaderPair
   {
-    kr::VertexBufferPtr pVertexBuffer;
-    kr::ShaderProgramPtr pShader;
+    kr::Borrowed<const kr::VertexBuffer> pVertexBuffer;
+    kr::Borrowed<const kr::ShaderProgram> pShader;
     GLuint glHandle_VAO = 0;
   };
 }
@@ -47,7 +46,7 @@ EZ_BEGIN_SUBSYSTEM_DECLARATION(krEngine, VertexBuffers)
   }
 
 private:
-  ezUByte m_mem_vbBindings[sizeof(VertexBufferBindings)];
+  ezUInt8 m_mem_vbBindings[sizeof(VertexBufferBindings)];
 EZ_END_SUBSYSTEM_DECLARATION
 
 /// \note Not all types are supported.
@@ -110,8 +109,8 @@ static void getSizeInfo(ezVariant::Type::Enum t, GLenum& type, GLint& numCompone
   }
 }
 
-kr::RefCountedPtr<kr::VertexBuffer> kr::VertexBuffer::create(BufferUsage usage,
-                                                             PrimitiveType primitive)
+kr::Owned<kr::VertexBuffer> kr::VertexBuffer::create(BufferUsage usage,
+                                                     PrimitiveType primitive)
 {
   GLuint handle;
   glGenBuffers(1, &handle);
@@ -129,11 +128,11 @@ kr::RefCountedPtr<kr::VertexBuffer> kr::VertexBuffer::create(BufferUsage usage,
   // Success
   // =======
 
-  auto pVertexBuffer = EZ_DEFAULT_NEW(VertexBuffer);
+  VertexBuffer* pVertexBuffer = EZ_DEFAULT_NEW(VertexBuffer);
   pVertexBuffer->m_glHandle = handle;
   pVertexBuffer->m_usage = usage;
   pVertexBuffer->m_primitive = primitive;
-  return pVertexBuffer;
+  return own(pVertexBuffer, [](VertexBuffer* ptr){ EZ_DEFAULT_DELETE(ptr); });
 }
 
 kr::VertexBuffer::~VertexBuffer()
@@ -142,19 +141,19 @@ kr::VertexBuffer::~VertexBuffer()
   m_glHandle = 0;
 }
 
-ezResult kr::setupLayout(VertexBufferPtr pVertBuffer,
-                         ShaderProgramPtr pShader,
+ezResult kr::setupLayout(Borrowed<VertexBuffer> pVertBuffer,
+                         Borrowed<ShaderProgram> pShader,
                          const char* layoutTypeName)
 {
   EZ_LOG_BLOCK("Setup Vertex Buffer Layout");
 
-  if (isNull(pVertBuffer))
+  if (pVertBuffer == nullptr)
   {
     ezLog::Warning("Vertex buffer is nullptr. Aborting.");
     return EZ_FAILURE;
   }
 
-  if (isNull(pShader))
+  if (pShader == nullptr)
   {
     ezLog::Warning("Shader program is nullptr. Aborting.");
     return EZ_FAILURE;
@@ -225,14 +224,14 @@ ezResult kr::setupLayout(VertexBufferPtr pVertBuffer,
     auto pProp = props[i];
 
     // We only need the members, such as ezColor::r.
-    if (pProp->GetCategory() != ezAbstractProperty::Member)
+    if (pProp->GetCategory() != ezPropertyCategory::Member)
       continue;
 
     // The name of the attribute in the layout struct.
     auto attributeName = static_cast<ezAbstractMemberProperty*>(pProp)->GetPropertyName();
 
     // The reflectable member attribute.
-    auto pAttribute = static_cast<ezAbstractMemberProperty*>(pProp)->GetPropertyType();
+    auto pAttribute = static_cast<ezAbstractMemberProperty*>(pProp)->GetSpecificType();
 
     // Size of the attribute (in bytes).
     auto attributeSize = pAttribute->GetTypeSize();
@@ -271,7 +270,7 @@ ezResult kr::setupLayout(VertexBufferPtr pVertBuffer,
     offset += attributeSize;
   }
 
-  /// \todo Do the following two calls using some kind of ON_SCOPE_EXIT mechanism.
+  /// \todo Do the following two calls using some kind of scope(exit) mechanism.
 
   glCheck(glBindVertexArray(0));
   glCheck(glBindBuffer(vboTarget, 0));
@@ -279,14 +278,14 @@ ezResult kr::setupLayout(VertexBufferPtr pVertBuffer,
   return result;
 }
 
-ezResult kr::uploadData(VertexBufferPtr pVertBuffer,
+ezResult kr::uploadData(kr::Borrowed<const VertexBuffer> pVertBuffer,
                         ezUInt32 byteCount,
                         const void* bytes,
                         ezUInt32 offet)
 {
   EZ_LOG_BLOCK("Upload Vertex Buffer Data");
 
-  if (isNull(pVertBuffer))
+  if (pVertBuffer == nullptr)
   {
     ezLog::Warning("Invalid vertex buffer object.");
     return EZ_FAILURE;
@@ -306,15 +305,15 @@ ezResult kr::uploadData(VertexBufferPtr pVertBuffer,
   return EZ_SUCCESS;
 }
 
-ezResult kr::bind(VertexBufferPtr pVertBuffer, ShaderProgramPtr pShader)
+ezResult kr::bind(kr::Borrowed<const VertexBuffer> pVertBuffer, Borrowed<const ShaderProgram> pShader)
 {
-  if (isNull(pVertBuffer))
+  if (pVertBuffer == nullptr)
   {
     ezLog::Warning("Cannot bind nullptr as vertex buffer. Ignoring.");
     return EZ_FAILURE;
   }
 
-  if (isNull(pShader))
+  if (pShader == nullptr)
   {
     ezLog::Warning("Cannot accept nullptr as program to bind vertex buffer to. Ignoring.");
     return EZ_FAILURE;
@@ -333,9 +332,7 @@ ezResult kr::bind(VertexBufferPtr pVertBuffer, ShaderProgramPtr pShader)
 
   if (handle == 0)
   {
-    ezLog::Warning("No vertex array object found "
-                   "in given vertex buffer "
-                   "for given program.");
+    ezLog::Warning("No vertex array object found in given vertex buffer for given program.");
     return EZ_FAILURE;
   }
 
@@ -351,11 +348,11 @@ ezResult kr::bind(VertexBufferPtr pVertBuffer, ShaderProgramPtr pShader)
   return EZ_SUCCESS;
 }
 
-ezResult kr::restoreLastVertexBuffer(ShaderProgramPtr pShader)
+ezResult kr::restoreLastVertexBuffer(Borrowed<const ShaderProgram> pShader)
 {
   if (g_pVertexBufferBindings->IsEmpty())
   {
-    ezLog::Warning("No last texture 2D to restore!");
+    ezLog::Warning("No last vertex buffer to restore!");
     return EZ_FAILURE;
   }
 
