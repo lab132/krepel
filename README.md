@@ -12,13 +12,22 @@ Requirements:
 
 Platforms:
 
-| OS              | Build System           |
-| :-------------- | :--------------------- |
-| Windows 8.1 x64 | Visual Studio 2013 x64 |
+| OS             | Build System           |
+| :------------- | :--------------------- |
+| Windows 10 x64 | Visual Studio 2015 x64 |
 
 ## lab132 toolbox
 
 https://github.com/lab132/toolbox
+
+Required libraries:
+
+- glew
+- ezEngine
+
+Optional libraries:
+
+- Catch (for unit tests)
 
 _TODO: More info here!_
 
