@@ -67,3 +67,28 @@ TEST_CASE("Game Loop", "[game]")
     REQUIRE(checkBar == 4);
   }
 }
+
+
+TEST_CASE("Global Game Loop Registry", "[game]")
+{
+  using namespace kr;
+
+  GameLoop loop1;
+  REQUIRE(GlobalGameLoopRegistry::add("loop1", &loop1).Succeeded());
+
+  GameLoop loop2;
+  REQUIRE(GlobalGameLoopRegistry::add("loop2", &loop2).Succeeded());
+
+  int check1 = 0;
+  int check2 = 0;
+
+  REQUIRE(loop1.addCallback("foo", [&]() { ++check1; }).Succeeded());
+  REQUIRE(loop2.addCallback("foo", [&]() { ++check2; }).Succeeded());
+
+  GlobalGameLoopRegistry::tick();
+  REQUIRE(check1 == 1);
+  REQUIRE(check2 == 1);
+
+  REQUIRE(GlobalGameLoopRegistry::remove("loop2").Succeeded());
+  REQUIRE(GlobalGameLoopRegistry::remove("loop1").Succeeded());
+}
