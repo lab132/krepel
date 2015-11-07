@@ -1,7 +1,8 @@
+#include <krEngine/game/mainModule.h>
 
 #include <Foundation/Utilities/CommandLineUtils.h>
 #include <Foundation/IO/ExtendedJSONReader.h>
-#include <Foundation/IO/FileSystem/DataDirTypeFolder.h>
+#include <Foundation/IO/MemoryStream.h>
 #include <Foundation/Logging/ConsoleWriter.h>
 #include <Foundation/Logging/VisualStudioWriter.h>
 
@@ -9,15 +10,18 @@ namespace
 {
   struct JsonFileReader
   {
-    ezFileReader file;
+    ezOSFile file;
     ezJSONReader reader;
   };
 }
 
-static ezStringBuilder extractValue(const ezVariantDictionary& data, const char* key)
+// pData may NOT be a nullptr.
+static ezStringBuilder extractValue(const ezVariantDictionary* pData, const char* key)
 {
+  EZ_ASSERT_DEBUG(pData != nullptr, "Unexpected nullptr.");
+
   ezVariant value;
-  if(!data.TryGetValue(key, value))
+  if(!pData->TryGetValue(key, value))
   {
     ezLog::Error("Unable to find key '%s'.", key);
     return ezStringBuilder();
@@ -32,77 +36,128 @@ static ezStringBuilder extractValue(const ezVariantDictionary& data, const char*
   return ezStringBuilder(value.Get<ezString>());
 }
 
-static ezStringBuilder extractGameName(const ezCommandLineUtils& cmd, const JsonFileReader& json)
+// pData may be a nullptr.
+static ezStringBuilder extractValue(const ezCommandLineUtils& cmd, const ezVariantDictionary* pData, const char* key)
 {
-  const char* const key = "game";
-  ezStringBuilder parentPath;
   ezStringBuilder gamePath = cmd.GetStringOption(key);
 
-  if(gamePath.IsEmpty())
+  if(gamePath.IsEmpty() && pData != nullptr)
   {
     // Game path was not specified via command line switch.
-    parentPath = json.file.GetFilePathAbsolute();
-    parentPath.PathParentDirectory();
-    gamePath = extractValue(json.reader.GetTopLevelObject(), key);
-  }
-  else
-  {
-    // Game path specified via command line.
-    parentPath = kr::cwd();
+    gamePath = extractValue(pData, key);
   }
 
-  parentPath.AppendPath(gamePath);
-  return parentPath;
+  return gamePath;
 }
 
-static ezResult loadGame(const ezStringBuilder& path)
+static ezResult loadGame(const ezStringBuilder& name)
 {
-  EZ_LOG_BLOCK("Loading Game", path);
+  EZ_LOG_BLOCK("Loading Game", name);
 
-  return ezPlugin::LoadPlugin(path);
+  return ezPlugin::LoadPlugin(name);
+}
+
+static ezResult unloadGame(const ezStringBuilder& name)
+{
+  EZ_LOG_BLOCK("Unloading Game", name);
+
+  return ezPlugin::UnloadPlugin(name);
+}
+
+static int runGame(const ezStringBuilder& name)
+{
+  EZ_LOG_BLOCK("Running Game", name);
+
+  auto pModule{ kr::MainModule::instance() };
+
+  if (pModule == nullptr)
+  {
+    ezLog::Error("No main module instance found.");
+    return 1;
+  }
+
+  pModule->startupCore();
+  pModule->startupEngine();
+
+  while(pModule->keepTicking())
+  {
+    pModule->tick();
+  }
+
+  pModule->shutdownEngine();
+  pModule->shutdownCore();
+
+  return 0;
 }
 
 int main(int argc, char* argv[])
 {
-  ezStringBuilder hello("Hello World");
-
   ezGlobalLog::AddLogWriter(ezLogWriter::Console::LogMessageHandler);
   KR_ON_SCOPE_EXIT{ ezGlobalLog::RemoveLogWriter(ezLogWriter::Console::LogMessageHandler); };
-
   ezGlobalLog::AddLogWriter(ezLogWriter::VisualStudio::LogMessageHandler);
   KR_ON_SCOPE_EXIT{ ezGlobalLog::RemoveLogWriter(ezLogWriter::VisualStudio::LogMessageHandler); };
-
-  ezStartup::StartupCore();
-  KR_ON_SCOPE_EXIT{ ezStartup::ShutdownCore(); };
-
-  ezFileSystem::RegisterDataDirectoryFactory(ezDataDirectory::FolderType::Factory);
-  ezFileSystem::AddDataDirectory(kr::cwd().GetData(), ezFileSystem::DataDirUsage::AllowWrites, "cwd", "cwd");
-  KR_ON_SCOPE_EXIT{ ezFileSystem::RemoveDataDirectoryGroup("cwd"); };
 
   ezCommandLineUtils cmd;
   cmd.SetCommandLine(argc, const_cast<const char**>(argv));
 
-  ezStringBuilder configFileName = cmd.GetStringOption("--config");
+  ezStringBuilder configFileName{ cmd.GetStringOption("--config") };
 
   if(configFileName.IsEmpty())
   {
     configFileName = "config.json";
   }
-  configFileName.Prepend("<cwd>");
 
-  JsonFileReader json;
-  EZ_VERIFY(json.file.Open(configFileName).Succeeded(), "Failed to open config file.");
-  json.reader.Parse(json.file);
+  const ezVariantDictionary* pData{ nullptr };
+  ezExtendedJSONReader jsonReader;
+  ezOSFile jsonFile;
 
-  auto gameName = extractGameName(cmd, json);
+  if (jsonFile.Open(configFileName, ezFileMode::Read).Failed())
+  {
+    ezLog::Info("Unable to open JSON config file.");
+  }
+  else
+  {
+    auto fileData{ EZ_DEFAULT_NEW_ARRAY(ezUInt8, static_cast<ezUInt32>(jsonFile.GetFileSize())) };
+    jsonFile.Read(fileData.GetPtr(), fileData.GetCount());
+
+    {
+      ezMemoryStreamStorage mem{ fileData.GetCount() };
+      ezMemoryStreamWriter{ &mem }.WriteBytes(fileData.GetPtr(), fileData.GetCount());
+      if(jsonReader.Parse(ezMemoryStreamReader{ &mem }).Failed())
+      {
+        ezLog::SeriousWarning("Discarding config file due to error when parsing. Check for a valid JSON format.");
+      }
+      else
+      {
+        pData = &jsonReader.GetTopLevelObject();
+      }
+    }
+  }
+
+  auto gameName{ extractValue(cmd, pData, "--game") };
   if(gameName.IsEmpty())
   {
-    ezLog::Error("No game path specified.");
+    ezLog::Error("No game module specified. use either --game <name> on the command line or \"game\" = \"<name>\" in the config file.");
+    return -1;
+  }
+
+  if(loadGame(gameName).Failed())
+  {
+    ezLog::Error("Failed to load game.");
     return 1;
   }
 
-  // Finally load the game.
-  loadGame(gameName);
+  auto result{ runGame(gameName) };
+  if(result != 0)
+  {
+    return result;
+  }
+
+  if(unloadGame(gameName).Failed())
+  {
+    ezLog::Error("Failed to unload game.");
+    return 1;
+  }
 
   return 0;
 }
