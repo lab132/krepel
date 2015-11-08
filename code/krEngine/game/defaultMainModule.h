@@ -4,6 +4,7 @@
 #include <krEngine/game/gameLoop.h>
 
 #include <System/Window/Window.h>
+#include <Foundation/Logging/HTMLWriter.h>
 
 namespace kr
 {
@@ -14,7 +15,6 @@ namespace kr
 
   public: // *** Accessors
 
-    void SetCreationDescription(ezWindowCreationDesc& desc);
     bool userRequestsClose() const { return m_userRequestsClose; }
 
   protected: // *** Data
@@ -41,7 +41,9 @@ namespace kr
 
   protected: // *** Data
     ezPlugin m_plugin{ false };
+    ezWindowCreationDesc m_windowDesc;
     DefaultWindow m_window;
     GameLoop m_moduleLoop;
+    ezLogWriter::HTML m_htmlLog;
   };
 }

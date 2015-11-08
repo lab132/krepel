@@ -1,13 +1,10 @@
 #include <krEngine/game.h>
 
-class krGameTest1 : public kr::DefaultMainModule
+class krGameTest1Module : public kr::DefaultMainModule
 {
-  virtual void OnCoreStartup() override
+public:
+  krGameTest1Module()
   {
-    ezWindowCreationDesc desc{ window()->GetCreationDescription() };
-    desc.m_Title = "Game Test 1";
-    window()->SetCreationDescription(desc);
-
-    kr::DefaultMainModule::OnCoreStartup();
+    m_windowDesc.m_Title = "krGameTest1";
   }
 } static g_mainModule; // <-- A static instance is mandatory!

@@ -4,7 +4,8 @@ static ezStringBuilder cwdHelper()
   auto bufferSize = GetCurrentDirectory(0, nullptr);
   auto buffer = new TCHAR[bufferSize];
   KR_ON_SCOPE_EXIT{ delete[] buffer; };
-  if(GetCurrentDirectory(bufferSize, buffer) != bufferSize)
+  auto result = GetCurrentDirectory(bufferSize, buffer);
+  if(result != bufferSize - 1)
   {
     ezLog::Error("Error calling GetCurrentDirectory.");
     return ezStringBuilder();
