@@ -34,4 +34,7 @@ namespace kr
   /// \brief Return the current working directory.
   /// \return The path as a string view. Guaranteed to be null-terminated.
   KR_ENGINE_API ezStringView cwd();
+
+  /// \brief The absolute native path to the default data directory.
+  KR_ENGINE_API const ezStringBuilder& defaultRoot();
 }

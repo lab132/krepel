@@ -24,9 +24,16 @@ kr::DefaultMainModule::~DefaultMainModule()
 
 void kr::DefaultMainModule::OnCoreStartup()
 {
-  if(ezFileSystem::AddDataDirectory(kr::cwd().GetData(), ezFileSystem::AllowWrites, ".", ".").Failed())
+  // The directory right above the executable belongs to the empty group.
+  if(ezFileSystem::AddDataDirectory(kr::defaultRoot(), ezFileSystem::ReadOnly).Failed())
   {
-    ezLog::Error("Failed to mount current working directory as data directory.");
+    ezLog::Error("Failed to mount the default root as read-only data directory.");
+  }
+
+  // The current working directory belongs to the empty group "".
+  if(ezFileSystem::AddDataDirectory(kr::cwd().GetData(), ezFileSystem::AllowWrites).Failed())
+  {
+    ezLog::Error("Failed to mount current working directory as writable data directory.");
   }
 
   if (m_windowDesc.m_Title.IsEmpty())
@@ -34,7 +41,7 @@ void kr::DefaultMainModule::OnCoreStartup()
     m_windowDesc.m_Title = m_plugin.GetPluginName();
   }
 
-  m_htmlLog.BeginLog(ezStringBuilder{ "<.>", m_plugin.GetPluginName(), "Log.html" }, m_windowDesc.m_Title);
+  m_htmlLog.BeginLog(ezStringBuilder{ m_plugin.GetPluginName(), "Log.html" }, m_windowDesc.m_Title);
   ezGlobalLog::AddLogWriter({ &ezLogWriter::HTML::LogMessageHandler, &m_htmlLog });
 }
 
@@ -66,7 +73,7 @@ void kr::DefaultMainModule::OnCoreShutdown()
 {
   ezGlobalLog::RemoveLogWriter({ &ezLogWriter::HTML::LogMessageHandler, &m_htmlLog });
   m_htmlLog.EndLog();
-  ezFileSystem::RemoveDataDirectoryGroup(".");
+  ezFileSystem::RemoveDataDirectoryGroup("");
 }
 
 void kr::DefaultMainModule::tick()
