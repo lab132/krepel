@@ -1,44 +1,59 @@
 #include <krEngine/game/defaultMainModule.h>
+#include <krEngine/game/gameLoop.h>
 
 #include <Foundation/Logging/ConsoleWriter.h>
 #include <Foundation/Logging/VisualStudioWriter.h>
 
 
-kr::DefaultMainModule* kr::DefaultMainModule::instance()
+kr::DefaultMainModule::DefaultMainModule()
 {
-  return static_cast<decltype(this)>(kr::MainModule::instance());
 }
 
-void kr::DefaultMainModule::startupCore()
+kr::DefaultMainModule::~DefaultMainModule()
 {
-  ezStartup::StartupCore();
 }
 
-void kr::DefaultMainModule::startupEngine()
+void kr::DefaultMainModule::OnCoreStartup()
 {
-  EZ_ASSERT_ALWAYS(m_window.Initialize().Succeeded(), "Failed to open window");
-
-  ezStartup::StartupEngine();
 }
 
-void kr::DefaultMainModule::shutdownEngine()
+void kr::DefaultMainModule::OnEngineStartup()
 {
-  ezStartup::ShutdownEngine();
+  EZ_VERIFY(m_window.Initialize().Succeeded(), "Failed to open window");
 
-  if (m_window.Destroy().Failed())
+  // We own this game loop, so the following call should never fail.
+  EZ_VERIFY(m_moduleLoop.addCallback("main", { &DefaultMainModule::tick, this }).Succeeded(), "Failed to register module tick function.");
+
+  // The following call may fail if the user supplied their own "module" game loop.
+  if (GlobalGameLoopRegistry::add("module", &m_moduleLoop, ezGlobalLog::GetInstance()).Failed())
+  {
+    ezLog::Error("Failed to register the main module's game loop. Things will probably not work as intended.");
+  }
+}
+
+void kr::DefaultMainModule::OnEngineShutdown()
+{
+  GlobalGameLoopRegistry::remove("module", ezGlobalLog::GetInstance());
+
+  if(m_window.Destroy().Failed())
   {
     ezLog::SeriousWarning("Failed to destroy window.");
   }
 }
 
-void kr::DefaultMainModule::shutdownCore()
+void kr::DefaultMainModule::OnCoreShutdown()
 {
-  ezStartup::ShutdownCore();
 }
 
 void kr::DefaultMainModule::tick()
 {
-  // TODO
+  m_window.ProcessWindowMessages();
+
+  if(m_window.userRequestsClose())
+  {
+    GlobalGameLoopRegistry::setKeepTicking(false);
+    return;
+  }
 }
 
 void kr::DefaultWindow::OnClickCloseMessage()
@@ -48,7 +63,7 @@ void kr::DefaultWindow::OnClickCloseMessage()
 
 void kr::DefaultWindow::SetCreationDescription(ezWindowCreationDesc& desc)
 {
-  if (IsInitialized())
+  if(IsInitialized())
   {
     ezLog::Warning("Setting window creation description after the window has been created does not take effect until the window is re-initialized!");
   }

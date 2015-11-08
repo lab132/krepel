@@ -1,6 +1,7 @@
 #pragma once
 
 #include <krEngine/game/mainModule.h>
+#include <krEngine/game/gameLoop.h>
 
 #include <System/Window/Window.h>
 
@@ -22,22 +23,25 @@ namespace kr
 
   class KR_ENGINE_API DefaultMainModule : public MainModule
   {
-  public: // *** Static API
-    DefaultMainModule* instance();
+  public: // *** Construction
+    DefaultMainModule();
+    virtual ~DefaultMainModule();
 
-  public: // *** Inherited via MainModule
-    virtual void startupCore() override;
-    virtual void startupEngine() override;
-    virtual void shutdownEngine() override;
-    virtual void shutdownCore() override;
-    virtual void tick() override;
-    virtual bool keepTicking() const override { return m_keepTicking; }
+  public: // *** Inherited via kr::MainModule
+    virtual void OnCoreStartup() override;
+    virtual void OnEngineStartup() override;
+    virtual void OnEngineShutdown() override;
+    virtual void OnCoreShutdown() override;
+
+  public: // *** Runtime
+    void tick();
 
   public: // *** Accessors
     DefaultWindow* window() { return &m_window; }
 
   protected: // *** Data
-    bool m_keepTicking = true;
+    ezPlugin m_plugin{ false };
     DefaultWindow m_window;
+    GameLoop m_moduleLoop;
   };
 }

@@ -1,22 +1,13 @@
 #include <krEngine/game.h>
 
-class krGameTest1Subsystem : public ezSubSystem
+class krGameTest1 : public kr::DefaultMainModule
 {
-  BEGIN_SUBSYSTEM_DEPENDENCIES
-    "krEngine"
-  END_SUBSYSTEM_DEPENDENCIES
-
-public:
-  virtual const char* GetGroupName() const override { return "krGameTest1"; }
-  virtual const char* GetSubSystemName() const override { return "main"; }
-
-  virtual void OnCoreStartup()
+  virtual void OnCoreStartup() override
   {
-    auto pMod{ static_cast<kr::DefaultMainModule*>(kr::MainModule::instance()) };
-    ezWindowCreationDesc desc{ pMod->window()->GetCreationDescription() };
+    ezWindowCreationDesc desc{ window()->GetCreationDescription() };
     desc.m_Title = "Game Test 1";
-    pMod->window()->SetCreationDescription(desc);
-  }
-} static s_GameTest1Subsystem;
+    window()->SetCreationDescription(desc);
 
-KR_MAIN_GAME_MODULE(kr::DefaultMainModule);
+    kr::DefaultMainModule::OnCoreStartup();
+  }
+} static g_mainModule; // <-- A static instance is mandatory!

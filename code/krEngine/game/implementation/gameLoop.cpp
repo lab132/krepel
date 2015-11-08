@@ -1,5 +1,6 @@
 #include <krEngine/game/gameLoop.h>
 
+
 ezResult kr::GameLoop::addCallback(ezStringView callbackName, ezDelegate<void()> callback)
 {
   EZ_LOG_BLOCK("kr::GameLoop::addCallback", ezStringBuilder(callbackName).GetData());
@@ -86,7 +87,7 @@ namespace
   struct NamedGameLoop
   {
     ezString name;
-    kr::GameLoop* pInstance = nullptr;
+    kr::GameLoop* pInstance{ nullptr };
 
     NamedGameLoop() = default;
     NamedGameLoop(ezStringView name, kr::GameLoop* pInstance) : name{ name }, pInstance{ pInstance } {}
@@ -128,19 +129,19 @@ ezResult kr::GlobalGameLoopRegistry::add(ezStringView loopName, GameLoop* pLoop,
 
 kr::GameLoop* kr::GlobalGameLoopRegistry::get(ezStringView loopName, ezLogInterface* pLogInterface)
 {
-  EZ_LOG_BLOCK(pLogInterface, "Get Global Game Loop");
+  EZ_LOG_BLOCK(pLogInterface, "Get Global Game Loop", ezStringBuilder{ loopName });
 
   auto& all = globalGameLoops();
   for(auto& namedLoop : all)
   {
     if(namedLoop.name == loopName)
     {
-      ezLog::VerboseDebugMessage(pLogInterface, "Found global game loop named '%s'.", loopName);
+      ezLog::VerboseDebugMessage(pLogInterface, "Found global game loop with the given name.");
       return namedLoop.pInstance;
     }
   }
 
-  ezLog::Warning(pLogInterface, "Unable to find global game loop named '%s'.", ezStringBuilder(loopName).GetData());
+  ezLog::Warning(pLogInterface, "Unable to find global game loop with the given name.");
   return nullptr;
 }
 
@@ -154,12 +155,12 @@ ezResult kr::GlobalGameLoopRegistry::remove(GameLoop* pLoop, ezLogInterface* pLo
     return EZ_FAILURE;
   }
 
-  auto& all = globalGameLoops();
+  auto& all{ globalGameLoops() };
   for(ezUInt32 i = 0; i < all.GetCount(); ++i)
   {
     if(all[i].pInstance == pLoop)
     {
-      ezLog::Success(pLogInterface, "Removing game loop named '%s'.", all[i].name);
+      ezLog::Success(pLogInterface, "Removed game loop named '%s'.", all[i].name.GetData());
       all.RemoveAt(i);
       return EZ_SUCCESS;
     }
@@ -169,6 +170,11 @@ ezResult kr::GlobalGameLoopRegistry::remove(GameLoop* pLoop, ezLogInterface* pLo
   return EZ_FAILURE;
 }
 
+ezResult kr::GlobalGameLoopRegistry::remove(ezStringView name, ezLogInterface* pLogInterface /*= nullptr*/)
+{
+  return remove(get(name, pLogInterface), pLogInterface);
+}
+
 void kr::GlobalGameLoopRegistry::tick(ezLogInterface* pLogInterface)
 {
   for(auto& namedLoop : globalGameLoops())
@@ -176,4 +182,16 @@ void kr::GlobalGameLoopRegistry::tick(ezLogInterface* pLogInterface)
     EZ_LOG_BLOCK(pLogInterface, "Ticking Global Game Loop", namedLoop.name);
     namedLoop.pInstance->tick(pLogInterface);
   }
+}
+
+static bool g_keepGlobalGameLoopTicking{ true };
+
+bool kr::GlobalGameLoopRegistry::keepTicking()
+{
+  return g_keepGlobalGameLoopTicking;
+}
+
+void kr::GlobalGameLoopRegistry::setKeepTicking(bool value)
+{
+  g_keepGlobalGameLoopTicking = value;
 }

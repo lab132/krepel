@@ -1,4 +1,5 @@
 #include <krEngine/game/mainModule.h>
+#include <krEngine/game/gameLoop.h>
 
 #include <Foundation/Utilities/CommandLineUtils.h>
 #include <Foundation/IO/ExtendedJSONReader.h>
@@ -68,24 +69,14 @@ static int runGame(const ezStringBuilder& name)
 {
   EZ_LOG_BLOCK("Running Game", name);
 
-  auto pModule{ kr::MainModule::instance() };
+  ezStartup::StartupEngine();
 
-  if (pModule == nullptr)
+  while(kr::GlobalGameLoopRegistry::keepTicking())
   {
-    ezLog::Error("No main module instance found.");
-    return 1;
+    kr::GlobalGameLoopRegistry::tick();
   }
 
-  pModule->startupCore();
-  pModule->startupEngine();
-
-  while(pModule->keepTicking())
-  {
-    pModule->tick();
-  }
-
-  pModule->shutdownEngine();
-  pModule->shutdownCore();
+  ezStartup::ShutdownEngine();
 
   return 0;
 }
@@ -96,6 +87,8 @@ int main(int argc, char* argv[])
   KR_ON_SCOPE_EXIT{ ezGlobalLog::RemoveLogWriter(ezLogWriter::Console::LogMessageHandler); };
   ezGlobalLog::AddLogWriter(ezLogWriter::VisualStudio::LogMessageHandler);
   KR_ON_SCOPE_EXIT{ ezGlobalLog::RemoveLogWriter(ezLogWriter::VisualStudio::LogMessageHandler); };
+
+  ezStartup::StartupCore();
 
   ezCommandLineUtils cmd;
   cmd.SetCommandLine(argc, const_cast<const char**>(argv));
@@ -147,11 +140,16 @@ int main(int argc, char* argv[])
     return 1;
   }
 
+  // Now that the game module is loaded, re-init to Core again so the game module also gets the event.
+  ezStartup::ReinitToCurrentState();
+
   auto result{ runGame(gameName) };
   if(result != 0)
   {
     return result;
   }
+
+  ezStartup::ShutdownCore();
 
   if(unloadGame(gameName).Failed())
   {

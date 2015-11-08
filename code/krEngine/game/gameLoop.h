@@ -2,8 +2,6 @@
 
 namespace kr
 {
-  struct LoopListener;
-
   class KR_ENGINE_API GameLoop
   {
   public: // *** Construction
@@ -74,8 +72,18 @@ namespace kr
 
     /// \brief Remove a registered gameloop by name.
     /// \see remove()
-    static ezResult remove(ezStringView name, ezLogInterface* pLogInterface = nullptr) { return remove(get(name, pLogInterface), pLogInterface); }
+    static ezResult remove(ezStringView name, ezLogInterface* pLogInterface = nullptr);
 
     static void tick(ezLogInterface* pLogInterface = nullptr);
+
+    /// \brief Whether the global game loop should be ticked or not.
+    /// \note This value is just a hint, so calls to tick() can still be made.
+    /// \see setKeepTicking()
+    static bool keepTicking();
+
+    /// \brief Set whether the global game loop should be ticked or not.
+    /// \note Calls to tick() can still be made.
+    /// \see keepTicking()
+    static void setKeepTicking(bool value);
   };
 }
