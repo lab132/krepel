@@ -1,5 +1,6 @@
 set(CMAKE_INSTALL_MESSAGE "LAZY")
 file(INSTALL @PULL_PATH@ DESTINATION "@PULL_DESTINATION@"
+     PATTERN "krGameLauncher.exe"
      PATTERN "*.dll"
      PATTERN "*.pdb"
      )

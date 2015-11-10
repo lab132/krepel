@@ -11,6 +11,7 @@ function(kr_client_copy_dlls CLIENT_DIR)
     file(INSTALL "${KREPEL_DIR}/bin/"
          DESTINATION "${CLIENT_DIR}"
          FILES_MATCHING
+         PATTERN "kr*Launcher.exe"
          PATTERN "*.dll"
          PATTERN "*.pdb")
     set(KREPEL_CLIENT_COPY_DLLS OFF CACHE BOOL "${desc}" FORCE)
