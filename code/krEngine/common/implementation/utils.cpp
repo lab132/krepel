@@ -10,6 +10,7 @@ static ezStringBuilder defaultRootHelper()
 {
   ezStringBuilder root{ ezOSFile::GetApplicationDirectory() };
   root.PathParentDirectory();
+  root.MakeCleanPath();
   return root;
 }
 

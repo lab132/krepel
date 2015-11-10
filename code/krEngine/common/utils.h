@@ -37,4 +37,12 @@ namespace kr
 
   /// \brief The absolute native path to the default data directory.
   KR_ENGINE_API const ezStringBuilder& defaultRoot();
+
+  inline ezStringBuilder makePath(const char* szPath1, const char* szPath2 = nullptr, const char* szPath3 = nullptr, const char* szPath4 = nullptr)
+  {
+    ezStringBuilder path;
+    path.AppendPath(szPath1, szPath2, szPath3, szPath4);
+    path.MakeCleanPath();
+    return path;
+  }
 }

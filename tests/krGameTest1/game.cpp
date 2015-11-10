@@ -7,7 +7,7 @@ public:
   {
     m_windowDesc.m_Title = "krGameTest1";
 
-    EZ_VERIFY(ezFileSystem::AddDataDirectory(ezStringBuilder{ kr::defaultRoot(), "testData/textures" }, ezFileSystem::ReadOnly, "", "textures").Succeeded(),
+    EZ_VERIFY(ezFileSystem::AddDataDirectory(kr::makePath(kr::defaultRoot(), "testData", "textures" ), ezFileSystem::ReadOnly, "", "textures").Succeeded(),
               "Failed to mount textures directory.");
   }
 } static g_mainModule; // <-- A static instance is mandatory!

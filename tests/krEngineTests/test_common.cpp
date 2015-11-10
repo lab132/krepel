@@ -133,17 +133,10 @@ TEST_CASE("ezContainer Extension", "[common]")
   */
 }
 
-TEST_CASE("Utils", "[common]")
+TEST_CASE("makePath", "[common]")
 {
   using namespace kr;
 
-  int data = 42;
-  auto pData = &data;
-
-  REQUIRE(pData != nullptr);
-  REQUIRE_FALSE(pData == nullptr);
-
-  pData = nullptr;
-  REQUIRE_FALSE(pData != nullptr);
-  REQUIRE(pData == nullptr);
+  auto path = makePath("C:", "hello", "world");
+  REQUIRE(path == "C:/hello/world"); // Yes, on all systems.
 }
