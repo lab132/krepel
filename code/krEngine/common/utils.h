@@ -45,4 +45,7 @@ namespace kr
     path.MakeCleanPath();
     return path;
   }
+
+  /// \return  One of "-debug", "-minsize", "-reldeb", or "" (i.e. the empty string).
+  KR_ENGINE_API const char* configPostfix();
 }

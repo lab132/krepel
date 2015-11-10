@@ -29,6 +29,8 @@ target_link_libraries(krEngine
                       ezThirdParty ezFoundation ezCore ezCoreUtils ezSystem
                       ${OPENGL_LIBRARIES})
 
+target_compile_definitions(krEngine PRIVATE _KR_CONFIG_POSTFIX="$<TARGET_PROPERTY:krEngine,$<UPPER_CASE:$<CONFIG>>_POSTFIX>")
+
 # Install Target
 # ==============
 include(kr_install_target)

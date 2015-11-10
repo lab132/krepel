@@ -19,3 +19,8 @@ const ezStringBuilder& kr::defaultRoot()
   static auto root{ defaultRootHelper() };
   return root;
 }
+
+const char* kr::configPostfix()
+{
+  return _KR_CONFIG_POSTFIX;
+}

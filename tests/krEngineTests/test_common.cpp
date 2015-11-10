@@ -140,3 +140,14 @@ TEST_CASE("makePath", "[common]")
   auto path = makePath("C:", "hello", "world");
   REQUIRE(path == "C:/hello/world"); // Yes, on all systems.
 }
+
+TEST_CASE("configPostfix", "[common]")
+{
+  ezStringView postfix{ kr::configPostfix() };
+
+#if EZ_ENABLED(EZ_COMPILE_FOR_DEBUG)
+  REQUIRE(postfix == "-debug");
+#else
+  REQUIRE(postfix.IsEmpty());
+#endif
+}

@@ -89,6 +89,7 @@ int main(int argc, char* argv[])
   KR_ON_SCOPE_EXIT{ ezGlobalLog::RemoveLogWriter(ezLogWriter::VisualStudio::LogMessageHandler); };
 
   ezStartup::StartupCore();
+  KR_ON_SCOPE_EXIT{ ezStartup::ShutdownCore(); };
 
   ezCommandLineUtils cmd;
   cmd.SetCommandLine(argc, const_cast<const char**>(argv));
@@ -134,28 +135,34 @@ int main(int argc, char* argv[])
     return -1;
   }
 
-  if(loadGame(gameName).Failed())
+  auto gameModuleName{ gameName };
+  gameModuleName.Append(kr::configPostfix());
+
+  auto result{ 0 };
+
+  if(loadGame(gameModuleName).Failed())
   {
     ezLog::Error("Failed to load game.");
-    return 1;
+    result = 1;
   }
 
-  // Now that the game module is loaded, re-init to Core again so the game module also gets the event.
-  ezStartup::ReinitToCurrentState();
-
-  auto result{ runGame(gameName) };
-  if(result != 0)
+  if (result == 0)
   {
-    return result;
+    // Now that the game module is loaded, re-init to Core again so the game module also gets the event.
+    ezStartup::ReinitToCurrentState();
+
+    auto result{ runGame(gameModuleName) };
+    if(result != 0)
+    {
+      return result;
+    }
   }
 
-  ezStartup::ShutdownCore();
-
-  if(unloadGame(gameName).Failed())
+  if(unloadGame(gameModuleName).Failed())
   {
     ezLog::Error("Failed to unload game.");
-    return 1;
+    result = 1;
   }
 
-  return 0;
+  return result;
 }
