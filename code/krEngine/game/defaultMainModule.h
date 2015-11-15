@@ -20,6 +20,7 @@ namespace kr
       Clock = -20,
       MessagePump = -10,
       Input = -5,
+      Module = 0,
       Rendering = 20,
     };
 
@@ -52,7 +53,15 @@ namespace kr
     virtual void OnCoreShutdown() override;
 
   public: // *** Runtime
-    virtual void tick();
+
+    /// \brief The module tick function.
+    ///
+    /// Override this to hook into the global game loop after the clock
+    /// and input has been processed.
+    ///
+    /// Alternatively, you can directly use kr::GlobalGameLoop to hook
+    /// into there. Use kr::DefaultGameLoopPriorities to set your own priority.
+    virtual void tick() {}
 
   public: // *** Properties
     Borrowed<Window> window() { return m_pWindow; }

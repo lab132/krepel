@@ -61,40 +61,58 @@ void kr::DefaultMainModule::OnEngineStartup()
 
   auto pLog{ ezGlobalLog::GetInstance() };
 
-  GlobalGameLoop::set("clock", [=]()
+  // Clock
+  // =====
+  auto clockTick = [=]()
   {
     clock()->Update();
-  }, pLog);
+  };
+
+  GlobalGameLoop::set("clock", clockTick, pLog);
   GlobalGameLoop::setPriority("clock", DefaultGameLoopPriorities::Clock, pLog);
 
-  GlobalGameLoop::set("tick", { &DefaultMainModule::tick, this }, pLog);
-
-  GlobalGameLoop::set("message-pump", [=]()
+  // Message Pump
+  // ============
+  auto tickMessagePump = [=]()
   {
     kr::processWindowMessages(window());
-  }, pLog);
-  GlobalGameLoop::setPriority("message-pump", DefaultGameLoopPriorities::MessagePump, pLog);
+  };
+  GlobalGameLoop::set("messagePump", tickMessagePump, pLog);
+  GlobalGameLoop::setPriority("messagePump", DefaultGameLoopPriorities::MessagePump, pLog);
 
-  GlobalGameLoop::set("input", [=]()
+  // Input
+  // =====
+  auto inputTick = [=]()
   {
     ezInputManager::Update(clock()->GetTimeDiff());
-  }, pLog);
+  };
+  GlobalGameLoop::set("input", inputTick, pLog);
   GlobalGameLoop::setPriority("input", DefaultGameLoopPriorities::Input, pLog);
 
-  GlobalGameLoop::set("rendering", [=]()
+  // Rendering
+  // =========
+  auto renderingTick = [=]()
   {
     kr::Renderer::extract();
     kr::Renderer::update(window());
-  }, pLog);
+  };
+  GlobalGameLoop::set("rendering", renderingTick, pLog);
   GlobalGameLoop::setPriority("rendering", DefaultGameLoopPriorities::Rendering, pLog);
+
+  // Module Tick
+  // ===========
+  GlobalGameLoop::set("module", { &DefaultMainModule::tick, this }, pLog);
+  GlobalGameLoop::setPriority("module", DefaultGameLoopPriorities::Module, pLog);
 }
 
 void kr::DefaultMainModule::OnEngineShutdown()
 {
   auto pLog{ ezGlobalLog::GetInstance() };
-  GlobalGameLoop::remove("message-pump", pLog);
+  GlobalGameLoop::remove("module", pLog);
+  GlobalGameLoop::remove("rendering", pLog);
+  GlobalGameLoop::remove("input", pLog);
+  GlobalGameLoop::remove("messagePump", pLog);
   GlobalGameLoop::remove("clock", pLog);
-  GlobalGameLoop::remove("tick", pLog);
 
   if(m_pWindow->close().Failed())
   {
@@ -107,17 +125,4 @@ void kr::DefaultMainModule::OnCoreShutdown()
   ezGlobalLog::RemoveLogWriter({ &ezLogWriter::HTML::LogMessageHandler, &m_htmlLog });
   m_htmlLog.EndLog();
   ezFileSystem::RemoveDataDirectoryGroup("");
-}
-
-void kr::DefaultMainModule::tick()
-{
-  clock()->Update();
-  auto dt = clock()->GetTimeDiff();
-  // So far, the delta time is not used here.
-  EZ_IGNORE_UNUSED(dt);
-
-  processWindowMessages(m_pWindow);
-
-  kr::Renderer::extract();
-  kr::Renderer::update(m_pWindow);
 }

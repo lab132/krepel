@@ -18,9 +18,9 @@ namespace
     bool isGarbage{ false };
     ezString name;
     ezInt32 priority{ 0 };
-    kr::GameLoopCallback callback;
+    kr::GlobalGameLoopCallback callback;
 
-    GameLoop(ezStringView name, kr::GameLoopCallback cb) : name{ kr::move(name) }, callback{ kr::move(cb) }
+    GameLoop(ezStringView name, kr::GlobalGameLoopCallback cb) : name{ kr::move(name) }, callback{ kr::move(cb) }
     {
     }
   };
@@ -61,7 +61,7 @@ GameLoop* internalGet(ezStringView loopName, ezLogInterface* pLogInterface)
   return nullptr;
 }
 
-void kr::GlobalGameLoop::set(ezStringView loopName, GameLoopCallback callback, ezLogInterface* pLogInterface)
+void kr::GlobalGameLoop::set(ezStringView loopName, GlobalGameLoopCallback callback, ezLogInterface* pLogInterface)
 {
   EZ_LOG_BLOCK(pLogInterface, "Add Global Game Loop", ezStringBuilder(loopName).GetData());
 
@@ -87,7 +87,7 @@ void kr::GlobalGameLoop::set(ezStringView loopName, GameLoopCallback callback, e
   g_gameLoopsNeedSorting = true;
 }
 
-kr::GameLoopCallback* kr::GlobalGameLoop::get(ezStringView loopName, ezLogInterface* pLogInterface)
+kr::GlobalGameLoopCallback* kr::GlobalGameLoop::get(ezStringView loopName, ezLogInterface* pLogInterface)
 {
   EZ_LOG_BLOCK(pLogInterface, "Get Global Game Loop", ezStringBuilder{ loopName });
 
