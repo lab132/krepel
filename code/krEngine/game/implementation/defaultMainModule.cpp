@@ -1,6 +1,7 @@
 #include <krEngine/game/defaultMainModule.h>
 #include <krEngine/game/gameLoop.h>
 #include <krEngine/common/utils.h>
+#include <krEngine/rendering/window.h>
 
 #include <Foundation/Logging/ConsoleWriter.h>
 #include <Foundation/Logging/VisualStudioWriter.h>
@@ -47,7 +48,14 @@ void kr::DefaultMainModule::OnCoreStartup()
 
 void kr::DefaultMainModule::OnEngineStartup()
 {
-  EZ_VERIFY(m_window.Initialize(m_windowDesc).Succeeded(), "Failed to open window");
+  m_pWindow = Window::createAndOpen(m_windowDesc);
+  EZ_VERIFY(m_pWindow != nullptr, "Failed to open window.");
+
+  m_pWindow->getEvent().AddEventHandler([](const WindowEventArgs& e)
+  {
+    auto userRequestsClose{ e.type == WindowEventArgs::ClickClose };
+    GlobalGameLoopRegistry::setKeepTicking(!userRequestsClose);
+  });
 
   // We own this game loop, so the following call should never fail.
   EZ_VERIFY(m_moduleLoop.addCallback("main", { &DefaultMainModule::tick, this }).Succeeded(), "Failed to register module tick function.");
@@ -63,7 +71,7 @@ void kr::DefaultMainModule::OnEngineShutdown()
 {
   GlobalGameLoopRegistry::remove("module", ezGlobalLog::GetInstance());
 
-  if(m_window.Destroy().Failed())
+  if(m_pWindow->close().Failed())
   {
     ezLog::SeriousWarning("Failed to destroy window.");
   }
@@ -78,11 +86,5 @@ void kr::DefaultMainModule::OnCoreShutdown()
 
 void kr::DefaultMainModule::tick()
 {
-  m_window.ProcessWindowMessages();
-
-  if(m_window.userRequestsClose())
-  {
-    GlobalGameLoopRegistry::setKeepTicking(false);
-    return;
-  }
+  processWindowMessages(m_pWindow);
 }

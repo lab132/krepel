@@ -1,5 +1,6 @@
 #pragma once
 
+#include <krEngine/ownership.h>
 #include <krEngine/game/mainModule.h>
 #include <krEngine/game/gameLoop.h>
 
@@ -8,6 +9,8 @@
 
 namespace kr
 {
+  class Window;
+
   class KR_ENGINE_API DefaultWindow : public ezWindow
   {
   public: // *** Inherited from ezWindow
@@ -37,12 +40,12 @@ namespace kr
     void tick();
 
   public: // *** Accessors
-    DefaultWindow* window() { return &m_window; }
+    Borrowed<Window> window() { return m_pWindow; }
 
   protected: // *** Data
     ezPlugin m_plugin{ false };
     ezWindowCreationDesc m_windowDesc;
-    DefaultWindow m_window;
+    Owned<Window> m_pWindow;
     GameLoop m_moduleLoop;
     ezLogWriter::HTML m_htmlLog;
   };
