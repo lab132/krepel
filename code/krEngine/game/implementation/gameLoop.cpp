@@ -1,143 +1,71 @@
 #include <krEngine/game/gameLoop.h>
 
+#include <Foundation/Configuration/SubSystem.h>
 
-ezResult kr::GameLoop::addCallback(ezStringView callbackName, ezDelegate<void()> callback)
+
+EZ_BEGIN_SUBSYSTEM_DECLARATION(krEngine, GlobalGameLoopRegistry)
+ON_CORE_SHUTDOWN
 {
-  EZ_LOG_BLOCK("kr::GameLoop::addCallback", ezStringBuilder(callbackName).GetData());
-
-  auto pCallback{ getCallback(callbackName) };
-  if(pCallback != nullptr)
-  {
-    ezLog::Warning("Callback with the given name already exists.");
-    return EZ_FAILURE;
-  }
-
-  ezLog::VerboseDebugMessage("Adding callback.");
-
-  pCallback = &m_callbacks.ExpandAndGetRef();
-  pCallback->name = callbackName;
-  pCallback->func = callback;
-
-  return EZ_SUCCESS;
+  kr::GlobalGameLoopRegistry::reset();
 }
+EZ_END_SUBSYSTEM_DECLARATION
 
-void kr::GameLoop::updateCallback(ezStringView callbackName, ezDelegate<void()> callback)
-{
-  EZ_LOG_BLOCK("kr::GameLoop::updateCallback", ezStringBuilder(callbackName).GetData());
-
-  auto pCallback{ getCallback(callbackName) };
-  if(pCallback)
-  {
-    ezLog::VerboseDebugMessage("Overwriting existing instance.");
-  }
-  else
-  {
-    ezLog::VerboseDebugMessage("Creating new instance.");
-    pCallback = &m_callbacks.ExpandAndGetRef();
-  }
-
-  pCallback->name = callbackName;
-  pCallback->func = callback;
-}
-
-ezResult kr::GameLoop::removeCallback(ezStringView callbackName)
-{
-  EZ_LOG_BLOCK("kr::GameLoop::removeCallback", ezStringBuilder(callbackName).GetData());
-
-  auto count{ m_callbacks.GetCount() };
-  for(ezUInt32 i = 0; i < count; i++)
-  {
-    if(m_callbacks[i].name == callbackName)
-    {
-      m_callbacks.RemoveAt(i);
-      return EZ_SUCCESS;
-    }
-  }
-
-  ezLog::Info("Unable to find the callback with the given name.");
-  return EZ_FAILURE;
-}
-
-void kr::GameLoop::tick(ezLogInterface* pLogInterface)
-{
-  for(auto& callback : m_callbacks)
-  {
-    ezStringBuilder callbackName{ callback.name };
-    EZ_LOG_BLOCK(pLogInterface, "Ticking Callback", callbackName);
-
-    callback.func();
-  }
-}
-
-kr::GameLoop::Callback* kr::GameLoop::getCallback(ezStringView name)
-{
-  for(auto& cb : m_callbacks)
-  {
-    if(cb.name == name)
-    {
-      return &cb;
-    }
-  }
-
-  return nullptr;
-}
 
 namespace
 {
-  struct NamedGameLoop
+  struct GameLoop
   {
+    bool isGarbage{ false };
     ezString name;
-    kr::GameLoop* pInstance{ nullptr };
+    kr::GameLoopCallback callback;
 
-    NamedGameLoop() = default;
-    NamedGameLoop(ezStringView name, kr::GameLoop* pInstance) : name{ name }, pInstance{ pInstance } {}
-    ~NamedGameLoop() { pInstance = nullptr; }
+    GameLoop(ezStringView name, kr::GameLoopCallback cb) : name{ kr::move(name) }, callback{ kr::move(cb) }
+    {
+    }
   };
 }
 
-static ezDynamicArray<NamedGameLoop, ezStaticAllocatorWrapper>& globalGameLoops()
+static ezDynamicArray<GameLoop, ezStaticAllocatorWrapper>& globalGameLoops()
 {
-  static ezDynamicArray<NamedGameLoop, ezStaticAllocatorWrapper> value;
+  static ezDynamicArray<GameLoop, ezStaticAllocatorWrapper> value;
   return value;
 }
 
-ezResult kr::GlobalGameLoopRegistry::add(ezStringView loopName, GameLoop* pLoop, ezLogInterface* pLogInterface)
+void kr::GlobalGameLoopRegistry::set(ezStringView loopName, GameLoopCallback callback, ezLogInterface* pLogInterface)
 {
   EZ_LOG_BLOCK(pLogInterface, "Add Global Game Loop", ezStringBuilder(loopName).GetData());
 
-  if(pLoop == nullptr)
+  if (!callback.IsValid())
   {
-    ezLog::Warning(pLogInterface, "Given game loop instance is null.");
-    return EZ_FAILURE;
+    ezLog::Warning(pLogInterface, "The given game loop callback is not valid.");
   }
 
   auto& all = globalGameLoops();
-  for(auto& namedLoop : all)
+  for(auto& loop : all)
   {
-    if(namedLoop.pInstance == pLoop)
+    if(loop.name == loopName)
     {
-      ezLog::Info(pLogInterface, "Global game loop with the given name already exists.");
-      ezLog::Dev(pLogInterface, "If you want to overwrite it, call remove() first.");
-      return EZ_FAILURE;
+      ezLog::Info(pLogInterface, "Overwriting existing game loop.");
+      loop.callback = move(callback);
+      return;
     }
   }
 
-  all.PushBack(move(NamedGameLoop{ loopName, pLoop }));
+  all.PushBack(move(GameLoop{ move(ezString{ loopName }), move(callback) }));
   ezLog::Success(pLogInterface, "Game loop added successfully.");
-  return EZ_SUCCESS;
 }
 
-kr::GameLoop* kr::GlobalGameLoopRegistry::get(ezStringView loopName, ezLogInterface* pLogInterface)
+kr::GameLoopCallback* kr::GlobalGameLoopRegistry::get(ezStringView loopName, ezLogInterface* pLogInterface)
 {
   EZ_LOG_BLOCK(pLogInterface, "Get Global Game Loop", ezStringBuilder{ loopName });
 
   auto& all = globalGameLoops();
-  for(auto& namedLoop : all)
+  for(auto& loop : all)
   {
-    if(namedLoop.name == loopName)
+    if(loop.name == loopName)
     {
       ezLog::VerboseDebugMessage(pLogInterface, "Found global game loop with the given name.");
-      return namedLoop.pInstance;
+      return &loop.callback;
     }
   }
 
@@ -145,23 +73,27 @@ kr::GameLoop* kr::GlobalGameLoopRegistry::get(ezStringView loopName, ezLogInterf
   return nullptr;
 }
 
-ezResult kr::GlobalGameLoopRegistry::remove(GameLoop* pLoop, ezLogInterface* pLogInterface)
+ezResult kr::GlobalGameLoopRegistry::remove(ezStringView loopName, ezLogInterface* pLogInterface /*= nullptr*/)
 {
-  EZ_LOG_BLOCK(pLogInterface, "Removing Global Game Loop");
-
-  if(pLoop == nullptr)
-  {
-    ezLog::Warning(pLogInterface, "Given game loop instance is null!");
-    return EZ_FAILURE;
-  }
+  EZ_LOG_BLOCK(pLogInterface, "Removing Global Game Loop", ezStringBuilder(loopName));
 
   auto& all{ globalGameLoops() };
   for(ezUInt32 i = 0; i < all.GetCount(); ++i)
   {
-    if(all[i].pInstance == pLoop)
+    if(all[i].name == loopName)
     {
-      ezLog::Success(pLogInterface, "Removed game loop named '%s'.", all[i].name.GetData());
-      all.RemoveAt(i);
+      if (GlobalGameLoopRegistry::isTicking())
+      {
+        // While ticking, we cannot simply remove the loop. We mark it as garbage and remove them once we're done ticking.
+        all[i].isGarbage = true;
+      }
+      else
+      {
+        // Since we are not ticking the global game loop, we can immediately remove it.
+        all.RemoveAt(i);
+      }
+
+      ezLog::Success(pLogInterface, "Removed game loop named '%s'.");
       return EZ_SUCCESS;
     }
   }
@@ -170,17 +102,35 @@ ezResult kr::GlobalGameLoopRegistry::remove(GameLoop* pLoop, ezLogInterface* pLo
   return EZ_FAILURE;
 }
 
-ezResult kr::GlobalGameLoopRegistry::remove(ezStringView name, ezLogInterface* pLogInterface /*= nullptr*/)
-{
-  return remove(get(name, pLogInterface), pLogInterface);
-}
+static bool g_globalGameLoopIsTicking{ false };
 
 void kr::GlobalGameLoopRegistry::tick(ezLogInterface* pLogInterface)
 {
-  for(auto& namedLoop : globalGameLoops())
+  g_globalGameLoopIsTicking = true;
+  KR_ON_SCOPE_EXIT{ g_globalGameLoopIsTicking = false; };
+
+  // Tick all loops.
+  auto& all = globalGameLoops();
+  for(auto& loop : all)
   {
-    EZ_LOG_BLOCK(pLogInterface, "Ticking Global Game Loop", namedLoop.name);
-    namedLoop.pInstance->tick(pLogInterface);
+    EZ_LOG_BLOCK(pLogInterface, "Ticking Global Game Loop", loop.name);
+    if (!loop.isGarbage && loop.callback.IsValid())
+    {
+      loop.callback();
+    }
+  }
+
+  // Collect Garbage
+  // ===============
+  ezUInt32 leftToCheck{ all.GetCount() };
+  while(leftToCheck > 0)
+  {
+    auto index = leftToCheck - 1;
+    if (all[index].isGarbage)
+    {
+      all.RemoveAt(index);
+    }
+    --leftToCheck;
   }
 }
 
@@ -194,4 +144,22 @@ bool kr::GlobalGameLoopRegistry::keepTicking()
 void kr::GlobalGameLoopRegistry::setKeepTicking(bool value)
 {
   g_keepGlobalGameLoopTicking = value;
+}
+
+bool kr::GlobalGameLoopRegistry::isTicking()
+{
+  return g_globalGameLoopIsTicking;
+}
+
+void kr::GlobalGameLoopRegistry::printTickOrder(ezLogInterface* pLogInterface /*= nullptr*/)
+{
+  for (auto& loop : globalGameLoops())
+  {
+    ezLog::Info(pLogInterface, "%s", loop.name);
+  }
+}
+
+void kr::GlobalGameLoopRegistry::reset()
+{
+  globalGameLoops().Clear();
 }

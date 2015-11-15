@@ -59,19 +59,30 @@ void kr::DefaultMainModule::OnEngineStartup()
     GlobalGameLoopRegistry::setKeepTicking(!userRequestsClose);
   });
 
-  // We own this game loop, so the following call should never fail.
-  EZ_VERIFY(m_moduleLoop.addCallback("main", { &DefaultMainModule::tick, this }).Succeeded(), "Failed to register module tick function.");
-
-  // The following call may fail if the user supplied their own "module" game loop.
-  if(GlobalGameLoopRegistry::add("module", &m_moduleLoop, ezGlobalLog::GetInstance()).Failed())
+  GlobalGameLoopRegistry::set("clock", [=]()
   {
-    ezLog::Error("Failed to register the main module's game loop. Things will probably not work as intended.");
-  }
+    clock()->Update();
+  }, ezGlobalLog::GetInstance());
+
+  GlobalGameLoopRegistry::set("tick", { &DefaultMainModule::tick, this }, ezGlobalLog::GetInstance());
+
+  GlobalGameLoopRegistry::set("message-pump", [=]()
+  {
+    kr::processWindowMessages(window());
+  }, ezGlobalLog::GetInstance());
+
+  GlobalGameLoopRegistry::set("rendering", [=]()
+  {
+    kr::Renderer::extract();
+    kr::Renderer::update(window());
+  }, ezGlobalLog::GetInstance());
 }
 
 void kr::DefaultMainModule::OnEngineShutdown()
 {
-  GlobalGameLoopRegistry::remove("module", ezGlobalLog::GetInstance());
+  GlobalGameLoopRegistry::remove("message-pump", ezGlobalLog::GetInstance());
+  GlobalGameLoopRegistry::remove("clock", ezGlobalLog::GetInstance());
+  GlobalGameLoopRegistry::remove("tick", ezGlobalLog::GetInstance());
 
   if(m_pWindow->close().Failed())
   {
@@ -97,9 +108,4 @@ void kr::DefaultMainModule::tick()
 
   kr::Renderer::extract();
   kr::Renderer::update(m_pWindow);
-}
-
-ezClock* kr::DefaultMainModule::clock()
-{
-  return ezClock::Get(ezGlobalClock_GameLogic);
 }

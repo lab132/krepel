@@ -2,48 +2,7 @@
 
 namespace kr
 {
-  class KR_ENGINE_API GameLoop
-  {
-  public: // *** Construction
-    GameLoop() = default;
-
-  public: // *** Runtime
-
-    /// \brief Add a named callback function to this game loop.
-    ///
-    /// Will not overwrite an existing callback with the name \p callbackName.
-    ///
-    /// \return Returns \c EZ_SUCCESS if no other callback with the same name existed yet, else \c EZ_FAILURE.
-    /// \see overwriteCallback()
-    ezResult addCallback(ezStringView callbackName, ezDelegate<void()> callback);
-
-    /// \brief Overwrite or add a named callback function to this game loop.
-    ///
-    /// Will add the callback if it didn't exist yet.
-    ///
-    /// \see addCallback()
-    void updateCallback(ezStringView callbackName, ezDelegate<void()> callback);
-
-    /// \brief Remove a named callback from this game loop.
-    ///
-    /// If the callback existed, will return EZ_SUCCESS.
-    /// Otherwise EZ_FAILURE is returned and nothing else is done.
-    ezResult removeCallback(ezStringView callbackName);
-
-    void tick(ezLogInterface* pLogInterface = nullptr);
-
-  private: // *** Internal
-    struct Callback
-    {
-      ezString name;
-      ezDelegate<void()> func;
-    };
-
-    Callback* getCallback(ezStringView name);
-
-  private: // *** Data
-    ezDynamicArray<Callback> m_callbacks;
-  };
+  using GameLoopCallback = ezDelegate<void()>;
 
   /// \brief Static class to register game loops with a name.
   ///
@@ -53,27 +12,20 @@ namespace kr
     GlobalGameLoopRegistry() = delete;
   public:
 
-    /// \brief Add a named gameloop to the global gameloop registry.
-    /// \return \c EZ_SUCCESS if the names gameloop did not exist yet, \c EZ_FAILURE otherwise.
-    static ezResult add(ezStringView name, GameLoop* pLoop, ezLogInterface* pLogInterface = nullptr);
+    /// \brief Set or add a named game loop to the global game loop registry.
+    /// \return \c EZ_SUCCESS if the names game loop did not exist yet, \c EZ_FAILURE otherwise.
+    static void set(ezStringView name, GameLoopCallback callback, ezLogInterface* pLogInterface = nullptr);
 
-    /// \brief Get a registered gameloop instance by name.
-    /// \return \c nullptr if the named gameloop does not exist.
-    static GameLoop* get(ezStringView name, ezLogInterface* pLogInterface = nullptr);
+    /// \brief Get a registered game loop instance by name.
+    /// \note It is not safe to store a pointer to the callback, as it might be moved in memory the next time set() or remove() is called.
+    /// \return \c nullptr if the named game loop does not exist.
+    static GameLoopCallback* get(ezStringView name, ezLogInterface* pLogInterface = nullptr);
 
-    /// \brief Remove a registered gameloop by pointer.
-    ///
-    /// You can also remove a registered gameloop by name with the overloaded version of remove().
-    ///
-    /// \return \c EZ_SUCCESS if the gameloop could successfully be removed, \c EZ_FAILURE if \p pLoop is null or not registered.
-    ///
-    /// \see remove()
-    static ezResult remove(GameLoop* pLoop, ezLogInterface* pLogInterface = nullptr);
-
-    /// \brief Remove a registered gameloop by name.
-    /// \see remove()
+    /// \brief Remove a registered game loop by name.
+    /// \return \c EZ_SUCCESS if a game loop of the given name could be found.
     static ezResult remove(ezStringView name, ezLogInterface* pLogInterface = nullptr);
 
+    /// \brief Ticks all registered game loops in order.
     static void tick(ezLogInterface* pLogInterface = nullptr);
 
     /// \brief Whether the global game loop should be ticked or not.
@@ -85,5 +37,15 @@ namespace kr
     /// \note Calls to tick() can still be made.
     /// \see keepTicking()
     static void setKeepTicking(bool value);
+
+    /// \brief Whether the global game loop is currently ticking or not.
+    static bool isTicking();
+
+    /// \brief Prints the order in which the registered callbacks are executed in for each tick, one per line.
+    static void printTickOrder(ezLogInterface* pLogInterface = nullptr);
+
+    /// \brief Resets the internal state of the global game loop registry.
+    /// \pre The global game loop must not be ticking when calling this function.
+    static void reset();
   };
 }

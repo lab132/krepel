@@ -176,9 +176,8 @@ void kr::Renderer::extract()
 
 void kr::Renderer::update(Borrowed<Window> pTarget)
 {
-  auto pClock = ezClock::Get(ezGlobalClock_UI);
-  pClock->Update();
-  auto dt = pClock->GetTimeDiff();
+  clock()->Update();
+  auto dt = clock()->GetTimeDiff();
   // So far, the delta time is not used in the renderer update.
   EZ_IGNORE_UNUSED(dt);
 
@@ -221,6 +220,19 @@ void kr::Renderer::update(Borrowed<Window> pTarget)
   {
     ezLog::Warning(g_pLog, "Failed to present frame.");
   }
+}
+
+static ezClock createRendererClock()
+{
+  ezClock clock;
+  clock.SetClockName("RenderClock");
+  return clock;
+}
+
+ezClock* kr::Renderer::clock()
+{
+  static ezClock instance{ createRendererClock() };
+  return &instance;
 }
 
 void kr::Renderer::addExtractionListener(ExtractionEventListener listener)

@@ -6,8 +6,8 @@
 
 #include <System/Window/Window.h>
 #include <Foundation/Logging/HTMLWriter.h>
+#include <Foundation/Time/Clock.h>
 
-class ezClock;
 
 namespace kr
 {
@@ -39,17 +39,17 @@ namespace kr
     virtual void OnCoreShutdown() override;
 
   public: // *** Runtime
-    void tick();
+    virtual void tick();
 
-  public: // *** Accessors
+  public: // *** Properties
     Borrowed<Window> window() { return m_pWindow; }
-    ezClock* clock();
+    ezClock* clock() { return &m_clock; }
 
   protected: // *** Data
     ezPlugin m_plugin{ false };
+    ezClock m_clock;
     ezWindowCreationDesc m_windowDesc;
     Owned<Window> m_pWindow;
-    GameLoop m_moduleLoop;
     ezLogWriter::HTML m_htmlLog;
   };
 }
