@@ -7,6 +7,8 @@
 #include <System/Window/Window.h>
 #include <Foundation/Logging/HTMLWriter.h>
 
+class ezClock;
+
 namespace kr
 {
   class Window;
@@ -41,6 +43,7 @@ namespace kr
 
   public: // *** Accessors
     Borrowed<Window> window() { return m_pWindow; }
+    ezClock* clock();
 
   protected: // *** Data
     ezPlugin m_plugin{ false };

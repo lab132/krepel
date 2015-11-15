@@ -18,6 +18,6 @@ namespace kr
     KR_ENGINE_API void removeExtractionListener(ExtractionEventListener listener);
 
     KR_ENGINE_API void extract();
-    KR_ENGINE_API void update(ezTime dt, Borrowed<Window> pTarget);
+    KR_ENGINE_API void update(Borrowed<Window> pTarget);
   };
 }

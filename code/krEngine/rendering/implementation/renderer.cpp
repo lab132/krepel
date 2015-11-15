@@ -174,8 +174,14 @@ void kr::Renderer::extract()
   }
 }
 
-void kr::Renderer::update(ezTime dt, Borrowed<Window> pTarget)
+void kr::Renderer::update(Borrowed<Window> pTarget)
 {
+  auto pClock = ezClock::Get(ezGlobalClock_UI);
+  pClock->Update();
+  auto dt = pClock->GetTimeDiff();
+  // So far, the delta time is not used in the renderer update.
+  EZ_IGNORE_UNUSED(dt);
+
   if (!pTarget)
   {
     ezLog::Warning(g_pLog, "Invalid target window.");

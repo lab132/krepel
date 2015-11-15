@@ -1,6 +1,7 @@
 #include <krEngine/game/defaultMainModule.h>
 #include <krEngine/game/gameLoop.h>
 #include <krEngine/common/utils.h>
+#include <krEngine/rendering/renderer.h>
 #include <krEngine/rendering/window.h>
 
 #include <Foundation/Logging/ConsoleWriter.h>
@@ -16,6 +17,7 @@ void kr::DefaultWindow::OnClickCloseMessage()
 
 kr::DefaultMainModule::DefaultMainModule()
 {
+  ezClock::SetNumGlobalClocks(ezGlobalClockCount);
   ezFileSystem::RegisterDataDirectoryFactory(ezDataDirectory::FolderType::Factory);
 }
 
@@ -86,5 +88,18 @@ void kr::DefaultMainModule::OnCoreShutdown()
 
 void kr::DefaultMainModule::tick()
 {
+  clock()->Update();
+  auto dt = clock()->GetTimeDiff();
+  // So far, the delta time is not used here.
+  EZ_IGNORE_UNUSED(dt);
+
   processWindowMessages(m_pWindow);
+
+  kr::Renderer::extract();
+  kr::Renderer::update(m_pWindow);
+}
+
+ezClock* kr::DefaultMainModule::clock()
+{
+  return ezClock::Get(ezGlobalClock_GameLogic);
 }
