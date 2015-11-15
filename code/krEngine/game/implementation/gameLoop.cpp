@@ -93,7 +93,7 @@ ezResult kr::GlobalGameLoopRegistry::remove(ezStringView loopName, ezLogInterfac
         all.RemoveAt(i);
       }
 
-      ezLog::Success(pLogInterface, "Removed game loop named '%s'.");
+      ezLog::Success(pLogInterface, "Removed game loop.");
       return EZ_SUCCESS;
     }
   }
