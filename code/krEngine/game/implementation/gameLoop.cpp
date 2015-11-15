@@ -4,10 +4,10 @@
 
 
 EZ_BEGIN_SUBSYSTEM_DECLARATION(krEngine, GlobalGameLoopRegistry)
-ON_CORE_SHUTDOWN
-{
-  kr::GlobalGameLoopRegistry::reset();
-}
+  ON_CORE_SHUTDOWN
+  {
+    kr::GlobalGameLoopRegistry::reset();
+  }
 EZ_END_SUBSYSTEM_DECLARATION
 
 
@@ -17,6 +17,7 @@ namespace
   {
     bool isGarbage{ false };
     ezString name;
+    ezInt32 priority{ 0 };
     kr::GameLoopCallback callback;
 
     GameLoop(ezStringView name, kr::GameLoopCallback cb) : name{ kr::move(name) }, callback{ kr::move(cb) }
@@ -29,6 +30,35 @@ static ezDynamicArray<GameLoop, ezStaticAllocatorWrapper>& globalGameLoops()
 {
   static ezDynamicArray<GameLoop, ezStaticAllocatorWrapper> value;
   return value;
+}
+
+static bool g_gameLoopsNeedSorting{ false };
+
+#include <algorithm>
+
+static void sortByPriority()
+{
+  auto& loops{ globalGameLoops() };
+
+  std::stable_sort(begin(loops), end(loops), [](const GameLoop& a, const GameLoop& b){ return a.priority > b.priority; });
+
+  g_gameLoopsNeedSorting = false;
+}
+
+GameLoop* internalGet(ezStringView loopName, ezLogInterface* pLogInterface)
+{
+  auto& all = globalGameLoops();
+  for(auto& loop : all)
+  {
+    if(loop.name == loopName)
+    {
+      ezLog::VerboseDebugMessage(pLogInterface, "Found global game loop with the given name.");
+      return &loop;
+    }
+  }
+
+  ezLog::Warning(pLogInterface, "Unable to find global game loop with the given name.");
+  return nullptr;
 }
 
 void kr::GlobalGameLoopRegistry::set(ezStringView loopName, GameLoopCallback callback, ezLogInterface* pLogInterface)
@@ -53,24 +83,16 @@ void kr::GlobalGameLoopRegistry::set(ezStringView loopName, GameLoopCallback cal
 
   all.PushBack(move(GameLoop{ move(ezString{ loopName }), move(callback) }));
   ezLog::Success(pLogInterface, "Game loop added successfully.");
+
+  g_gameLoopsNeedSorting = true;
 }
 
 kr::GameLoopCallback* kr::GlobalGameLoopRegistry::get(ezStringView loopName, ezLogInterface* pLogInterface)
 {
   EZ_LOG_BLOCK(pLogInterface, "Get Global Game Loop", ezStringBuilder{ loopName });
 
-  auto& all = globalGameLoops();
-  for(auto& loop : all)
-  {
-    if(loop.name == loopName)
-    {
-      ezLog::VerboseDebugMessage(pLogInterface, "Found global game loop with the given name.");
-      return &loop.callback;
-    }
-  }
-
-  ezLog::Warning(pLogInterface, "Unable to find global game loop with the given name.");
-  return nullptr;
+  auto ptr{ internalGet(loopName, pLogInterface) };
+  return ptr == nullptr ? nullptr : &ptr->callback;
 }
 
 ezResult kr::GlobalGameLoopRegistry::remove(ezStringView loopName, ezLogInterface* pLogInterface /*= nullptr*/)
@@ -102,12 +124,47 @@ ezResult kr::GlobalGameLoopRegistry::remove(ezStringView loopName, ezLogInterfac
   return EZ_FAILURE;
 }
 
+void kr::GlobalGameLoopRegistry::setPriority(ezStringView loopName, ezInt32 priority, ezLogInterface* pLogInterface /*= nullptr*/)
+{
+  EZ_LOG_BLOCK(pLogInterface, "Set Priority For Global Game Loop", ezStringBuilder(loopName));
+
+  auto pLoop = internalGet(loopName, pLogInterface);
+  if(pLoop == nullptr)
+  {
+    ezLog::Warning(pLogInterface, "Unable to set priority on loop ");
+    return;
+  }
+
+  pLoop->priority = priority;
+  g_gameLoopsNeedSorting = true;
+}
+
+ezInt32 kr::GlobalGameLoopRegistry::getPriority(ezStringView loopName, ezLogInterface* pLogInterface /*= nullptr*/)
+{
+  EZ_LOG_BLOCK(pLogInterface, "Get Priority of Global Game Loop", ezStringBuilder(loopName));
+
+  auto pLoop = internalGet(loopName, pLogInterface);
+  if(pLoop == nullptr)
+  {
+    ezLog::Warning(pLogInterface, "Unable to set priority on loop ");
+    return 0;
+  }
+
+  return pLoop->priority;
+}
+
 static bool g_globalGameLoopIsTicking{ false };
 
 void kr::GlobalGameLoopRegistry::tick(ezLogInterface* pLogInterface)
 {
   g_globalGameLoopIsTicking = true;
   KR_ON_SCOPE_EXIT{ g_globalGameLoopIsTicking = false; };
+
+  if (g_gameLoopsNeedSorting)
+  {
+    ezLog::Info(pLogInterface, "Sorting game loops by priority.");
+    sortByPriority();
+  }
 
   // Tick all loops.
   auto& all = globalGameLoops();
@@ -153,13 +210,22 @@ bool kr::GlobalGameLoopRegistry::isTicking()
 
 void kr::GlobalGameLoopRegistry::printTickOrder(ezLogInterface* pLogInterface /*= nullptr*/)
 {
-  for (auto& loop : globalGameLoops())
+  if (g_gameLoopsNeedSorting)
   {
-    ezLog::Info(pLogInterface, "%s", loop.name);
+    sortByPriority();
+  }
+
+  auto& loops{ globalGameLoops() };
+  for (auto& loop : loops)
+  {
+    ezLog::Info(pLogInterface, "%s", loop.name.GetData());
   }
 }
 
 void kr::GlobalGameLoopRegistry::reset()
 {
   globalGameLoops().Clear();
+  g_gameLoopsNeedSorting = false;
+  g_globalGameLoopIsTicking = false;
+  g_keepGlobalGameLoopTicking = true;
 }

@@ -59,30 +59,42 @@ void kr::DefaultMainModule::OnEngineStartup()
     GlobalGameLoopRegistry::setKeepTicking(!userRequestsClose);
   });
 
+  auto pLog{ ezGlobalLog::GetInstance() };
+
   GlobalGameLoopRegistry::set("clock", [=]()
   {
     clock()->Update();
-  }, ezGlobalLog::GetInstance());
+  }, pLog);
+  GlobalGameLoopRegistry::setPriority("clock", DefaultGameLoopPriorities::Clock, pLog);
 
-  GlobalGameLoopRegistry::set("tick", { &DefaultMainModule::tick, this }, ezGlobalLog::GetInstance());
+  GlobalGameLoopRegistry::set("tick", { &DefaultMainModule::tick, this }, pLog);
 
   GlobalGameLoopRegistry::set("message-pump", [=]()
   {
     kr::processWindowMessages(window());
-  }, ezGlobalLog::GetInstance());
+  }, pLog);
+  GlobalGameLoopRegistry::setPriority("message-pump", DefaultGameLoopPriorities::MessagePump, pLog);
+
+  GlobalGameLoopRegistry::set("input", [=]()
+  {
+    ezInputManager::Update(clock()->GetTimeDiff());
+  }, pLog);
+  GlobalGameLoopRegistry::setPriority("input", DefaultGameLoopPriorities::Input, pLog);
 
   GlobalGameLoopRegistry::set("rendering", [=]()
   {
     kr::Renderer::extract();
     kr::Renderer::update(window());
-  }, ezGlobalLog::GetInstance());
+  }, pLog);
+  GlobalGameLoopRegistry::setPriority("rendering", DefaultGameLoopPriorities::Rendering, pLog);
 }
 
 void kr::DefaultMainModule::OnEngineShutdown()
 {
-  GlobalGameLoopRegistry::remove("message-pump", ezGlobalLog::GetInstance());
-  GlobalGameLoopRegistry::remove("clock", ezGlobalLog::GetInstance());
-  GlobalGameLoopRegistry::remove("tick", ezGlobalLog::GetInstance());
+  auto pLog{ ezGlobalLog::GetInstance() };
+  GlobalGameLoopRegistry::remove("message-pump", pLog);
+  GlobalGameLoopRegistry::remove("clock", pLog);
+  GlobalGameLoopRegistry::remove("tick", pLog);
 
   if(m_pWindow->close().Failed())
   {

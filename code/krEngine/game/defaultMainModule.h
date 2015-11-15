@@ -13,6 +13,19 @@ namespace kr
 {
   class Window;
 
+  struct DefaultGameLoopPriorities
+  {
+    enum Enum
+    {
+      Clock = -20,
+      MessagePump = -10,
+      Input = -5,
+      Rendering = 20,
+    };
+
+    DefaultGameLoopPriorities() = delete;
+  };
+
   class KR_ENGINE_API DefaultWindow : public ezWindow
   {
   public: // *** Inherited from ezWindow
