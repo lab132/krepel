@@ -14,27 +14,27 @@ TEST_CASE("Global Game Loop Registry", "[game]")
 
   SECTION("Basics")
   {
-    GlobalGameLoopRegistry::set("foo", [&]() { ++check1; });
-    GlobalGameLoopRegistry::set("bar", [&]() { ++check2; });
+    GlobalGameLoop::set("foo", [&]() { ++check1; });
+    GlobalGameLoop::set("bar", [&]() { ++check2; });
 
-    GlobalGameLoopRegistry::tick();
+    GlobalGameLoop::tick();
     REQUIRE(check1 == 1);
     REQUIRE(check2 == 1);
 
-    REQUIRE(GlobalGameLoopRegistry::remove("foo").Succeeded());
-    REQUIRE(GlobalGameLoopRegistry::remove("bar").Succeeded());
-    REQUIRE(GlobalGameLoopRegistry::remove("bar").Failed());
+    REQUIRE(GlobalGameLoop::remove("foo").Succeeded());
+    REQUIRE(GlobalGameLoop::remove("bar").Succeeded());
+    REQUIRE(GlobalGameLoop::remove("bar").Failed());
   }
 
   SECTION("Priority")
   {
-    GlobalGameLoopRegistry::set("bar", [&]() { REQUIRE(check1 == 1); ++check1; });
-    GlobalGameLoopRegistry::set("foo", [&]() { REQUIRE(check1 == 0); ++check1; });
+    GlobalGameLoop::set("bar", [&]() { REQUIRE(check1 == 1); ++check1; });
+    GlobalGameLoop::set("foo", [&]() { REQUIRE(check1 == 0); ++check1; });
 
-    GlobalGameLoopRegistry::setPriority("foo", 10);
-    GlobalGameLoopRegistry::setPriority("bar", -10);
+    GlobalGameLoop::setPriority("foo", 10);
+    GlobalGameLoop::setPriority("bar", -10);
 
-    GlobalGameLoopRegistry::tick();
+    GlobalGameLoop::tick();
     REQUIRE(check1 == 2);
     REQUIRE(check2 == 0);
   }

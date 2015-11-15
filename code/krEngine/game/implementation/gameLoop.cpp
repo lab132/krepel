@@ -3,10 +3,10 @@
 #include <Foundation/Configuration/SubSystem.h>
 
 
-EZ_BEGIN_SUBSYSTEM_DECLARATION(krEngine, GlobalGameLoopRegistry)
+EZ_BEGIN_SUBSYSTEM_DECLARATION(krEngine, GlobalGameLoop)
   ON_CORE_SHUTDOWN
   {
-    kr::GlobalGameLoopRegistry::reset();
+    kr::GlobalGameLoop::reset();
   }
 EZ_END_SUBSYSTEM_DECLARATION
 
@@ -61,7 +61,7 @@ GameLoop* internalGet(ezStringView loopName, ezLogInterface* pLogInterface)
   return nullptr;
 }
 
-void kr::GlobalGameLoopRegistry::set(ezStringView loopName, GameLoopCallback callback, ezLogInterface* pLogInterface)
+void kr::GlobalGameLoop::set(ezStringView loopName, GameLoopCallback callback, ezLogInterface* pLogInterface)
 {
   EZ_LOG_BLOCK(pLogInterface, "Add Global Game Loop", ezStringBuilder(loopName).GetData());
 
@@ -87,7 +87,7 @@ void kr::GlobalGameLoopRegistry::set(ezStringView loopName, GameLoopCallback cal
   g_gameLoopsNeedSorting = true;
 }
 
-kr::GameLoopCallback* kr::GlobalGameLoopRegistry::get(ezStringView loopName, ezLogInterface* pLogInterface)
+kr::GameLoopCallback* kr::GlobalGameLoop::get(ezStringView loopName, ezLogInterface* pLogInterface)
 {
   EZ_LOG_BLOCK(pLogInterface, "Get Global Game Loop", ezStringBuilder{ loopName });
 
@@ -95,7 +95,7 @@ kr::GameLoopCallback* kr::GlobalGameLoopRegistry::get(ezStringView loopName, ezL
   return ptr == nullptr ? nullptr : &ptr->callback;
 }
 
-ezResult kr::GlobalGameLoopRegistry::remove(ezStringView loopName, ezLogInterface* pLogInterface /*= nullptr*/)
+ezResult kr::GlobalGameLoop::remove(ezStringView loopName, ezLogInterface* pLogInterface /*= nullptr*/)
 {
   EZ_LOG_BLOCK(pLogInterface, "Removing Global Game Loop", ezStringBuilder(loopName));
 
@@ -104,7 +104,7 @@ ezResult kr::GlobalGameLoopRegistry::remove(ezStringView loopName, ezLogInterfac
   {
     if(all[i].name == loopName)
     {
-      if (GlobalGameLoopRegistry::isTicking())
+      if (GlobalGameLoop::isTicking())
       {
         // While ticking, we cannot simply remove the loop. We mark it as garbage and remove them once we're done ticking.
         all[i].isGarbage = true;
@@ -124,7 +124,7 @@ ezResult kr::GlobalGameLoopRegistry::remove(ezStringView loopName, ezLogInterfac
   return EZ_FAILURE;
 }
 
-void kr::GlobalGameLoopRegistry::setPriority(ezStringView loopName, ezInt32 priority, ezLogInterface* pLogInterface /*= nullptr*/)
+void kr::GlobalGameLoop::setPriority(ezStringView loopName, ezInt32 priority, ezLogInterface* pLogInterface /*= nullptr*/)
 {
   EZ_LOG_BLOCK(pLogInterface, "Set Priority For Global Game Loop", ezStringBuilder(loopName));
 
@@ -139,7 +139,7 @@ void kr::GlobalGameLoopRegistry::setPriority(ezStringView loopName, ezInt32 prio
   g_gameLoopsNeedSorting = true;
 }
 
-ezInt32 kr::GlobalGameLoopRegistry::getPriority(ezStringView loopName, ezLogInterface* pLogInterface /*= nullptr*/)
+ezInt32 kr::GlobalGameLoop::getPriority(ezStringView loopName, ezLogInterface* pLogInterface /*= nullptr*/)
 {
   EZ_LOG_BLOCK(pLogInterface, "Get Priority of Global Game Loop", ezStringBuilder(loopName));
 
@@ -155,7 +155,7 @@ ezInt32 kr::GlobalGameLoopRegistry::getPriority(ezStringView loopName, ezLogInte
 
 static bool g_globalGameLoopIsTicking{ false };
 
-void kr::GlobalGameLoopRegistry::tick(ezLogInterface* pLogInterface)
+void kr::GlobalGameLoop::tick(ezLogInterface* pLogInterface)
 {
   g_globalGameLoopIsTicking = true;
   KR_ON_SCOPE_EXIT{ g_globalGameLoopIsTicking = false; };
@@ -193,22 +193,22 @@ void kr::GlobalGameLoopRegistry::tick(ezLogInterface* pLogInterface)
 
 static bool g_keepGlobalGameLoopTicking{ true };
 
-bool kr::GlobalGameLoopRegistry::keepTicking()
+bool kr::GlobalGameLoop::keepTicking()
 {
   return g_keepGlobalGameLoopTicking;
 }
 
-void kr::GlobalGameLoopRegistry::setKeepTicking(bool value)
+void kr::GlobalGameLoop::setKeepTicking(bool value)
 {
   g_keepGlobalGameLoopTicking = value;
 }
 
-bool kr::GlobalGameLoopRegistry::isTicking()
+bool kr::GlobalGameLoop::isTicking()
 {
   return g_globalGameLoopIsTicking;
 }
 
-void kr::GlobalGameLoopRegistry::printTickOrder(ezLogInterface* pLogInterface /*= nullptr*/)
+void kr::GlobalGameLoop::printTickOrder(ezLogInterface* pLogInterface /*= nullptr*/)
 {
   if (g_gameLoopsNeedSorting)
   {
@@ -222,7 +222,7 @@ void kr::GlobalGameLoopRegistry::printTickOrder(ezLogInterface* pLogInterface /*
   }
 }
 
-void kr::GlobalGameLoopRegistry::reset()
+void kr::GlobalGameLoop::reset()
 {
   globalGameLoops().Clear();
   g_gameLoopsNeedSorting = false;

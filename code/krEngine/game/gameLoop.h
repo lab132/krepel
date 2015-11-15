@@ -7,12 +7,12 @@ namespace kr
   /// \brief Static class to register game loops with a name.
   ///
   /// \todo Dependency management. Something like \c depend(GameLoop* pLoop, GameLoop* pDependency);. Fail for cyclic deps.
-  class KR_ENGINE_API GlobalGameLoopRegistry
+  class KR_ENGINE_API GlobalGameLoop
   {
-    GlobalGameLoopRegistry() = delete;
+    GlobalGameLoop() = delete;
   public:
 
-    /// \brief Set or add a named game loop to the global game loop registry.
+    /// \brief Set or add a named loop in / to the global game loop.
     /// \return \c EZ_SUCCESS if the names game loop did not exist yet, \c EZ_FAILURE otherwise.
     static void set(ezStringView loopName, GameLoopCallback callback, ezLogInterface* pLogInterface = nullptr);
 
@@ -26,11 +26,17 @@ namespace kr
     static ezResult remove(ezStringView loopName, ezLogInterface* pLogInterface = nullptr);
 
     /// \brief Set the priority for a named game loop.
+    ///
+    /// A higher priority value means that the loop is executed earlier.
+    ///
     /// \pre A game loop with the given name must already exist.
     /// \see set()
     static void setPriority(ezStringView loopName, ezInt32 priority, ezLogInterface* pLogInterface = nullptr);
 
     /// \brief Get the priority for a named game loop.
+    ///
+    /// A higher priority value means that the loop is executed earlier.
+    ///
     /// \pre A game loop with the given name must already exist.
     /// \see set()
     static ezInt32 getPriority(ezStringView loopName, ezLogInterface* pLogInterface = nullptr);
@@ -54,7 +60,7 @@ namespace kr
     /// \brief Prints the order in which the registered callbacks are executed in for each tick, one per line.
     static void printTickOrder(ezLogInterface* pLogInterface = nullptr);
 
-    /// \brief Resets the internal state of the global game loop registry.
+    /// \brief Resets the internal state of the global game loop.
     /// \pre The global game loop must not be ticking when calling this function.
     static void reset();
   };

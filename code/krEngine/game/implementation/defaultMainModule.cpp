@@ -56,45 +56,45 @@ void kr::DefaultMainModule::OnEngineStartup()
   m_pWindow->getEvent().AddEventHandler([](const WindowEventArgs& e)
   {
     auto userRequestsClose{ e.type == WindowEventArgs::ClickClose };
-    GlobalGameLoopRegistry::setKeepTicking(!userRequestsClose);
+    GlobalGameLoop::setKeepTicking(!userRequestsClose);
   });
 
   auto pLog{ ezGlobalLog::GetInstance() };
 
-  GlobalGameLoopRegistry::set("clock", [=]()
+  GlobalGameLoop::set("clock", [=]()
   {
     clock()->Update();
   }, pLog);
-  GlobalGameLoopRegistry::setPriority("clock", DefaultGameLoopPriorities::Clock, pLog);
+  GlobalGameLoop::setPriority("clock", DefaultGameLoopPriorities::Clock, pLog);
 
-  GlobalGameLoopRegistry::set("tick", { &DefaultMainModule::tick, this }, pLog);
+  GlobalGameLoop::set("tick", { &DefaultMainModule::tick, this }, pLog);
 
-  GlobalGameLoopRegistry::set("message-pump", [=]()
+  GlobalGameLoop::set("message-pump", [=]()
   {
     kr::processWindowMessages(window());
   }, pLog);
-  GlobalGameLoopRegistry::setPriority("message-pump", DefaultGameLoopPriorities::MessagePump, pLog);
+  GlobalGameLoop::setPriority("message-pump", DefaultGameLoopPriorities::MessagePump, pLog);
 
-  GlobalGameLoopRegistry::set("input", [=]()
+  GlobalGameLoop::set("input", [=]()
   {
     ezInputManager::Update(clock()->GetTimeDiff());
   }, pLog);
-  GlobalGameLoopRegistry::setPriority("input", DefaultGameLoopPriorities::Input, pLog);
+  GlobalGameLoop::setPriority("input", DefaultGameLoopPriorities::Input, pLog);
 
-  GlobalGameLoopRegistry::set("rendering", [=]()
+  GlobalGameLoop::set("rendering", [=]()
   {
     kr::Renderer::extract();
     kr::Renderer::update(window());
   }, pLog);
-  GlobalGameLoopRegistry::setPriority("rendering", DefaultGameLoopPriorities::Rendering, pLog);
+  GlobalGameLoop::setPriority("rendering", DefaultGameLoopPriorities::Rendering, pLog);
 }
 
 void kr::DefaultMainModule::OnEngineShutdown()
 {
   auto pLog{ ezGlobalLog::GetInstance() };
-  GlobalGameLoopRegistry::remove("message-pump", pLog);
-  GlobalGameLoopRegistry::remove("clock", pLog);
-  GlobalGameLoopRegistry::remove("tick", pLog);
+  GlobalGameLoop::remove("message-pump", pLog);
+  GlobalGameLoop::remove("clock", pLog);
+  GlobalGameLoop::remove("tick", pLog);
 
   if(m_pWindow->close().Failed())
   {

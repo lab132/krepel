@@ -71,9 +71,9 @@ static int runGame(const ezStringBuilder& name)
 
   ezStartup::StartupEngine();
 
-  while(kr::GlobalGameLoopRegistry::keepTicking())
+  while(kr::GlobalGameLoop::keepTicking())
   {
-    kr::GlobalGameLoopRegistry::tick();
+    kr::GlobalGameLoop::tick();
   }
 
   ezStartup::ShutdownEngine();
