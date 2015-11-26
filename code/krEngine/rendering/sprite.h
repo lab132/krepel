@@ -9,17 +9,17 @@
 /// \note Ez's reflection requires the type to live in the top-level, not in any namespace.
 struct krSpriteVertex
 {
+  EZ_DECLARE_POD_TYPE();
+
   // *** Per-Vertex Data
   ezVec2 pos = ezVec2::ZeroVector();
   ezVec2 texCoords = ezVec2::ZeroVector();
 };
 
-EZ_DECLARE_REFLECTABLE_TYPE(EZ_NO_LINKAGE, krSpriteVertex);
+EZ_DECLARE_REFLECTABLE_TYPE(KR_ENGINE_API, krSpriteVertex);
 
 namespace kr
 {
-  namespace Renderer{ class Extractor; };
-
   EZ_DECLARE_FLAGS(ezUInt8, SpriteComponents,
                    ShaderUniforms,
                    Cutout,
@@ -105,8 +105,21 @@ namespace kr
 
     ezArrayPtr<const krSpriteVertex> getVertices() const { return ezMakeArrayPtr(m_vertices); }
 
-  public: // *** Friends
-    friend KR_ENGINE_API void update(Sprite& sprite);
+  public: // *** Runtime
+
+    /// \brief Initializes a sprite.
+    /// \note This is actually just an update call.
+    ezResult initialize(Borrowed<Texture> texture,
+                        Borrowed<Sampler> sampler,
+                        Borrowed<ShaderProgram> shader);
+
+    /// \brief Updates the internal state of \a sprite.
+    void update();
+
+    /// \brief Whether the given \a sprite is ready to render.
+    ///
+    /// Use this for validation before extracting sprite data.
+    bool canRender();
 
   private: // *** Data
     /// \brief 1's for all components that need updating.
@@ -123,12 +136,12 @@ namespace kr
     Borrowed<Texture> m_pTexture;
 
     /// \brief Local bounds of this sprite.
-    ezRectFloat m_localBounds = { 0.0f, 0.0f };
+    ezRectFloat m_localBounds{ 0.0f, 0.0f };
 
     /// \brief Cutout of the texture. By default, the entire texture is shown.
-    ezRectU32 m_cutout = { 0u, 0u };
+    ezRectU32 m_cutout{ 0u, 0u };
 
-    ezColor m_color = ezColor::White;
+    ezColor m_color{ ezColor::White };
 
     Borrowed<ShaderProgram> m_pShader;
 
@@ -140,27 +153,4 @@ namespace kr
     ShaderUniform m_uViewMatrix;
     ShaderUniform m_uProjectionMatrix;
   };
-
-  /// \brief Whether the given \a sprite is ready to render.
-  ///
-  /// Use this for validation before extracting sprite data.
-  KR_ENGINE_API bool canRender(const Sprite& sprite);
-
-  /// \brief Updates the internal state of \a sprite.
-  KR_ENGINE_API void update(Sprite& sprite);
-
-  /// \brief Initializes a sprite.
-  /// \note This is actually just an update call.
-  inline ezResult initialize(Sprite& sprite,
-                             Borrowed<Texture> texture,
-                             Borrowed<Sampler> sampler,
-                             Borrowed<ShaderProgram> shader)
-  {
-    sprite.setTexture(texture);
-    sprite.setSampler(sampler);
-    sprite.setShader(shader);
-    update(sprite);
-    bool success = canRender(sprite) && !sprite.needsUpdate();
-    return success ? EZ_FAILURE : EZ_SUCCESS;
-  }
 }

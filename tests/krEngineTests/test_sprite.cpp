@@ -30,9 +30,9 @@ TEST_CASE("Workflow", "[sprite]")
   auto shader = Sprite::createDefaultShader();
 
   Sprite sprite;
-  REQUIRE_FALSE(canRender(sprite));
+  REQUIRE_FALSE(sprite.canRender());
   sprite.setLocalBounds(ezRectFloat(0, 0, 128, 128));
-  initialize(sprite, tex, sampler, shader);
+  sprite.initialize(tex, sampler, shader);
   sprite.getSampler()->setFiltering(TextureFiltering::Nearest);
 
   // Handle the close-event of the window.
@@ -50,7 +50,7 @@ TEST_CASE("Workflow", "[sprite]")
     auto aspectRatio = 16.0f/9.0f;
     extract(e, cam, aspectRatio);
 
-    REQUIRE(canRender(sprite));
+    REQUIRE(sprite.canRender());
 
     auto t = Transform2D::zero();
     t.position = ezVec2(-sprite.getLocalBounds().width / 2.0f);

@@ -135,8 +135,8 @@ static void renderExtractionData(ezUInt8* current, ezUInt8* max)
       auto& sprite = *static_cast<SpriteData*>(data);
       draw(sprite, g_view, g_projection);
       sprite.~SpriteData();
-    }
       break;
+    }
     default:
       EZ_REPORT_FAILURE("Unknown extraction data type.");
       break;

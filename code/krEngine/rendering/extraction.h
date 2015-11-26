@@ -6,6 +6,8 @@ class ezCamera;
 
 namespace kr
 {
+  namespace Renderer { class Extractor; }
+
   KR_ENGINE_API void extract(Renderer::Extractor& e,
                              const ezCamera& cam,
                              float aspectRatio);

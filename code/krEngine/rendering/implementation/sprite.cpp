@@ -64,7 +64,7 @@ void kr::Sprite::operator=(const Sprite& other)
   this->m_uViewMatrix = other.m_uViewMatrix;
   this->m_uProjectionMatrix = other.m_uProjectionMatrix;
 
-  update(*this);
+  update();
 }
 
 kr::Sprite::Sprite(const Sprite& other)
@@ -84,13 +84,23 @@ void kr::Sprite::setCutout(ezRectU32 newCutout)
   m_needUpdate.Add(SpriteComponents::Cutout);
 }
 
-void kr::update(Sprite& sprite)
+ezResult kr::Sprite::initialize(Borrowed<Texture> texture, Borrowed<Sampler> sampler, Borrowed<ShaderProgram> shader)
+{
+  setTexture(texture);
+  setSampler(sampler);
+  setShader(shader);
+  update();
+  bool success = canRender() && !needsUpdate();
+  return success ? EZ_FAILURE : EZ_SUCCESS;
+}
+
+void kr::Sprite::update()
 {
   EZ_LOG_BLOCK("Updating Sprite");
 
   // Terminate, If There Is No Texture
   // =================================
-  if (sprite.m_pTexture == nullptr)
+  if (m_pTexture == nullptr)
   {
     ezLog::Warning("Sprite has no texture yet. Cannot Update.");
     return;
@@ -98,7 +108,7 @@ void kr::update(Sprite& sprite)
 
   // Terminate, If There Is No Sampler
   // =================================
-  if (sprite.m_pSampler == nullptr)
+  if (m_pSampler == nullptr)
   {
     ezLog::Warning("Sprite has no sampler yet. Cannot Update.");
     return;
@@ -106,7 +116,7 @@ void kr::update(Sprite& sprite)
 
   // Terminate, If There Is No Sampler
   // =================================
-  if(sprite.m_pShader == nullptr)
+  if(m_pShader == nullptr)
   {
     ezLog::Warning("Sprite has no shader yet. Cannot Update.");
     return;
@@ -114,34 +124,34 @@ void kr::update(Sprite& sprite)
 
   // Create Shader, If Needed
   // ========================
-  if(sprite.m_needUpdate.IsSet(SpriteComponents::ShaderUniforms))
+  if(m_needUpdate.IsSet(SpriteComponents::ShaderUniforms))
   {
-    sprite.m_uOrigin           = shaderUniformOf(sprite.m_pShader, "u_origin");
-    sprite.m_uRotation         = shaderUniformOf(sprite.m_pShader, "u_rotation");
-    sprite.m_uViewMatrix       = shaderUniformOf(sprite.m_pShader, "u_view");
-    sprite.m_uProjectionMatrix = shaderUniformOf(sprite.m_pShader, "u_projection");
-    sprite.m_uColor            = shaderUniformOf(sprite.m_pShader, "u_color");
-    sprite.m_uTexture          = shaderUniformOf(sprite.m_pShader, "u_texture");
+    m_uOrigin           = shaderUniformOf(m_pShader, "u_origin");
+    m_uRotation         = shaderUniformOf(m_pShader, "u_rotation");
+    m_uViewMatrix       = shaderUniformOf(m_pShader, "u_view");
+    m_uProjectionMatrix = shaderUniformOf(m_pShader, "u_projection");
+    m_uColor            = shaderUniformOf(m_pShader, "u_color");
+    m_uTexture          = shaderUniformOf(m_pShader, "u_texture");
   }
 
   // Create VertexBuffer, If Needed
   // ==============================
-  if(sprite.m_pVertexBuffer == nullptr)
+  if(m_pVertexBuffer == nullptr)
   {
-    sprite.m_pVertexBuffer = move(createVertexBuffer(sprite.m_pShader));
+    m_pVertexBuffer = move(createVertexBuffer(m_pShader));
   }
 
   bool uploadVB = false;
 
   // Update Cutout
   // =============
-  if(sprite.m_needUpdate.IsSet(SpriteComponents::Cutout))
+  if(m_needUpdate.IsSet(SpriteComponents::Cutout))
   {
-    auto& pTexture = sprite.m_pTexture;
+    auto& pTexture = m_pTexture;
     auto texWidth = pTexture->getWidth();
     auto texHeight = pTexture->getHeight();
 
-    auto& cutout = sprite.m_cutout;
+    auto& cutout = m_cutout;
     if (cutout.HasNonZeroArea())
     {
       auto l = float(cutout.x)      / float(texWidth);  // Left.
@@ -149,10 +159,10 @@ void kr::update(Sprite& sprite)
       auto t = float(cutout.height) / float(texHeight); // Top.
       auto b = float(cutout.y)      / float(texHeight); // Bottom.
 
-      sprite.m_vertices[0].texCoords.Set(l, t);
-      sprite.m_vertices[1].texCoords.Set(l, b);
-      sprite.m_vertices[2].texCoords.Set(r, t);
-      sprite.m_vertices[3].texCoords.Set(r, b);
+      m_vertices[0].texCoords.Set(l, t);
+      m_vertices[1].texCoords.Set(l, b);
+      m_vertices[2].texCoords.Set(r, t);
+      m_vertices[3].texCoords.Set(r, b);
     }
     else
     {
@@ -161,50 +171,50 @@ void kr::update(Sprite& sprite)
       cutout.width = texWidth;
       cutout.height = texHeight;
 
-      sprite.m_vertices[0].texCoords.Set(0, 1);
-      sprite.m_vertices[1].texCoords.Set(0, 0);
-      sprite.m_vertices[2].texCoords.Set(1, 1);
-      sprite.m_vertices[3].texCoords.Set(1, 0);
+      m_vertices[0].texCoords.Set(0, 1);
+      m_vertices[1].texCoords.Set(0, 0);
+      m_vertices[2].texCoords.Set(1, 1);
+      m_vertices[3].texCoords.Set(1, 0);
     }
 
     uploadVB = true;
-    sprite.m_needUpdate.Remove(SpriteComponents::Cutout);
+    m_needUpdate.Remove(SpriteComponents::Cutout);
   }
 
   // Update Local Bounds
   // ===================
-  if(sprite.m_needUpdate.IsSet(SpriteComponents::LocalBounds))
+  if(m_needUpdate.IsSet(SpriteComponents::LocalBounds))
   {
-    auto& bounds = sprite.m_localBounds;
+    auto& bounds = m_localBounds;
 
     // If no bounds were set, use the texture dimensions.
     if (!bounds.HasNonZeroArea())
     {
-      auto& cutout = sprite.m_cutout;
+      auto& cutout = m_cutout;
       bounds.width  = float(cutout.width);
       bounds.height = float(cutout.height);
     }
 
-    sprite.m_vertices[0].pos.Set(bounds.x,                bounds.y);
-    sprite.m_vertices[1].pos.Set(bounds.x,                bounds.y + bounds.height);
-    sprite.m_vertices[2].pos.Set(bounds.x + bounds.width, bounds.y);
-    sprite.m_vertices[3].pos.Set(bounds.x + bounds.width, bounds.y + bounds.height);
+    m_vertices[0].pos.Set(bounds.x,                bounds.y);
+    m_vertices[1].pos.Set(bounds.x,                bounds.y + bounds.height);
+    m_vertices[2].pos.Set(bounds.x + bounds.width, bounds.y);
+    m_vertices[3].pos.Set(bounds.x + bounds.width, bounds.y + bounds.height);
 
     uploadVB = true;
-    sprite.m_needUpdate.Remove(SpriteComponents::LocalBounds);
+    m_needUpdate.Remove(SpriteComponents::LocalBounds);
   }
 
   // Upload VertexBuffer Data If Necessary
   // =====================================
   if (uploadVB)
   {
-    uploadData(sprite.getVertexBuffer(), sprite.getVertices());
+    uploadData(getVertexBuffer(), getVertices());
   }
 }
 
-bool kr::canRender(const Sprite& sprite)
+bool kr::Sprite::canRender()
 {
-  return sprite.getTexture() != nullptr
-      && sprite.getSampler() != nullptr
-      && sprite.getShader()  != nullptr;
+  return getTexture() != nullptr
+      && getSampler() != nullptr
+      && getShader()  != nullptr;
 }
